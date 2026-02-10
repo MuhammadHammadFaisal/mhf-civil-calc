@@ -42,6 +42,18 @@ st.set_page_config(
 st.markdown("""
 <style>
 
+.stApp {
+    background: 
+        linear-gradient(rgba(26,58,90,0.88), rgba(26,58,90,0.88)),
+        url("assets/blueprint.png");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 /* --- 1. CARD CONTAINER --- */
 [data-testid="stPageLink-NavLink"] {
     background-color: #f8f9fa !important;
@@ -229,6 +241,7 @@ def main():
 # ==================================================
 if __name__ == "__main__":
     main()
+
 
 
 
