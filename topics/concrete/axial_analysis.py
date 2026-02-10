@@ -179,83 +179,99 @@ def plot_load_deformation(N1, N2, trans_type):
     return fig
 
 # ======================================
-# 3. MAIN APP
+# 3. MAIN APP (FIXED & POLISHED)
 # ======================================
 def app():
+    st.title("RC Column Analyst")
 
+    # Layout: Input Column (Left) | Viz Column (Right)
     col_input, col_viz = st.columns([1.3, 1])
 
     with col_input:
-            st.subheader("1. System Properties")
-            
-            # Hardcoded Code (Hidden from user)
-            design_code = "TS 500 (Lecture Notes)" 
-    
-            # --- GEOMETRY & REINFORCEMENT ---
-            with st.expander("Geometry & Config", expanded=True):
-                shape = st.selectbox("Column Shape", ["Rectangular", "Square", "Circular"])
-                
-                # THE NEW "MASTER" SELECTOR
-                # This covers: Plain, Unconfined, Standard Ties, and Spiral
-                reinf_style = st.selectbox(
-                    "Reinforcement Style",
-                    [
-                        "Standard Ties (Match Shape)",  # Normal case
-                        "Spiral / Circular",           # Spiral inside Rect/Sq/Circ
-                        "Longitudinal Only (No Ties)", # "No confinement"
-                        "None (Plain Concrete)"        # No steel at all
-                    ]
-                )
-    
-            # --- DIMENSIONS ---
-            st.markdown("**Dimensions**")
-            cover = st.number_input("Cover [mm]", value=25.0)
-            
-            Ag = 0; dims = (0,0)
-            # Standard Geometry Logic...
-            if shape == "Rectangular":
-                cc1, cc2 = st.columns(2)
-                with cc1: b = st.number_input("Width (b)", value=300.0)
-                with cc2: h = st.number_input("Depth (h)", value=400.0)
-                Ag = b*h; dims = (b, h)
-            elif shape == "Square":
-                a = st.number_input("Side (a)", value=350.0)
-                Ag = a**2; dims = (a, a)
-            else:
-                D = st.number_input("Diameter (D)", value=300.0)
-                Ag = np.pi * D**2 / 4; dims = (D,)
-    
-            # --- REINFORCEMENT INPUTS ---
-            # Only show steel inputs if not "Plain Concrete"
-            if reinf_style != "None (Plain Concrete)":
-                st.markdown("**Longitudinal Bars**")
-                rc1, rc2 = st.columns(2)
-                with rc1: bar_dia = st.number_input("Bar Dia", value=16.0)
-                with rc2: num_bars = st.number_input("Count", value=8, min_value=4)
-                Ast = num_bars * np.pi * (bar_dia / 2) ** 2
-                
-                # Spiral inputs appear ONLY if Spiral is selected
-                if "Spiral" in reinf_style:
-                    st.info(" Spiral Settings")
-                    sc1, sc2 = st.columns(2)
-                    with sc1: spiral_dia = st.number_input("Spiral $\phi$", value=8.0)
-                    with sc2: spiral_spacing = st.number_input("Spacing (s)", value=50.0)
-            else:
-                # Plain concrete has no steel
-                Ast = 0
-                num_bars = 0
-                
-            # --- MAP TO OLD VARIABLES ---
-            # This prevents your calculation code from breaking
-            trans_type = "Ties" # Default
-            if "Spiral" in reinf_style: trans_type = "Spiral"
-    with col_viz:
-            st.subheader("2. Visualization")
-            # Update this line:
-            fig1 = draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, True, cover)
-            st.pyplot(fig1, use_container_width=True)
-            st.caption(f"**Section Data:** $A_g = {Ag:,.0f}$ mm², $\\rho = {(Ast/Ag)*100:.2f}\\%$")
+        st.subheader("1. System Properties")
         
+        # --- A. DESIGN CODE (Hidden/Hardcoded) ---
+        design_code = "TS 500 (Lecture Notes)" 
+        # st.caption("Standard: **TS 500**") 
+
+        # --- B. MATERIALS (RESTORED!) ---
+        # These were missing in your snippet!
+        st.markdown("**Materials**")
+        c1, c2 = st.columns(2)
+        with c1: fc = st.number_input("Concrete ($f_{ck}$) [MPa]", value=20.0, step=5.0)
+        with c2: fy = st.number_input("Steel ($f_{yk}$) [MPa]", value=420.0, step=10.0)
+
+        # --- C. GEOMETRY & REINFORCEMENT ---
+        with st.expander("Geometry & Configuration", expanded=True):
+            shape = st.selectbox("Column Shape", ["Rectangular", "Square", "Circular"])
+            
+            # THE UNIVERSAL SELECTOR
+            reinf_style = st.selectbox(
+                "Reinforcement Style",
+                [
+                    "Standard Ties (Match Shape)",  
+                    "Spiral / Circular",           
+                    "Longitudinal Only (No Ties)", 
+                    "None (Plain Concrete)"        
+                ]
+            )
+
+        # --- D. DIMENSIONS ---
+        st.markdown("**Dimensions**")
+        cover = st.number_input("Cover [mm]", value=25.0)
+        
+        Ag = 0; dims = (0,0)
+        
+        if shape == "Rectangular":
+            cc1, cc2 = st.columns(2)
+            with cc1: b = st.number_input("Width (b)", value=300.0)
+            with cc2: h = st.number_input("Depth (h)", value=400.0)
+            Ag = b*h; dims = (b, h)
+        elif shape == "Square":
+            a = st.number_input("Side (a)", value=350.0)
+            Ag = a**2; dims = (a, a)
+        else:
+            D = st.number_input("Diameter (D)", value=300.0)
+            Ag = np.pi * D**2 / 4; dims = (D,)
+
+        # --- E. REINFORCEMENT DETAILS ---
+        # Default values (to prevent crash if hidden)
+        Ast = 0
+        num_bars = 0
+        bar_dia = 0
+        spiral_dia = 0
+        spiral_spacing = 0
+
+        # Logic: Only show inputs if NOT Plain Concrete
+        if reinf_style != "None (Plain Concrete)":
+            st.markdown("**Longitudinal Bars**")
+            rc1, rc2 = st.columns(2)
+            with rc1: bar_dia = st.number_input("Bar Dia", value=16.0)
+            with rc2: num_bars = st.number_input("Count", value=8, min_value=4)
+            Ast = num_bars * np.pi * (bar_dia / 2) ** 2
+            
+            # Logic: Spiral inputs ONLY if "Spiral" style is selected
+            if "Spiral" in reinf_style:
+                st.info("🌀 Spiral Settings")
+                sc1, sc2 = st.columns(2)
+                with sc1: spiral_dia = st.number_input("Spiral $\phi$", value=8.0)
+                with sc2: spiral_spacing = st.number_input("Spacing (s)", value=50.0)
+        
+        # --- MAP TO CALCULATION VARIABLES ---
+        trans_type = "Ties" # Default
+        if "Spiral" in reinf_style: 
+            trans_type = "Spiral"
+        elif "Longitudinal" in reinf_style or "None" in reinf_style:
+            trans_type = "None" # Used to skip tie drawing logic if needed
+
+    # --- VISUALIZATION COLUMN ---
+    with col_viz:
+        st.subheader("2. Visualization")
+        # Ensure we pass the variables correctly
+        fig1 = draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, True, cover)
+        st.pyplot(fig1, use_container_width=True)
+        st.caption(f"**Section Data:** $A_g = {Ag:,.0f}$ mm², $\\rho = {(Ast/Ag)*100:.2f}\\%$")
+
     st.markdown("---")
 
     # ======================================
@@ -275,31 +291,16 @@ def app():
             st.latex(fr"f_{{cd}} = {fc}/{gamma_c} = {fcd:.2f} \text{{ MPa}}")
             st.latex(fr"f_{{yd}} = {fy}/{gamma_s} = {fyd:.2f} \text{{ MPa}}")
             
-        elif "ACI" in design_code:
-            # Check for spiral vs tied
-            phi = 0.75 if trans_type == "Spiral" else 0.65
-            alpha = 0.85 if trans_type == "Spiral" else 0.80
-            st.write(f"**ACI Factors:** $\\phi={phi}, \\alpha={alpha}$")
-
-        # --- ACI ANALYSIS ---
-        if "ACI" in design_code:
-            P0 = 0.85 * fc * (Ag - Ast) + fy * Ast
-            Pn_max = alpha * P0
-            PhiPn = phi * Pn_max
-            
-            st.markdown("### ACI Capacity")
-            st.latex(r"\phi P_{n,max} = \phi \cdot \alpha [0.85 f'_c (A_g - A_{st}) + f_y A_{st}]")
-            term_conc = f"0.85({fc})({Ag:.0f}-{Ast:.0f})"
-            term_steel = f"{fy}({Ast:.0f})"
-            st.latex(fr"\phi P_{{n}} = {phi} \cdot {alpha} [{term_conc} + {term_steel}]")
-            st.metric("Design Capacity ($\phi P_n$)", f"{PhiPn/1000:,.0f} kN")
-
-        # --- TS 500 ANALYSIS (Detailed) ---
-        elif "TS 500" in design_code:
-            # 1. Unconfined
+            # 1. Unconfined Capacity (Always calculated unless Plain)
             st.markdown("### Peak 1: Unconfined Capacity ($N_{or}$)")
+            
+            if reinf_style == "None (Plain Concrete)":
+                st.warning("Plain concrete analysis not fully implemented. Showing pure concrete capacity.")
+                term_steel = 0
+            else:
+                term_steel = Ast * fyd
+
             term_conc = 0.85 * fcd * (Ag - Ast)
-            term_steel = Ast * fyd
             Nor1 = term_conc + term_steel
             
             st.latex(r"N_{or} = 0.85 f_{cd} (A_g - A_{st}) + A_{st} f_{yd}")
@@ -308,28 +309,30 @@ def app():
             graph_N1 = Nor1 / 1000
             graph_N2 = 0
             
-            if trans_type == "Spiral":
+            # 2. Confined Capacity (Only if Spiral)
+            if "Spiral" in reinf_style:
                 st.markdown("---")
                 st.markdown("### Peak 2: Confined Capacity ($N_{or2}$)")
                 
-                # --- CALCULATION UPDATE FOR HYBRID SHAPE ---
+                # Fix: Effective diameter logic
                 if shape == "Circular":
                     D_col = dims[0]
                 else:
-                    # If Rectangular, the spiral is limited by the smaller dimension
-                    D_col = min(dims[0], dims[1])
+                    D_col = min(dims[0], dims[1]) # Rect/Square uses smallest dim
 
-                # Now calculate core dimensions based on this effective D_col
-                d_core_outer = D_col - 2*cover
-                d_core_center = D_col - 2*(cover + spiral_dia/2)
+                # Fix: Removed duplicate lines here
                 d_core_outer = D_col - 2*cover
                 d_core_center = D_col - 2*(cover + spiral_dia/2)
                 
                 Ack = np.pi * d_core_outer**2 / 4 
                 Asp = np.pi * spiral_dia**2 / 4
                 
-                rho_s = (4 * Asp) / (d_core_center * spiral_spacing)
-                
+                # Prevent div/0 error if spacing is 0
+                if spiral_spacing > 0:
+                    rho_s = (4 * Asp) / (d_core_center * spiral_spacing)
+                else:
+                    rho_s = 0
+
                 c1, c2 = st.columns(2)
                 c1.write(f"Core Dia (Centerline): **{d_core_center:.1f} mm**")
                 c2.write(f"Spiral Ratio ($\\rho_s$): **{rho_s:.4f}**")
@@ -343,29 +346,32 @@ def app():
                 else:
                     st.success(f"✅ $\\rho_s$ ({rho_s:.4f}) > Min ({rho_min_req:.4f})")
 
-                f_cc_char = 0.85 * fc + 2 * rho_s * fy
-                f_ccd = f_cc_char / 1.5
-                st.latex(fr"f_{{ccd}} = \frac{{0.85({fc}) + 2({rho_s:.4f})({fy})}}{{1.5}} = \mathbf{{{f_ccd:.2f} \text{{ MPa}}}}")
-                
-                term_core = f_ccd * Ack
-                term_steel_2 = Ast * fyd
-                Nor2 = term_core + term_steel_2
-                
-                st.latex(r"N_{or2} = f_{ccd} A_{ck} + A_{st} f_{yd}")
-                st.latex(fr"N_{{or2}} = {f_ccd:.2f}({Ack:.0f}) + {Ast:.0f}({fyd:.2f}) = \mathbf{{{Nor2/1000:.0f} \text{{ kN}}}}")
-                
-                graph_N2 = Nor2 / 1000
-                delta = graph_N2 - graph_N1
-                
-                if delta > 0:
-                    st.success(f"**Confined Peak is Higher.** Gain = +{delta:.0f} kN.")
-                else:
-                    st.warning(f"⚠️ **Unconfined Peak Governs.** Loss = {delta:.0f} kN.")
+                    f_cc_char = 0.85 * fc + 2 * rho_s * fy
+                    f_ccd = f_cc_char / 1.5
+                    st.latex(fr"f_{{ccd}} = \frac{{0.85({fc}) + 2({rho_s:.4f})({fy})}}{{1.5}} = \mathbf{{{f_ccd:.2f} \text{{ MPa}}}}")
+                    
+                    term_core = f_ccd * Ack
+                    term_steel_2 = Ast * fyd
+                    Nor2 = term_core + term_steel_2
+                    
+                    st.latex(r"N_{or2} = f_{ccd} A_{ck} + A_{st} f_{yd}")
+                    st.latex(fr"N_{{or2}} = {f_ccd:.2f}({Ack:.0f}) + {Ast:.0f}({fyd:.2f}) = \mathbf{{{Nor2/1000:.0f} \text{{ kN}}}}")
+                    
+                    graph_N2 = Nor2 / 1000
+                    delta = graph_N2 - graph_N1
+                    
+                    if delta > 0:
+                        st.success(f"**Confined Peak is Higher.** Gain = +{delta:.0f} kN.")
+                    else:
+                        st.warning(f"⚠️ **Unconfined Peak Governs.** Loss = {delta:.0f} kN.")
 
+            # Load-Deformation Graph
             st.markdown("### Load-Deformation Behavior")
-            fig = plot_load_deformation(graph_N1, graph_N2, trans_type)
+            # Pass "Spiral" only if reinf_style is Spiral, otherwise "Ties" (standard behavior)
+            plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
+            fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
             st.pyplot(fig)
             plt.close(fig)
-            
-        else:
-            st.info("Eurocode detailed substitution not implemented in this view.")
+
+if __name__ == "__main__":
+    app()
