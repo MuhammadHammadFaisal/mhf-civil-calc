@@ -58,12 +58,12 @@ main > div:first-child {
     border-radius: 12px;
     background-color: rgba(26,58,90,0.5);
     box-shadow: 0 0 30px rgba(0,0,0,0.2);
-    color: #eee !important; /* Ensures text is readable in light and dark modes */
+    color: #E2E8F0 !important; /* UPDATED COLOR HERE */
 }
 
-/* Force all text inside content to be light */
+/* Force all text inside content to be the requested color */
 main > div:first-child, main > div:first-child * {
-    color: #eee !important;
+    color: #E2E8F0 !important; /* UPDATED COLOR HERE */
 }
 
 /* ===== Card Styling ===== */
@@ -84,8 +84,9 @@ main > div:first-child, main > div:first-child * {
     border-color: #ced4da !important;
 }
 
+/* Keep card text dark so it is readable on white background */
 [data-testid="stPageLink-NavLink"] p {
-    color: #212529 !important;
+    color: #212529 !important; 
     font-size: 17px !important;
     font-weight: 600 !important;
     margin: 0 !important;
@@ -144,12 +145,13 @@ def main():
     with col_logo:
         st.image("assets/Sticker.png", use_container_width=True)
     with col_text:
+        # Applied color: #E2E8F0 to all text elements below and fixed syntax
         st.markdown("""
-        <h1 style="color:#FFFFFF; font-size:46px; margin-bottom:6px;">MHF Civil Calc</h1>
-        <p style="color:#E2E8F0; font-size:18px; line-height:1.5; max-width:700px;">
+        <h1 style="color: #E2E8F0; font-size:46px; margin-bottom:6px;">MHF Civil Calc</h1>
+        <p style="color: #E2E8F0; font-size:18px; line-height:1.5; max-width:700px;">
             Civil Engineering Calculation Workspace
         </p>
-        <p style="color:#E2E8F0; font-size:14px; max-width:700px;">
+        <p style="color: #E2E8F0; font-size:14px; max-width:700px;">
             Verified numerical solvers aligned with standard undergraduate civil engineering coursework.
         </p>
         """, unsafe_allow_html=True)
@@ -190,8 +192,7 @@ def main():
     # ------------------------- ABOUT -------------------------
     st.subheader("About")
     st.markdown("""
-    **Developed by Muhammad Hammad Faisal**  
-    Final-Year Civil Engineering Student, METU
+    **Developed by Muhammad Hammad Faisal** Final-Year Civil Engineering Student, METU
     """)
     st.link_button(
         "LinkedIn Profile",
@@ -201,7 +202,7 @@ def main():
     # ------------------------- FOOTER -------------------------
     st.markdown("---")
     st.markdown("""
-    <div style="text-align:center; color:#bbb; font-size:12px;">
+    <div style="text-align:center; color: #E2E8F0; font-size:12px;">
         © 2026 MHF Civil · Ankara, Turkey
     </div>
     """, unsafe_allow_html=True)
@@ -209,8 +210,3 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
-
-
-
-
-
