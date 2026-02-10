@@ -24,7 +24,7 @@ def prepare_background(path, max_width=1920, max_height=1080):
     try:
         img = Image.open(path)
         img.thumbnail((max_width, max_height), Image.LANCZOS)  # Maintain aspect ratio
-        resized_path = "assets/blueprint_resized.png"
+        resized_path = "assets/blueprint.png"
         img.save(resized_path)
         return resized_path
     except Exception as e:
@@ -217,3 +217,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
