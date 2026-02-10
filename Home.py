@@ -15,7 +15,7 @@ def prepare_icon(im, final_size=64):
 
 # Load favicon
 try:
-    icon_img = Image.open("assets/logo.2.png").convert("RGBA")
+    icon_img = Image.open("assets/Sticker.png").convert("RGBA")
     icon_img = prepare_icon(icon_img, 64)
 except:
     icon_img = "🛠️"  # fallback emoji
@@ -168,11 +168,11 @@ def get_active_modules():
 # =========================================================
 def main():
     # ------------------------- HEADER -------------------------
-    col_logo, col_text = st.columns([1.5, 3])
+    col_logo, col_text = st.columns([1, 3])
     with col_logo:
         # Assuming asset exists
-        if "assets/logo.2.png" and os.path.exists("assets/logo.2.png"):
-             st.image("assets/logo.2.png", use_container_width=True)
+        if "assets/Sticker.png" and os.path.exists("assets/Sticker.png"):
+             st.image("assets/Sticker.png", use_container_width=True)
         else:
              st.write("🛠️") # Fallback if image missing
 
@@ -244,6 +244,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
