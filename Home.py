@@ -34,36 +34,52 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Technical Blueprint with Deep Gradient ===== */
+/* ===== Blueprint Background with Side Borders ===== */
 .stApp {
-    /* 1. Deepest Base Color (Midnight Navy) */
-    background-color: #020a1a;
-    
+    background-color: #031126; /* Maintained your original color */
     background-image: 
-        /* 2. Center Glow (Restoring the gradient you liked) */
-        radial-gradient(circle at center, rgba(20, 75, 140, 0.5) 0%, rgba(2, 10, 26, 1) 90%),
+        /* 1. NEW: Side Border Lines (Left & Right Margins) */
+        linear-gradient(90deg, transparent 40px, rgba(255, 255, 255, 0.4) 41px, transparent 42px), /* Left Line */
+        linear-gradient(-90deg, transparent 40px, rgba(255, 255, 255, 0.4) 41px, transparent 42px), /* Right Line */
+
+        /* 2. Technical Arcs (Kept) */
+        radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.05) 181px, transparent 183px),
+        radial-gradient(circle at 100% 0%, transparent 240px, rgba(255,255,255,0.03) 241px, transparent 245px),
+        radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.05) 201px, transparent 203px),
+        radial-gradient(circle at 0% 100%, transparent 300px, rgba(255,255,255,0.02) 301px, transparent 305px),
         
-        /* 3. Fine Grid (Sharp & Faint) */
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        
-        /* 4. Major Grid (Distinct Structural Lines) */
+        /* 3. Major Grid (Kept) */
         linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         
-        /* 5. Technical Arcs (Subtle Geometry in Corners) */
-        radial-gradient(circle at 100% 0%, transparent 120px, rgba(255,255,255,0.05) 121px, transparent 123px),
-        radial-gradient(circle at 100% 0%, transparent 160px, rgba(255,255,255,0.03) 161px, transparent 163px),
-        radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.04) 201px, transparent 203px);
-
-    /* Exact sizing for the layered effect */
-    background-size: 
-        100% 100%,                  /* Glow fills the screen */
-        20px 20px, 20px 20px,       /* Fine Grid */
-        100px 100px, 100px 100px,   /* Major Grid */
-        100% 100%, 100% 100%, 100% 100%; /* Arcs */
+        /* 4. Sub Grid (Kept) */
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
         
+        /* 5. Center Glow (Kept) */
+        radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, #031126 90%);
+
+    background-size: 
+        100% 100%, 100% 100%,     /* Borders */
+        100% 100%, 100% 100%, 100% 100%, 100% 100%, /* Arcs */
+        200px 200px, 200px 200px, /* Major Grid */
+        40px 40px, 40px 40px,     /* Sub Grid */
+        100% 100%;                /* Glow */
+    
     background-attachment: fixed;
+}
+
+/* ===== Glassy Card Styling (Kept for consistency) ===== */
+[data-testid="stPageLink-NavLink"] {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(4px);
+}
+
+[data-testid="stPageLink-NavLink"] p {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
 }
 
 /* ===== Glassy Card Styling ===== */
@@ -260,6 +276,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
