@@ -249,7 +249,7 @@ with col_input:
         # This prevents your calculation code from breaking
         trans_type = "Ties" # Default
         if "Spiral" in reinf_style: trans_type = "Spiral"
-    with col_viz:
+with col_viz:
         st.subheader("2. Visualization")
         # Update this line:
         fig1 = draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, True, cover)
