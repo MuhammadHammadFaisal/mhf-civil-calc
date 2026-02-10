@@ -66,13 +66,13 @@ main > div:first-child, main > div:first-child * {
     : #E2E8F0 !important; /* UPDATED  HERE */
 }
 
-/* ===== Card Styling ===== */
+/* ===== Card Styling (Course Modules) ===== */
 [data-testid="stPageLink-NavLink"] {
-    background-: rgba(255,255,255,0.85) !important;
-    border: 1px solid #dee2e6 !important;
+    background-color: rgba(255, 255, 255, 0.05) !important; /* Transparent/Glassy look */
+    border: 1px solid rgba(255, 255, 255, 0.5) !important; /* Distinct white border */
     border-radius: 10px !important;
     padding: 18px !important;
-    transition: background- 0.15s ease !important;
+    transition: all 0.2s ease !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -80,13 +80,14 @@ main > div:first-child, main > div:first-child * {
 }
 
 [data-testid="stPageLink-NavLink"]:hover {
-    background-: rgba(255,255,255,0.95) !important;
-    border-: #ced4da !important;
+    background-color: rgba(255, 255, 255, 0.15) !important; /* Slightly brighter on hover */
+    border-color: #ffffff !important;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Keep card text dark so it is readable on white background */
+/* Force card text to be WHITE so it is readable on blue background */
 [data-testid="stPageLink-NavLink"] p {
-    color: #212529 !important; 
+    color: #FFFFFF !important;  /* <--- THIS FIXES THE VISIBILITY */
     font-size: 17px !important;
     font-weight: 600 !important;
     margin: 0 !important;
@@ -96,11 +97,8 @@ main > div:first-child, main > div:first-child * {
 }
 
 [data-testid="stPageLink-NavLink"] svg {
-    display: none !important;
-}
-
-[data-testid="stHeaderAction"] {
-    display: none !important;
+    fill: #FFFFFF !important; /* Fixes any icons to be white too */
+    display: none !important; /* Or keep hidden if you prefer */
 }
 
 /* ===== Button Styling (Feedback & LinkedIn) ===== */
@@ -215,6 +213,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
