@@ -149,7 +149,7 @@ def main():
         <p style="#E2E8F0; font-size:18px; line-height:1.5; max-width:700px;">
             Civil Engineering Calculation Workspace
         </p>
-        <p style="color:#22D3EE; font-size:14px; max-width:700px;">
+        <p style="color:#E2E8F0; font-size:14px; max-width:700px;">
             Verified numerical solvers aligned with standard undergraduate civil engineering coursework.
         </p>
         """, unsafe_allow_html=True)
@@ -209,6 +209,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
