@@ -185,78 +185,78 @@ def app():
 
     col_input, col_viz = st.columns([1.3, 1])
 
-with col_input:
-        st.subheader("1. System Properties")
-        
-        # Hardcoded Code (Hidden from user)
-        design_code = "TS 500 (Lecture Notes)" 
-
-        # --- GEOMETRY & REINFORCEMENT ---
-        with st.expander("Geometry & Config", expanded=True):
-            shape = st.selectbox("Column Shape", ["Rectangular", "Square", "Circular"])
+    with col_input:
+            st.subheader("1. System Properties")
             
-            # THE NEW "MASTER" SELECTOR
-            # This covers: Plain, Unconfined, Standard Ties, and Spiral
-            reinf_style = st.selectbox(
-                "Reinforcement Style",
-                [
-                    "Standard Ties (Match Shape)",  # Normal case
-                    "Spiral / Circular",           # Spiral inside Rect/Sq/Circ
-                    "Longitudinal Only (No Ties)", # "No confinement"
-                    "None (Plain Concrete)"        # No steel at all
-                ]
-            )
-
-        # --- DIMENSIONS ---
-        st.markdown("**Dimensions**")
-        cover = st.number_input("Cover [mm]", value=25.0)
-        
-        Ag = 0; dims = (0,0)
-        # Standard Geometry Logic...
-        if shape == "Rectangular":
-            cc1, cc2 = st.columns(2)
-            with cc1: b = st.number_input("Width (b)", value=300.0)
-            with cc2: h = st.number_input("Depth (h)", value=400.0)
-            Ag = b*h; dims = (b, h)
-        elif shape == "Square":
-            a = st.number_input("Side (a)", value=350.0)
-            Ag = a**2; dims = (a, a)
-        else:
-            D = st.number_input("Diameter (D)", value=300.0)
-            Ag = np.pi * D**2 / 4; dims = (D,)
-
-        # --- REINFORCEMENT INPUTS ---
-        # Only show steel inputs if not "Plain Concrete"
-        if reinf_style != "None (Plain Concrete)":
-            st.markdown("**Longitudinal Bars**")
-            rc1, rc2 = st.columns(2)
-            with rc1: bar_dia = st.number_input("Bar Dia", value=16.0)
-            with rc2: num_bars = st.number_input("Count", value=8, min_value=4)
-            Ast = num_bars * np.pi * (bar_dia / 2) ** 2
-            
-            # Spiral inputs appear ONLY if Spiral is selected
-            if "Spiral" in reinf_style:
-                st.info(" Spiral Settings")
-                sc1, sc2 = st.columns(2)
-                with sc1: spiral_dia = st.number_input("Spiral $\phi$", value=8.0)
-                with sc2: spiral_spacing = st.number_input("Spacing (s)", value=50.0)
-        else:
-            # Plain concrete has no steel
-            Ast = 0
-            num_bars = 0
-            
-        # --- MAP TO OLD VARIABLES ---
-        # This prevents your calculation code from breaking
-        trans_type = "Ties" # Default
-        if "Spiral" in reinf_style: trans_type = "Spiral"
-with col_viz:
-        st.subheader("2. Visualization")
-        # Update this line:
-        fig1 = draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, True, cover)
-        st.pyplot(fig1, use_container_width=True)
-        st.caption(f"**Section Data:** $A_g = {Ag:,.0f}$ mm², $\\rho = {(Ast/Ag)*100:.2f}\\%$")
+            # Hardcoded Code (Hidden from user)
+            design_code = "TS 500 (Lecture Notes)" 
     
-st.markdown("---")
+            # --- GEOMETRY & REINFORCEMENT ---
+            with st.expander("Geometry & Config", expanded=True):
+                shape = st.selectbox("Column Shape", ["Rectangular", "Square", "Circular"])
+                
+                # THE NEW "MASTER" SELECTOR
+                # This covers: Plain, Unconfined, Standard Ties, and Spiral
+                reinf_style = st.selectbox(
+                    "Reinforcement Style",
+                    [
+                        "Standard Ties (Match Shape)",  # Normal case
+                        "Spiral / Circular",           # Spiral inside Rect/Sq/Circ
+                        "Longitudinal Only (No Ties)", # "No confinement"
+                        "None (Plain Concrete)"        # No steel at all
+                    ]
+                )
+    
+            # --- DIMENSIONS ---
+            st.markdown("**Dimensions**")
+            cover = st.number_input("Cover [mm]", value=25.0)
+            
+            Ag = 0; dims = (0,0)
+            # Standard Geometry Logic...
+            if shape == "Rectangular":
+                cc1, cc2 = st.columns(2)
+                with cc1: b = st.number_input("Width (b)", value=300.0)
+                with cc2: h = st.number_input("Depth (h)", value=400.0)
+                Ag = b*h; dims = (b, h)
+            elif shape == "Square":
+                a = st.number_input("Side (a)", value=350.0)
+                Ag = a**2; dims = (a, a)
+            else:
+                D = st.number_input("Diameter (D)", value=300.0)
+                Ag = np.pi * D**2 / 4; dims = (D,)
+    
+            # --- REINFORCEMENT INPUTS ---
+            # Only show steel inputs if not "Plain Concrete"
+            if reinf_style != "None (Plain Concrete)":
+                st.markdown("**Longitudinal Bars**")
+                rc1, rc2 = st.columns(2)
+                with rc1: bar_dia = st.number_input("Bar Dia", value=16.0)
+                with rc2: num_bars = st.number_input("Count", value=8, min_value=4)
+                Ast = num_bars * np.pi * (bar_dia / 2) ** 2
+                
+                # Spiral inputs appear ONLY if Spiral is selected
+                if "Spiral" in reinf_style:
+                    st.info(" Spiral Settings")
+                    sc1, sc2 = st.columns(2)
+                    with sc1: spiral_dia = st.number_input("Spiral $\phi$", value=8.0)
+                    with sc2: spiral_spacing = st.number_input("Spacing (s)", value=50.0)
+            else:
+                # Plain concrete has no steel
+                Ast = 0
+                num_bars = 0
+                
+            # --- MAP TO OLD VARIABLES ---
+            # This prevents your calculation code from breaking
+            trans_type = "Ties" # Default
+            if "Spiral" in reinf_style: trans_type = "Spiral"
+    with col_viz:
+            st.subheader("2. Visualization")
+            # Update this line:
+            fig1 = draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, True, cover)
+            st.pyplot(fig1, use_container_width=True)
+            st.caption(f"**Section Data:** $A_g = {Ag:,.0f}$ mm², $\\rho = {(Ast/Ag)*100:.2f}\\%$")
+        
+    st.markdown("---")
 
     # ======================================
     # 4. CALCULATION REPORT
