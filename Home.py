@@ -34,25 +34,40 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
+/* ===== Advanced Technical Blueprint Background ===== */
 .stApp {
-    background-color: #051b36;
+    background-color: #041630; /* Deeper navy base */
     background-image: 
-        /* Fine Grid (20px) */
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        /* Major Grid (100px) */
-        linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-        /* Technical Drafting Circles (Simulating the compass marks) */
-        radial-gradient(circle at 0% 100%, transparent 150px, rgba(255,255,255,0.05) 151px, rgba(255,255,255,0.05) 152px, transparent 153px),
-        radial-gradient(circle at 100% 0%, transparent 200px, rgba(255,255,255,0.05) 201px, rgba(255,255,255,0.05) 202px, transparent 203px),
-        /* Center Lighting Glow */
-        radial-gradient(circle at center, rgba(40, 90, 160, 0.3) 0%, #051b36 85%);
+        /* 1. Fine Graph Paper Grid (10px) */
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        
+        /* 2. Primary Structural Grid (50px) */
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        
+        /* 3. Major Axis Lines (250px) */
+        linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
 
-    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px, 100% 100%, 100% 100%, 100% 100%;
+        /* 4. Drafting Compass Arcs (Top Right) */
+        radial-gradient(circle at 100% 0%, transparent 120px, rgba(255,255,255,0.04) 121px, transparent 122px),
+        radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.03) 181px, transparent 184px),
+        
+        /* 5. Drafting Compass Arcs (Bottom Left) */
+        radial-gradient(circle at 0% 100%, transparent 160px, rgba(255,255,255,0.05) 161px, transparent 162px),
+        radial-gradient(circle at 0% 100%, transparent 240px, rgba(255,255,255,0.03) 241px, transparent 243px),
+
+        /* 6. Technical Dimension Details (Simulated lines/marks) */
+        repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255,255,255,0.01) 40px, rgba(255,255,255,0.01) 41px),
+        
+        /* 7. Center Depth Lighting (The "Glow") */
+        radial-gradient(circle at center, rgba(20, 70, 140, 0.4) 0%, #041630 85%);
+
+    /* Sizing for the grids and technical layers */
+    background-size: 10px 10px, 10px 10px, 50px 50px, 50px 50px, 250px 250px, 250px 250px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
     background-attachment: fixed;
 }
-
 /* ===== Framed Content Area ===== */
 main > div:first-child {
     max-width: 1200px;
@@ -217,6 +232,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
