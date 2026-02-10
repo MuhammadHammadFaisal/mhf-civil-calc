@@ -34,21 +34,23 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Detailed Blueprint Background ===== */
 .stApp {
-    background-color: #051937; 
+    background-color: #051b36;
     background-image: 
-        /* Layer 1: The major grid */
-        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-        /* Layer 2: The center glow and technical details */
-        radial-gradient(circle at center, rgba(30, 80, 150, 0.2) 0%, #051937 100%),
-        url("https://your-image-host.com/blueprint_details.png"); /* Use your uploaded image here */
-    
-    background-size: 100px 100px, 100px 100px, 100% 100%, cover;
-    background-position: center;
+        /* Fine Grid (20px) */
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        /* Major Grid (100px) */
+        linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+        /* Technical Drafting Circles (Simulating the compass marks) */
+        radial-gradient(circle at 0% 100%, transparent 150px, rgba(255,255,255,0.05) 151px, rgba(255,255,255,0.05) 152px, transparent 153px),
+        radial-gradient(circle at 100% 0%, transparent 200px, rgba(255,255,255,0.05) 201px, rgba(255,255,255,0.05) 202px, transparent 203px),
+        /* Center Lighting Glow */
+        radial-gradient(circle at center, rgba(40, 90, 160, 0.3) 0%, #051b36 85%);
+
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px, 100% 100%, 100% 100%, 100% 100%;
     background-attachment: fixed;
-    background-blend-mode: screen; /* This blends the grid over the image details */
 }
 
 /* ===== Framed Content Area ===== */
@@ -215,6 +217,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
