@@ -289,104 +289,133 @@ def app():
 
     st.markdown("---")
 
+# ======================================
+    # 3. CALCULATION REPORT (STUDENT MODE)
     # ======================================
-    # 4. CALCULATION REPORT
-    # ======================================
-    st.subheader("3. Calculation Report")
-    
     if st.button("Analyze Capacity", type="primary"):
-        st.markdown("#### Step-by-Step Analysis")
+        st.markdown("---")
+        st.subheader("📝 Step-by-Step Calculation Report")
+
+        # --- STEP 0: CONSTANTS & MATERIALS ---
+        st.markdown("#### 0. Design Parameters")
+        c1, c2, c3 = st.columns(3)
         
-        # --- CONSTANTS ---
+        # Design Strengths
         if "TS 500" in design_code:
             gamma_c, gamma_s = 1.5, 1.15
             fcd = fc / gamma_c
             fyd = fy / gamma_s
-            st.write("**Material Design Strengths:**")
-            st.latex(fr"f_{{cd}} = {fc}/{gamma_c} = {fcd:.2f} \text{{ MPa}}")
-            st.latex(fr"f_{{yd}} = {fy}/{gamma_s} = {fyd:.2f} \text{{ MPa}}")
+            c1.metric("Concrete Design ($f_{cd}$)", f"{fcd:.2f} MPa", help=f"{fc} / 1.5")
+            c2.metric("Steel Design ($f_{yd}$)", f"{fyd:.2f} MPa", help=f"{fy} / 1.15")
+        
+        # Geometry Properties
+        st.write("**Geometric Properties:**")
+        st.latex(fr"A_g = {Ag:,.0f} \text{{ mm}}^2")
+        st.latex(fr"A_{{st}} = {num_bars} \times \frac{{\pi \cdot {bar_dia}^2}}{{4}} = {Ast:,.0f} \text{{ mm}}^2")
+
+        # --- STEP 1: DETAILING CHECKS (CRITICAL FOR STUDENTS) ---
+        st.markdown("#### 1. Detailing Checks (Sanity Check)")
+        rho_percent = (Ast / Ag) * 100
+        
+        # Check against TS 500 Limits (1% to 4%)
+        chk_col1, chk_col2 = st.columns(2)
+        chk_col1.write(f"Reinforcement Ratio ($\\rho_l$): **{rho_percent:.2f}%**")
+        
+        if 1.0 <= rho_percent <= 4.0:
+            chk_col2.success("✅ OK (1% $\le \rho \le$ 4%)")
+        elif rho_percent < 1.0:
+            chk_col2.warning("⚠️ Low Reinforcement! (Code Min = 1%)")
+        else:
+            chk_col2.error("❌ Too High! (Code Max = 4%)")
+
+        # --- STEP 2: UNCONFINED CAPACITY ---
+        st.markdown("#### 2. Unconfined Axial Capacity ($N_{or}$)")
+        st.info("This is the capacity when the concrete shell is still intact.")
+
+        # Breakdown Forces
+        Force_conc = 0.85 * fcd * (Ag - Ast)
+        Force_steel = Ast * fyd
+        Nor1 = Force_conc + Force_steel
+
+        # Display as "Force Components"
+        f1, f2 = st.columns(2)
+        f1.metric("Concrete Contribution", f"{Force_conc/1000:,.0f} kN", help="0.85 * fcd * (Ag - Ast)")
+        f2.metric("Steel Contribution", f"{Force_steel/1000:,.0f} kN", help="Ast * fyd")
+        
+        st.markdown("**Total Unconfined Capacity:**")
+        st.latex(r"N_{or} = F_{conc} + F_{steel}")
+        st.latex(fr"N_{{or}} = {Force_conc/1000:.0f} + {Force_steel/1000:.0f} = \mathbf{{{Nor1/1000:.0f} \text{{ kN}}}}")
+
+        graph_N1 = Nor1 / 1000
+        graph_N2 = 0
+
+        # --- STEP 3: CONFINED CAPACITY (IF SPIRAL) ---
+        if "Spiral" in reinf_style:
+            st.markdown("#### 3. Confined Core Capacity ($N_{or2}$)")
+            st.info("This calculates if the spiral can hold the core together after the shell spalls off.")
             
-            # 1. Unconfined Capacity (Always calculated unless Plain)
-            st.markdown("### Peak 1: Unconfined Capacity ($N_{or}$)")
-            
-            if reinf_style == "None (Plain Concrete)":
-                st.warning("Plain concrete analysis not fully implemented. Showing pure concrete capacity.")
-                term_steel = 0
+            # A. GEOMETRY OF CORE
+            d_outer = core_diameter_input 
+            d_center = d_outer - spiral_dia
+            Ack = np.pi * d_outer**2 / 4
+            Asp = np.pi * spiral_dia**2 / 4
+
+            col_geom1, col_geom2 = st.columns(2)
+            col_geom1.write(f"Core Diameter ($D_k$): **{d_outer:.0f} mm**")
+            col_geom2.write(f"Core Area ($A_{{ck}}$): **{Ack:,.0f} mm²**")
+
+            # B. VOLUMETRIC RATIO
+            st.markdown("**B. Confinement Ratio ($\rho_s$)**")
+            if spiral_spacing > 0:
+                rho_s = (4 * Asp) / (d_center * spiral_spacing)
+                st.latex(fr"\rho_s = \frac{{4 A_{{sp}}}}{{D_{{core}} s}} = \frac{{4 ({Asp:.1f})}}{{{d_center:.0f} \cdot {spiral_spacing:.0f}}} = \mathbf{{{rho_s:.4f}}}")
             else:
-                term_steel = Ast * fyd
+                rho_s = 0; st.error("Spacing cannot be zero.")
 
-            term_conc = 0.85 * fcd * (Ag - Ast)
-            Nor1 = term_conc + term_steel
+            # Check Min Rho_s
+            rho_min_calc = 0.45 * (fc/fy) * ((Ag/Ack)-1)
+            rho_min_abs = 0.12 * (fc/fy)
+            rho_min_req = max(rho_min_calc, rho_min_abs)
             
-            st.latex(r"N_{or} = 0.85 f_{cd} (A_g - A_{st}) + A_{st} f_{yd}")
-            st.latex(fr"N_{{or}} = 0.85({fcd:.2f})({Ag:.0f} - {Ast:.0f}) + {Ast:.0f}({fyd:.2f}) = \mathbf{{{Nor1/1000:.0f} \text{{ kN}}}}")
-            
-            graph_N1 = Nor1 / 1000
-            graph_N2 = 0
-            
-            # 2. Confined Capacity (Only if Spiral)
-            if "Spiral" in reinf_style:
-                st.markdown("---")
-                st.markdown("### Peak 2: Confined Capacity ($N_{or2}$)")
+            if rho_s >= rho_min_req:
+                st.success(f"✅ Confinement Sufficient ($\rho_s > {rho_min_req:.4f}$)")
                 
-                # Fix: Effective diameter logic
-                if shape == "Circular":
-                    D_col = dims[0]
+                # C. ENHANCED STRENGTH
+                st.markdown("**C. Enhanced Concrete Strength ($f_{ccd}$)**")
+                # Calculate the boost
+                confinement_stress = (2 * rho_s * fy) / 1.5 
+                f_ccd = (0.85 * fc / 1.5) + confinement_stress
+                
+                st.write("The spiral acts like a belt, increasing the concrete's strength:")
+                st.latex(fr"f_{{ccd}} = f_{{cd}} + \text{{Confinement Boost}}")
+                st.latex(fr"f_{{ccd}} = {fcd:.2f} + \frac{{2 \cdot {rho_s:.4f} \cdot {fy}}}{{1.5}} = \mathbf{{{f_ccd:.2f} \text{{ MPa}}}}")
+
+                # D. FINAL CAPACITY
+                term_core = f_ccd * Ack
+                term_steel_2 = Ast * fyd
+                Nor2 = term_core + term_steel_2
+
+                st.markdown("**D. Final Confined Capacity**")
+                st.latex(fr"N_{{or2}} = (f_{{ccd}} \cdot A_{{ck}}) + (A_{{st}} \cdot f_{{yd}})")
+                st.latex(fr"N_{{or2}} = ({f_ccd:.2f} \cdot {Ack:.0f}) + {term_steel_2:.0f} = \mathbf{{{Nor2/1000:.0f} \text{{ kN}}}}")
+                
+                graph_N2 = Nor2 / 1000
+                delta = graph_N2 - graph_N1
+                
+                if delta > 0:
+                    st.success(f"🎉 **Ductile Design Achieved!** The column gets stronger after spalling (+{delta:.0f} kN).")
                 else:
-                    D_col = min(dims[0], dims[1]) # Rect/Square uses smallest dim
+                    st.warning(f"⚠️ **Brittle Behavior.** The confined core is weaker than the original section (-{abs(delta):.0f} kN).")
+            else:
+                st.error(f"❌ **Spiral Too Weak.** $\rho_s$ ({rho_s:.4f}) is less than required ({rho_min_req:.4f}). Calculation stops.")
+                graph_N2 = 0
 
-                # Fix: Removed duplicate lines here
-                d_core_outer = D_col - 2*cover
-                d_core_center = D_col - 2*(cover + spiral_dia/2)
-                
-                Ack = np.pi * d_core_outer**2 / 4 
-                Asp = np.pi * spiral_dia**2 / 4
-                
-                # Prevent div/0 error if spacing is 0
-                if spiral_spacing > 0:
-                    rho_s = (4 * Asp) / (d_core_center * spiral_spacing)
-                else:
-                    rho_s = 0
-
-                c1, c2 = st.columns(2)
-                c1.write(f"Core Dia (Centerline): **{d_core_center:.1f} mm**")
-                c2.write(f"Spiral Ratio ($\\rho_s$): **{rho_s:.4f}**")
-                
-                rho_min_calc = 0.45 * (fc/fy) * ((Ag/Ack)-1)
-                rho_min_abs = 0.12 * (fc/fy)
-                rho_min_req = max(rho_min_calc, rho_min_abs)
-                
-                if rho_s < rho_min_req:
-                    st.error(f"⚠️ $\\rho_s$ ({rho_s:.4f}) < Min ({rho_min_req:.4f}). Second peak will not develop!")
-                else:
-                    st.success(f"✅ $\\rho_s$ ({rho_s:.4f}) > Min ({rho_min_req:.4f})")
-
-                    f_cc_char = 0.85 * fc + 2 * rho_s * fy
-                    f_ccd = f_cc_char / 1.5
-                    st.latex(fr"f_{{ccd}} = \frac{{0.85({fc}) + 2({rho_s:.4f})({fy})}}{{1.5}} = \mathbf{{{f_ccd:.2f} \text{{ MPa}}}}")
-                    
-                    term_core = f_ccd * Ack
-                    term_steel_2 = Ast * fyd
-                    Nor2 = term_core + term_steel_2
-                    
-                    st.latex(r"N_{or2} = f_{ccd} A_{ck} + A_{st} f_{yd}")
-                    st.latex(fr"N_{{or2}} = {f_ccd:.2f}({Ack:.0f}) + {Ast:.0f}({fyd:.2f}) = \mathbf{{{Nor2/1000:.0f} \text{{ kN}}}}")
-                    
-                    graph_N2 = Nor2 / 1000
-                    delta = graph_N2 - graph_N1
-                    
-                    if delta > 0:
-                        st.success(f"**Confined Peak is Higher.** Gain = +{delta:.0f} kN.")
-                    else:
-                        st.warning(f"⚠️ **Unconfined Peak Governs.** Loss = {delta:.0f} kN.")
-
-            # Load-Deformation Graph
-            st.markdown("### Load-Deformation Behavior")
-            # Pass "Spiral" only if reinf_style is Spiral, otherwise "Ties" (standard behavior)
-            plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
-            fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
-            st.pyplot(fig)
-            plt.close(fig)
+        # --- STEP 4: VISUALIZATION ---
+        st.markdown("#### 4. Behavior Graph")
+        plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
+        fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
+        st.pyplot(fig)
+        plt.close(fig)
 
 if __name__ == "__main__":
     app()
