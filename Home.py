@@ -36,61 +36,59 @@ st.set_page_config(
 
 
 
-# ==================================================
+# ==================================
 # CUSTOM CSS
-# ==================================================
+# ==================================
 st.markdown("""
 <style>
 
+/* --- 0. BACKGROUND SETUP --- */
+[data-testid="stAppViewContainer"] {
+    background-image: url("https://your-image-link.com/blueprint.jpg");
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+}
+
+/* This adds a slight dark overlay so your white cards and text "pop" more */
+[data-testid="stAppViewContainer"]::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3); 
+    z-index: 0;
+}
+
+/* Ensure content stays above the overlay */
+[data-testid="stVerticalBlock"] {
+    position: relative;
+    z-index: 1;
+}
+
 /* --- 1. CARD CONTAINER --- */
 [data-testid="stPageLink-NavLink"] {
-    background-color: #f8f9fa !important;
+    background-color: rgba(255, 255, 255, 0.9) !important; /* Made slightly transparent white */
     border: 1px solid #dee2e6 !important;
     border-radius: 10px !important;
     padding: 18px !important;
-    box-shadow: none !important;
-    transition: background-color 0.15s ease !important;
-    
-    /* Flexbox settings to center everything */
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.1) !important; /* Added subtle shadow for depth */
+    transition: all 0.2s ease !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
 }
 
-/* Hover Effect */
+/* Hover Effect - Makes it lift slightly */
 [data-testid="stPageLink-NavLink"]:hover {
-    background-color: #eef4f1 !important;
-    border-color: #ced4da !important;
+    background-color: #ffffff !important;
+    border-color: #007bff !important;
+    transform: translateY(-2px);
 }
 
-/* --- 2. TEXT STYLING INSIDE CARDS --- */
-[data-testid="stPageLink-NavLink"] p {
-    color: #212529 !important;
-    font-size: 17px !important;
-    font-weight: 600 !important;
-    margin: 0 !important;
-    line-height: 1.4 !important;
-    
-    /* Force text to center */
-    text-align: center !important;
-    width: 100% !important;
-}
-
-/* --- 3. HIDE ICONS --- */
-/* Hide the arrow icon inside the card links */
-[data-testid="stPageLink-NavLink"] svg {
-    display: none !important;
-}
-
-/* Hide the small chain/link icon next to Headers (Purpose, About, etc.) */
-[data-testid="stHeaderAction"] {
-    display: none !important;
-}
-
-/* --- 4. GENERAL LINK BUTTON STYLING --- */
-[data-testid="stLinkButton"] > a {
-    border-radius: 8px !important;
-}
+/* ... keep the rest of your CSS as it was ... */
 
 </style>
 """, unsafe_allow_html=True)
@@ -229,6 +227,7 @@ def main():
 # ==================================================
 if __name__ == "__main__":
     main()
+
 
 
 
