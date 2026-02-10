@@ -170,7 +170,7 @@ def main():
                 st.markdown("")
 
     # ------------------------- PURPOSE -------------------------
-    st.subheader("Purpose")
+    st.subheader(f'<p style="color: #E2E8F0;">'f'Purpose')
     st.markdown(
         f'<p style="color: #E2E8F0;">'
         f'MHF Civil provides transparent numerical solutions to standard civil engineering problems. '
@@ -213,6 +213,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
