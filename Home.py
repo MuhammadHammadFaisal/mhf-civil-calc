@@ -8,28 +8,26 @@ from PIL import Image
 def prepare_icon(im, final_size=64):
     x, y = im.size
     size = max(x, y)
-
-    # Create square transparent canvas
     new_im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     new_im.paste(im, ((size - x) // 2, (size - y) // 2))
-
-    # Resize to favicon friendly size
     new_im = new_im.resize((final_size, final_size), Image.LANCZOS)
     return new_im
 
 # =========================================================
 # HELPER: Resize background image automatically
 # =========================================================
-def prepare_background(path, max_width=1920, max_height=1080):
+def resize_background(path, max_width=1920, max_height=1080):
     try:
         img = Image.open(path)
-        img.thumbnail((max_width, max_height), Image.LANCZOS)  # Maintain aspect ratio
-        resized_path = "assets/blueprint.png"
-        img.save(resized_path)
-        return resized_path
+        img.thumbnail((max_width, max_height), Image.LANCZOS)  # Keep aspect ratio
+        img.save(path)  # overwrite original file
     except Exception as e:
-        st.warning(f"Background image could not be loaded: {e}")
-        return path  # fallback to original
+        st.warning(f"Could not resize background: {e}")
+
+# =========================================================
+# Resize background
+# =========================================================
+resize_background("assets/blueprint.png")
 
 # =========================================================
 # Load favicon
@@ -39,11 +37,6 @@ try:
     icon_img = prepare_icon(icon_img, 64)
 except:
     icon_img = ""
-
-# =========================================================
-# Prepare background image
-# =========================================================
-bg_path = prepare_background("assets/blueprint.png")
 
 # =========================================================
 # APP CONFIG
@@ -57,36 +50,35 @@ st.set_page_config(
 # =========================================================
 # CUSTOM CSS
 # =========================================================
-st.markdown(f"""
+st.markdown("""
 <style>
-.stApp {{
+.stApp {
     /* Gradient overlay + background image */
     background: linear-gradient(rgba(26,58,90,0.3), rgba(26,58,90,0.3)),
-                url("{bg_path}") no-repeat center center fixed;
+                url("assets/blueprint.png") no-repeat center center fixed;
     background-size: cover;
-}}
+}
 
 /* --- CARD CONTAINER --- */
-[data-testid="stPageLink-NavLink"] {{
+[data-testid="stPageLink-NavLink"] {
     background-color: #f8f9fa !important;
     border: 1px solid #dee2e6 !important;
     border-radius: 10px !important;
     padding: 18px !important;
     transition: background-color 0.15s ease !important;
-
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-}}
+}
 
 /* Hover Effect */
-[data-testid="stPageLink-NavLink"]:hover {{
+[data-testid="stPageLink-NavLink"]:hover {
     background-color: #eef4f1 !important;
     border-color: #ced4da !important;
-}}
+}
 
 /* Text styling inside cards */
-[data-testid="stPageLink-NavLink"] p {{
+[data-testid="stPageLink-NavLink"] p {
     color: #212529 !important;
     font-size: 17px !important;
     font-weight: 600 !important;
@@ -94,22 +86,22 @@ st.markdown(f"""
     line-height: 1.4 !important;
     text-align: center !important;
     width: 100% !important;
-}}
+}
 
 /* Hide arrow icon inside card */
-[data-testid="stPageLink-NavLink"] svg {{
+[data-testid="stPageLink-NavLink"] svg {
     display: none !important;
-}}
+}
 
 /* Hide header link icon */
-[data-testid="stHeaderAction"] {{
+[data-testid="stHeaderAction"] {
     display: none !important;
-}}
+}
 
 /* General link button */
-[data-testid="stLinkButton"] > a {{
+[data-testid="stLinkButton"] > a {
     border-radius: 8px !important;
-}}
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -118,7 +110,6 @@ st.markdown(f"""
 # =========================================================
 def get_active_modules():
     modules = []
-
     if os.path.exists("pages"):
         for file in os.listdir("pages"):
             if file.endswith(".py") and file != "__init__.py":
@@ -133,14 +124,12 @@ def get_active_modules():
                             modules.append((file, name.title()))
                 except Exception:
                     pass
-
     return sorted(modules, key=lambda x: x[1])
 
 # =========================================================
 # MAIN APPLICATION
 # =========================================================
 def main():
-    # HEADER
     col_logo, col_text = st.columns([1, 3], vertical_alignment="center")
 
     with col_logo:
@@ -214,7 +203,5 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-
 if __name__ == "__main__":
     main()
-
