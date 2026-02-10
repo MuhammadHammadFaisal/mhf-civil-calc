@@ -63,16 +63,16 @@ main > div:first-child {
 
 /* Force all text inside content to be the requested color */
 main > div:first-child, main > div:first-child * {
-    color: #E2E8F0 !important; /* UPDATED COLOR HERE */
+    : #E2E8F0 !important; /* UPDATED  HERE */
 }
 
 /* ===== Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
-    background-color: rgba(255,255,255,0.85) !important;
+    background-: rgba(255,255,255,0.85) !important;
     border: 1px solid #dee2e6 !important;
     border-radius: 10px !important;
     padding: 18px !important;
-    transition: background-color 0.15s ease !important;
+    transition: background- 0.15s ease !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -80,8 +80,8 @@ main > div:first-child, main > div:first-child * {
 }
 
 [data-testid="stPageLink-NavLink"]:hover {
-    background-color: rgba(255,255,255,0.95) !important;
-    border-color: #ced4da !important;
+    background-: rgba(255,255,255,0.95) !important;
+    border-: #ced4da !important;
 }
 
 /* Keep card text dark so it is readable on white background */
@@ -103,8 +103,21 @@ main > div:first-child, main > div:first-child * {
     display: none !important;
 }
 
+/* ===== Button Styling (Feedback & LinkedIn) ===== */
 [data-testid="stLinkButton"] > a {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    color: #1a3a5a !important; /* Dark blue text for contrast */
+    border: 1px solid #dee2e6 !important;
     border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stLinkButton"] > a:hover {
+    background-color: #ffffff !important;
+    border-color: #aad4ff !important;
+    box-shadow: 0 0 10px rgba(170, 212, 255, 0.5) !important;
+    color: #1a3a5a !important;
 }
 
 /* Optional: link styling */
@@ -211,6 +224,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
