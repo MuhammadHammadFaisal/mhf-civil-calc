@@ -113,12 +113,6 @@ main > div:first-child, main > div:first-child * {
     transition: all 0.2s ease !important;
 }
 
-[data-testid="stLinkButton"] > a:hover {
-    background-color: #ffffff !important;
-    border-color: #aad4ff !important;
-    box-shadow: 0 0 10px rgba(170, 212, 255, 0.5) !important;
-    color: #1a3a5a !important;
-}
 
 
 
@@ -221,6 +215,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
