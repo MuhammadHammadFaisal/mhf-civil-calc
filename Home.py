@@ -2,7 +2,9 @@ import streamlit as st
 import os
 from PIL import Image
 
-# Helper function to make image square and resize
+# =========================================================
+# HELPER: Make Image Square and Resize for Favicon
+# =========================================================
 def prepare_icon(im, final_size=64):
     x, y = im.size
     size = max(x, y)
@@ -13,17 +15,14 @@ def prepare_icon(im, final_size=64):
 
     # Resize to favicon friendly size
     new_im = new_im.resize((final_size, final_size), Image.LANCZOS)
-
     return new_im
 
-
-# Load and fix the image
+# Load favicon
 try:
     icon_img = Image.open("assets/Sticker.png").convert("RGBA")
     icon_img = prepare_icon(icon_img, 64)
 except:
     icon_img = ""
-
 
 # =========================================================
 # APP CONFIG
@@ -34,24 +33,17 @@ st.set_page_config(
     page_icon=icon_img
 )
 
-
-# ==================================================
+# =========================================================
 # CUSTOM CSS
-# ==================================================
+# =========================================================
 st.markdown("""
 <style>
-
 .stApp {
-    background: 
-        linear-gradient(rgba(26,58,90,0.88), rgba(26,58,90,0.88)),
-        url("assets/blueprint.png");
+    /* Gradient overlay + background image */
+    background: linear-gradient(rgba(26,58,90,0.3), rgba(26,58,90,0.3)),
+                url("assets/blueprint_resized.png") no-repeat center center fixed;
     background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
 }
-
-
-
 
 /* --- CARD CONTAINER --- */
 [data-testid="stPageLink-NavLink"] {
@@ -72,7 +64,7 @@ st.markdown("""
     border-color: #ced4da !important;
 }
 
-/* --- TEXT STYLING INSIDE CARDS --- */
+/* Text styling inside cards */
 [data-testid="stPageLink-NavLink"] p {
     color: #212529 !important;
     font-size: 17px !important;
@@ -97,14 +89,12 @@ st.markdown("""
 [data-testid="stLinkButton"] > a {
     border-radius: 8px !important;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
-
-# ==================================================
+# =========================================================
 # SCAN ACTIVE MODULES
-# ==================================================
+# =========================================================
 def get_active_modules():
     modules = []
 
@@ -125,12 +115,11 @@ def get_active_modules():
 
     return sorted(modules, key=lambda x: x[1])
 
-
-# ==================================================
+# =========================================================
 # MAIN APPLICATION
-# ==================================================
+# =========================================================
 def main():
-
+    # HEADER
     col_logo, col_text = st.columns([1, 3], vertical_alignment="center")
 
     with col_logo:
@@ -152,12 +141,10 @@ def main():
     # MODULES
     st.subheader("Course Modules")
     st.markdown("")
-
     modules = get_active_modules()
 
     if modules:
         cols = st.columns(3)
-
         for idx, (file, title) in enumerate(modules):
             with cols[idx % 3]:
                 st.page_link(
@@ -181,7 +168,6 @@ def main():
         "If you identify an incorrect result, unclear assumption, or missing topic, "
         "your feedback helps improve the reliability of this platform."
     )
-
     st.link_button(
         "Open Feedback Form",
         "https://docs.google.com/forms/d/e/1FAIpQLSfKtE2MK_2JZxEK4SzyjEhjdb8PKEC8-dN5az82MaIoPZzMsg/viewform",
@@ -194,7 +180,6 @@ def main():
     **Developed by Muhammad Hammad Faisal**  
     Final-Year Civil Engineering Student, METU
     """)
-
     st.link_button(
         "LinkedIn Profile",
         "https://www.linkedin.com/in/muhammad-hammad-20059a229"
@@ -211,4 +196,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
