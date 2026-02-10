@@ -54,7 +54,7 @@ st.markdown("""
 <style>
 .stApp {
     /* Gradient overlay + background image */
-    background: linear-gradient(rgba(26,58,90,0.3), rgba(26,58,90,0.3)),
+    background:
                 url("assets/blueprint.png") no-repeat center center fixed;
     background-size: cover;
 }
@@ -205,3 +205,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
