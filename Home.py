@@ -1,18 +1,15 @@
 import streamlit as st
-import os
 from PIL import Image
-import base64
-from io import BytesIO
 
 # =========================================================
-# Helper: Make Image Square and Resize for Favicon
+# Load favicon
 # =========================================================
 def prepare_icon(im_path, final_size=64):
     im = Image.open(im_path).convert("RGBA")
     x, y = im.size
     size = max(x, y)
-    new_im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    new_im.paste(im, ((size - x) // 2, (size - y) // 2))
+    new_im = Image.new("RGBA", (size, size), (0,0,0,0))
+    new_im.paste(im, ((size-x)//2, (size-y)//2))
     new_im = new_im.resize((final_size, final_size), Image.LANCZOS)
     return new_im
 
@@ -21,61 +18,29 @@ try:
 except:
     icon_img = ""
 
-# =========================================================
-# Helper: Convert image to base64 for CSS background
-# =========================================================
-def get_base64_image(path, max_size=(1920, 1080)):
-    img = Image.open(path)
-    img.thumbnail(max_size, Image.LANCZOS)
-    buffered = BytesIO()
-    img.save(buffered, format="PNG")
-    img_bytes = buffered.getvalue()
-    return base64.b64encode(img_bytes).decode()
-
-bg_base64 = get_base64_image("assets/blueprint.png")
+st.set_page_config(page_title="MHF Civil Calc", layout="wide", page_icon=icon_img)
 
 # =========================================================
-# App Config
+# CSS for blueprint-like grid background
 # =========================================================
-st.set_page_config(
-    page_title="MHF Civil Calc",
-    layout="wide",
-    page_icon=icon_img
-)
-
-# =========================================================
-# CSS with embedded background
-# =========================================================
-st.markdown(f"""
+st.markdown("""
 <style>
-.stApp {{
-    /* Gradient overlay + scrolling background */
-    background: linear-gradient(rgba(26,58,90,0.5), rgba(26,58,90,0.5)),
-                url("data:image/png;base64,{bg_base64}") no-repeat center top;
-    background-size: cover;
-    background-attachment: scroll;  /* Allow background to scroll */
-}}
+/* ===== Background ===== */
+.stApp {
+    background-color: #1a3a5a; /* base dark blue */
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+    background-position: 0 0, 0 0, 0 0, 0 0;
+    background-attachment: scroll;
+}
 
-.stApp::before {{
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(26,58,90,0.25);  /* extra dim layer behind all content */
-    z-index: 0;
-}}
-
-/* All other elements stay above background */
-main > div {{
-    position: relative;
-    z-index: 1;
-}}
-
-/* Card styles */
-[data-testid="stPageLink-NavLink"] {{
-    background-color: #f8f9fa !important;
+/* --- CARD STYLING --- */
+[data-testid="stPageLink-NavLink"] {
+    background-color: rgba(255,255,255,0.85) !important;
     border: 1px solid #dee2e6 !important;
     border-radius: 10px !important;
     padding: 18px !important;
@@ -83,14 +48,15 @@ main > div {{
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-}}
+    backdrop-filter: blur(4px);
+}
 
-[data-testid="stPageLink-NavLink"]:hover {{
-    background-color: #eef4f1 !important;
+[data-testid="stPageLink-NavLink"]:hover {
+    background-color: rgba(255,255,255,0.95) !important;
     border-color: #ced4da !important;
-}}
+}
 
-[data-testid="stPageLink-NavLink"] p {{
+[data-testid="stPageLink-NavLink"] p {
     color: #212529 !important;
     font-size: 17px !important;
     font-weight: 600 !important;
@@ -98,122 +64,24 @@ main > div {{
     line-height: 1.4 !important;
     text-align: center !important;
     width: 100% !important;
-}}
+}
 
-[data-testid="stPageLink-NavLink"] svg {{
+[data-testid="stPageLink-NavLink"] svg {
     display: none !important;
-}}
+}
 
-[data-testid="stHeaderAction"] {{
+[data-testid="stHeaderAction"] {
     display: none !important;
-}}
+}
 
-[data-testid="stLinkButton"] > a {{
+[data-testid="stLinkButton"] > a {
     border-radius: 8px !important;
-}}
+}
 </style>
 """, unsafe_allow_html=True)
 
-
 # =========================================================
-# Scan Active Modules
+# Minimal content to test
 # =========================================================
-def get_active_modules():
-    modules = []
-    if os.path.exists("pages"):
-        for file in os.listdir("pages"):
-            if file.endswith(".py") and file != "__init__.py":
-                try:
-                    with open(os.path.join("pages", file), "r", encoding="utf-8") as f:
-                        content = f.read()
-                        if "Module Under Construction" not in content:
-                            name = file.replace(".py", "").replace("_", " ").replace("-", " ")
-                            parts = name.split(" ", 1)
-                            if parts[0].isdigit():
-                                name = parts[1]
-                            modules.append((file, name.title()))
-                except Exception:
-                    pass
-    return sorted(modules, key=lambda x: x[1])
-
-# =========================================================
-# Main Application
-# =========================================================
-def main():
-    # HEADER
-    col_logo, col_text = st.columns([1, 3], vertical_alignment="center")
-
-    with col_logo:
-        st.image("assets/Sticker.png", use_container_width=True)
-
-    with col_text:
-        st.markdown("""
-        <h1 style="font-size:46px; margin-bottom:6px;">MHF Civil Calc</h1>
-        <p style="color:#ddd; font-size:18px; line-height:1.5; max-width:700px;">
-            Civil Engineering Calculation Workspace
-        </p>
-        <p style="color:#bbb; font-size:14px; max-width:700px;">
-            Verified numerical solvers aligned with standard undergraduate civil engineering coursework.
-        </p>
-        """, unsafe_allow_html=True)
-
-    st.markdown("")
-
-    # MODULES
-    st.subheader("Course Modules")
-    st.markdown("")
-    modules = get_active_modules()
-
-    if modules:
-        cols = st.columns(3)
-        for idx, (file, title) in enumerate(modules):
-            with cols[idx % 3]:
-                st.page_link(
-                    f"pages/{file}",
-                    label=title,
-                    use_container_width=True
-                )
-                st.markdown("")
-
-    # PURPOSE
-    st.subheader("Purpose")
-    st.markdown("""
-    MHF Civil provides transparent numerical solutions to standard civil engineering problems.
-    Each module follows established theory, clearly states assumptions, and presents intermediate
-    steps to support learning, verification, and exam preparation.
-    """)
-
-    # FEEDBACK
-    st.subheader("Feedback")
-    st.write(
-        "If you identify an incorrect result, unclear assumption, or missing topic, "
-        "your feedback helps improve the reliability of this platform."
-    )
-    st.link_button(
-        "Open Feedback Form",
-        "https://docs.google.com/forms/d/e/1FAIpQLSfKtE2MK_2JZxEK4SzyjEhjdb8PKEC8-dN5az82MaIoPZzMsg/viewform",
-        use_container_width=True
-    )
-
-    # ABOUT
-    st.subheader("About")
-    st.markdown("""
-    **Developed by Muhammad Hammad Faisal**  
-    Final-Year Civil Engineering Student, METU
-    """)
-    st.link_button(
-        "LinkedIn Profile",
-        "https://www.linkedin.com/in/muhammad-hammad-20059a229"
-    )
-
-    # FOOTER
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align:center; color:#aaa; font-size:12px;">
-        © 2026 MHF Civil · Ankara, Turkey
-    </div>
-    """, unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    main()
-
+st.title("MHF Civil Calc")
+st.write("This background is a clean, subtle blueprint grid that scrolls naturally!")
