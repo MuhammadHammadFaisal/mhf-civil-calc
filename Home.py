@@ -168,7 +168,7 @@ def get_active_modules():
 # =========================================================
 def main():
     # ------------------------- HEADER -------------------------
-    col_logo, col_text = st.columns([1, 3])
+    col_logo, col_text = st.columns([1.5, 3])
     with col_logo:
         # Assuming asset exists
         if "assets/logo.2.png" and os.path.exists("assets/logo.2.png"):
@@ -244,6 +244,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
