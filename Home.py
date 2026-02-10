@@ -18,7 +18,7 @@ try:
     icon_img = Image.open("assets/Sticker.png").convert("RGBA")
     icon_img = prepare_icon(icon_img, 64)
 except:
-    icon_img = "🛠️"
+    icon_img = "🛠️"  # fallback emoji
 
 # =========================================================
 # App Config
@@ -30,7 +30,7 @@ st.set_page_config(
 )
 
 # =========================================================
-# CSS Styling
+# CSS: Blueprint Background + Framed Content + Cards + Text Colors
 # =========================================================
 st.markdown("""
 <style>
@@ -38,82 +38,98 @@ st.markdown("""
 /* ===== Blueprint Background ===== */
 .stApp {
     background-color: #1a3a5a;
-    background-image:
+    background-image: 
         linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
         linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
-        radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px, 500px 500px;
+        radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px),
+        repeating-linear-gradient(
+            45deg,
+            rgba(255,255,255,0.01),
+            rgba(255,255,255,0.01) 5px,
+            transparent 5px,
+            transparent 10px
+        );
+    background-size: 
+        20px 20px,
+        20px 20px,
+        100px 100px,
+        100px 100px,
+        500px 500px,
+        100px 100px;
 }
 
-/* ===== Content Frame ===== */
-.content-frame {
+/* ===== Framed Content Area ===== */
+main > div:first-child {
     max-width: 1200px;
     margin: 30px auto;
     padding: 30px 40px;
     border: 2px solid rgba(255,255,255,0.2);
     border-radius: 12px;
-    background-color: rgba(26,58,90,0.55);
-    box-shadow: 0 0 30px rgba(0,0,0,0.25);
+    background-color: rgba(26,58,90,0.5);
+    box-shadow: 0 0 30px rgba(0,0,0,0.2);
 }
 
-.content-frame h1,
-.content-frame h2,
-.content-frame h3,
-.content-frame p,
-.content-frame li,
-.content-frame span {
-    color: #eee;
+/* ===== LOCK TEXT COLOR (LIGHT MODE FIX) ===== */
+main > div:first-child p,
+main > div:first-child h1,
+main > div:first-child h2,
+main > div:first-child h3,
+main > div:first-child h4,
+main > div:first-child h5,
+main > div:first-child li,
+main > div:first-child span,
+main > div:first-child label,
+main > div:first-child small {
+    color: #eee !important;
 }
 
-/* ===== Page Cards ===== */
+/* Links */
+main > div:first-child a {
+    color: #aad4ff !important;
+    text-decoration: none;
+}
+
+/* ===== Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
-    background-color: rgba(255,255,255,0.9) !important;
+    background-color: rgba(255,255,255,0.85) !important;
+    border: 1px solid #dee2e6 !important;
     border-radius: 10px !important;
     padding: 18px !important;
+    transition: background-color 0.15s ease !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    backdrop-filter: blur(4px);
 }
 
 [data-testid="stPageLink-NavLink"]:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    background-color: rgba(255,255,255,0.95) !important;
+    border-color: #ced4da !important;
 }
 
 [data-testid="stPageLink-NavLink"] p {
     color: #212529 !important;
     font-size: 17px !important;
     font-weight: 600 !important;
-    text-align: center !important;
     margin: 0 !important;
+    line-height: 1.4 !important;
+    text-align: center !important;
+    width: 100% !important;
 }
 
 [data-testid="stPageLink-NavLink"] svg {
     display: none !important;
 }
 
-/* ===== Hide Streamlit Icons ===== */
+/* Hide Streamlit header icons */
 [data-testid="stHeaderAction"] {
     display: none !important;
 }
 
-/* ===== Footer ===== */
-.footer {
-    margin-top: 40px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255,255,255,0.15);
-    text-align: center;
-    color: #bbb;
-    font-size: 12px;
-}
-
-/* ===== Links ===== */
-a {
-    color: #aad4ff !important;
-    text-decoration: none;
+[data-testid="stLinkButton"] > a {
+    border-radius: 8px !important;
 }
 
 </style>
@@ -141,23 +157,21 @@ def get_active_modules():
     return sorted(modules, key=lambda x: x[1])
 
 # =========================================================
-# Main App
+# Main Application
 # =========================================================
 def main():
 
-    st.markdown('<div class="content-frame">', unsafe_allow_html=True)
-
     # ---------- HEADER ----------
-    col_logo, col_text = st.columns([1, 4], vertical_alignment="center")
+    col_logo, col_text = st.columns([1, 3])
     with col_logo:
-        st.image("assets/Sticker.png", width=120)
+        st.image("assets/Sticker.png", use_container_width=True)
     with col_text:
         st.markdown("""
         <h1 style="font-size:46px; margin-bottom:6px;">MHF Civil Calc</h1>
-        <p style="font-size:18px;">
+        <p style="font-size:18px; line-height:1.5; max-width:700px;">
             Civil Engineering Calculation Workspace
         </p>
-        <p style="font-size:14px; color:#ddd;">
+        <p style="font-size:14px; color:#ddd; max-width:700px;">
             Verified numerical solvers aligned with standard undergraduate civil engineering coursework.
         </p>
         """, unsafe_allow_html=True)
@@ -166,7 +180,7 @@ def main():
     st.subheader("Course Modules")
     modules = get_active_modules()
     if modules:
-        cols = st.columns(3, gap="large")
+        cols = st.columns(3)
         for idx, (file, title) in enumerate(modules):
             with cols[idx % 3]:
                 st.page_link(
@@ -207,13 +221,12 @@ def main():
     )
 
     # ---------- FOOTER ----------
+    st.markdown("---")
     st.markdown("""
-    <div class="footer">
+    <div style="text-align:center; color:#bbb; font-size:12px;">
         © 2026 MHF Civil · Ankara, Turkey
     </div>
     """, unsafe_allow_html=True)
-
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # =========================================================
 if __name__ == "__main__":
