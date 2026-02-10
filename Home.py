@@ -178,7 +178,7 @@ def main():
 
     with col_text:
         st.markdown("""
-        <h1 style="color: #FFFFFF; font-size:46px; margin-bottom:6px;">MHF Civil Calc</h1>
+        <h1 style="color: #FFFFFF; font-size:60px; margin-bottom:6px;">MHF Civil Calc</h1>
         <p style="color: #E2E8F0; font-size:18px; line-height:1.5; max-width:700px;">
             Civil Engineering Calculation Workspace
         </p>
@@ -244,6 +244,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
