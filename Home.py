@@ -19,7 +19,7 @@ def prepare_icon(im, final_size=64):
 
 # Load and fix the image
 try:
-    icon_img = Image.open("assets/Sticker.png").convert("RGBA")
+    icon_img = Image.open("assets/logo.2.png").convert("RGBA")
     icon_img = prepare_icon(icon_img, 64)   # <-- IMPORTANT
 except:
     icon_img = ""   # fallback emoji
@@ -129,7 +129,7 @@ def main():
     col_logo, col_text = st.columns([1, 3], vertical_alignment="center")
 
     with col_logo:
-        st.image("assets/Sticker.png", use_container_width=True)
+        st.image("assets/logo.2.png", use_container_width=True)
 
     with col_text:
         st.markdown("""
@@ -229,6 +229,7 @@ def main():
 # ==================================================
 if __name__ == "__main__":
     main()
+
 
 
 
