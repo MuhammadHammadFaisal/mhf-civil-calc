@@ -157,7 +157,8 @@ def app():
     with col_input:
         st.subheader("1. System Properties")
         with st.expander("Code & Geometry", expanded=True):
-            design_code = st.selectbox("Design Code", ["TS 500 (Lecture Notes)", "ACI 318-19", "Eurocode 2"])
+            design_code = "TS 500 (Lecture Notes)"
+            st.caption("Design Standard: **TS 500 (Lecture Notes)**")
             shape = st.selectbox("Column Shape", ["Rectangular", "Square", "Circular"])
             
             trans_type = "Ties"
