@@ -202,19 +202,27 @@ def app():
         with c2: fy = st.number_input("Steel ($f_{yk}$) [MPa]", value=420.0, step=10.0)
 
         # --- C. GEOMETRY & REINFORCEMENT ---
+        # --- GEOMETRY & REINFORCEMENT ---
         with st.expander("Geometry & Configuration", expanded=True):
             shape = st.selectbox("Column Shape", ["Rectangular", "Square", "Circular"])
             
-            # THE UNIVERSAL SELECTOR
-            reinf_style = st.selectbox(
-                "Reinforcement Style",
-                [
-                    "Standard Ties (Match Shape)",  
-                    "Spiral / Circular",           
-                    "Longitudinal Only (No Ties)", 
-                    "None (Plain Concrete)"        
-                ]
+            # 1. DEFINE THE MAPPING (User Friendly Name -> Code Logic Name)
+            # This allows us to show clear names without breaking the drawing function
+            confinement_options = {
+                "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
+                "Spiral (Continuous Helix)": "Spiral / Circular",
+                "Unconfined (Longitudinal Bars Only)": "Longitudinal Only (No Ties)",
+                "Plain Concrete (No Reinforcement)": "None (Plain Concrete)"
+            }
+            
+            # 2. SHOW THE USER FRIENDLY NAMES
+            selected_label = st.selectbox(
+                "Confinement Type", 
+                list(confinement_options.keys())
             )
+            
+            # 3. CONVERT BACK TO LOGIC FOR CODE
+            reinf_style = confinement_options[selected_label]
 
         # --- D. DIMENSIONS ---
         st.markdown("**Dimensions**")
