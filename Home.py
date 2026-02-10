@@ -147,7 +147,7 @@ def main():
     with col_text:
         # Applied color: #E2E8F0 to all text elements below and fixed syntax
         st.markdown("""
-        <h1 style="color: #E2E8F0; font-size:46px; margin-bottom:6px;">MHF Civil Calc</h1>
+        <h1 style="color: #FFFFFF; font-size:46px; margin-bottom:6px;">MHF Civil Calc</h1>
         <p style="color: #E2E8F0; font-size:18px; line-height:1.5; max-width:700px;">
             Civil Engineering Calculation Workspace
         </p>
@@ -171,7 +171,7 @@ def main():
 
     # ------------------------- PURPOSE -------------------------
     st.subheader("Purpose")
-    st.markdown("""
+    st.markdown("""style="color: #E2E8F0"
     MHF Civil provides transparent numerical solutions to standard civil engineering problems.
     Each module follows established theory, clearly states assumptions, and presents intermediate
     steps to support learning, verification, and exam preparation.
@@ -210,3 +210,4 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
