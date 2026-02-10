@@ -41,14 +41,18 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-/* ===== Background ===== */
 .stApp {
-    background-color: #1a3a5a;
-    background-image: 
-        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
-    background-size: 20px 20px;
+    background: 
+        linear-gradient(rgba(26,58,90,0.88), rgba(26,58,90,0.88)),
+        url("assets/blueprint_bg.png");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 }
+
+</style>
+""", unsafe_allow_html=True)
+
 
 
 /* --- CARD CONTAINER --- */
@@ -209,4 +213,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
