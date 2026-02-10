@@ -33,58 +33,40 @@ st.set_page_config(
 # CSS: Blueprint Background + Framed Content + Cards + Text Colors
 # =========================================================
 st.markdown("""
-<style>
-/* ===== Advanced Technical Blueprint Background ===== */
+/* ===== Advanced Blueprint with Technical Details ===== */
 .stApp {
-    background-color: #041630; /* Deeper navy base */
+    background-color: #031126; /* Deeper midnight blue */
     background-image: 
-        /* 1. Fine Graph Paper Grid (10px) */
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        
-        /* 2. Primary Structural Grid (50px) */
-        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-        
-        /* 3. Major Axis Lines (250px) */
+        /* 1. Technical Arcs (Top Right & Bottom Left) */
+        radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.05) 181px, transparent 183px),
+        radial-gradient(circle at 100% 0%, transparent 240px, rgba(255,255,255,0.03) 241px, transparent 245px),
+        radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.05) 201px, transparent 203px),
+        radial-gradient(circle at 0% 100%, transparent 300px, rgba(255,255,255,0.02) 301px, transparent 305px),
+
+        /* 2. Glow Hotspots at Grid Intersections (Simulating the 'dots' in your image) */
+        radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+
+        /* 3. Major Grid Lines (Bold) */
         linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
-
-        /* 4. Drafting Compass Arcs (Top Right) */
-        radial-gradient(circle at 100% 0%, transparent 120px, rgba(255,255,255,0.04) 121px, transparent 122px),
-        radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.03) 181px, transparent 184px),
         
-        /* 5. Drafting Compass Arcs (Bottom Left) */
-        radial-gradient(circle at 0% 100%, transparent 160px, rgba(255,255,255,0.05) 161px, transparent 162px),
-        radial-gradient(circle at 0% 100%, transparent 240px, rgba(255,255,255,0.03) 241px, transparent 243px),
+        /* 4. Secondary Sub-Grid Lines */
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
 
-        /* 6. Technical Dimension Details (Simulated lines/marks) */
-        repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255,255,255,0.01) 40px, rgba(255,255,255,0.01) 41px),
-        
-        /* 7. Center Depth Lighting (The "Glow") */
-        radial-gradient(circle at center, rgba(20, 70, 140, 0.4) 0%, #041630 85%);
+        /* 5. Center Spotlight Glow */
+        radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, #031126 90%);
 
-    /* Sizing for the grids and technical layers */
-    background-size: 10px 10px, 10px 10px, 50px 50px, 50px 50px, 250px 250px, 250px 250px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+    /* Sizing for the layers */
+    background-size: 
+        100% 100%, 100% 100%, 100% 100%, 100% 100%, /* Arcs */
+        40px 40px, /* Hotspots (match the grid size) */
+        200px 200px, 200px 200px, /* Major Grid */
+        40px 40px, 40px 40px, /* Sub Grid */
+        100% 100%; /* Glow */
+    
     background-attachment: fixed;
 }
-/* ===== Framed Content Area ===== */
-main > div:first-child {
-    max-width: 1200px;
-    margin: 30px auto;
-    padding: 30px 40px;
-    border: 2px solid rgba(255,255,255,0.2);
-    border-radius: 12px;
-    background-color: rgba(26,58,90,0.5);
-    box-shadow: 0 0 30px rgba(0,0,0,0.2);
-    color: #E2E8F0 !important; /* UPDATED COLOR HERE */
-}
-
-/* Force all text inside content to be the requested color */
-main > div:first-child, main > div:first-child * {
-    : #E2E8F0 !important; /* UPDATED  HERE */
-}
-
 /* ===== Card Styling (Course Modules) ===== */
 [data-testid="stPageLink-NavLink"] {
     background-color: rgba(255, 255, 255, 0.05) !important; /* Transparent/Glassy look */
@@ -232,6 +214,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
