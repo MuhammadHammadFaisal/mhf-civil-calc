@@ -34,33 +34,10 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* App Background */
-.stApp {
-    background-color: #031126;
-    background-image: 
-        radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.05) 181px, transparent 183px),
-        radial-gradient(circle at 100% 0%, transparent 240px, rgba(255,255,255,0.03) 241px, transparent 245px),
-        radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.05) 201px, transparent 203px),
-        radial-gradient(circle at 0% 100%, transparent 300px, rgba(255,255,255,0.02) 301px, transparent 305px),
-        radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-        linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
-        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-        radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, #031126 90%);
-    background-size: 
-        100% 100%, 100% 100%, 100% 100%, 100% 100%,
-        40px 40px,
-        200px 200px, 200px 200px,
-        40px 40px, 40px 40px,
-        100% 100%;
-    background-attachment: fixed;
-}
-
 /* Card container */
 [data-testid="stPageLink-NavLink"] {
-    background-color: #f8f9fa !important;
-    border: 1px solid #dee2e6 !important;
+    background-color: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.3) !important;
     border-radius: 10px !important;
     padding: 18px !important;
     display: flex !important;
@@ -71,14 +48,14 @@ st.markdown("""
 
 /* Hover effect */
 [data-testid="stPageLink-NavLink"]:hover {
-    background-color: #eef4f1 !important;
-    border-color: #ced4da !important;
-    box-shadow: 0 0 10px rgba(0,0,0,0.05) !important;
+    background-color: rgba(255,255,255,0.15) !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 0 10px rgba(255,255,255,0.2) !important;
 }
 
 /* Text inside card */
 [data-testid="stPageLink-NavLink"] p {
-    color: #212529 !important;
+    color: #E2E8F0 !important;
     font-size: 17px !important;
     font-weight: 600 !important;
     text-align: center !important;
@@ -128,11 +105,11 @@ def main():
         st.image("assets/Sticker.png", use_container_width=True)
     with col_text:
         st.markdown("""
-        <h1 style="font-size:46px; margin-bottom:6px;">MHF Civil Calc</h1>
-        <p style="color:#555; font-size:18px; line-height:1.5; max-width:700px;">
+        <h1 style="font-size:46px; margin-bottom:6px; color:#E2E8F0;">MHF Civil Calc</h1>
+        <p style="color:#E2E8F0; font-size:18px; line-height:1.5; max-width:700px;">
             Civil Engineering Calculation Workspace
         </p>
-        <p style="color:#777; font-size:14px; max-width:700px;">
+        <p style="color:#E2E8F0; font-size:14px; max-width:700px;">
             Verified numerical solvers aligned with standard undergraduate civil engineering coursework.
         </p>
         """, unsafe_allow_html=True)
@@ -140,7 +117,7 @@ def main():
     st.markdown("")
 
     # ------------------------- MODULES -------------------------
-    st.subheader("Course Modules")
+    st.markdown('<h3 style="color:#E2E8F0;">Course Modules</h3>', unsafe_allow_html=True)
     st.markdown("")
     modules = get_active_modules()
     if modules:
@@ -151,20 +128,19 @@ def main():
                 st.markdown("")
 
     # ------------------------- PURPOSE -------------------------
-    st.markdown("")
-    st.subheader("Purpose")
+    st.markdown('<h3 style="color:#E2E8F0;">Purpose</h3>', unsafe_allow_html=True)
     st.markdown("""
-    MHF Civil provides transparent numerical solutions to standard civil engineering problems.
-    Each module follows established theory, clearly states assumptions, and presents intermediate
-    steps to support learning, verification, and exam preparation.
-    """)
+    <p style="color:#E2E8F0;">
+        MHF Civil provides transparent numerical solutions to standard civil engineering problems.
+        Each module follows established theory, clearly states assumptions, and presents intermediate
+        steps to support learning, verification, and exam preparation.
+    </p>
+    """, unsafe_allow_html=True)
 
     # ------------------------- FEEDBACK + LINKEDIN -------------------------
-    st.markdown("")
-    st.subheader("Feedback & Connect")
+    st.markdown('<h3 style="color:#E2E8F0;">Feedback & Connect</h3>', unsafe_allow_html=True)
     st.markdown("")
 
-    # Display side by side like cards
     col1, col2 = st.columns(2)
     with col1:
         st.page_link(
@@ -182,7 +158,7 @@ def main():
     # ------------------------- FOOTER -------------------------
     st.markdown("---")
     st.markdown("""
-    <div style="text-align:center; color:#777; font-size:12px;">
+    <div style="text-align:center; color:#E2E8F0; font-size:12px;">
         © 2026 MHF Civil · Ankara, Turkey
     </div>
     """, unsafe_allow_html=True)
@@ -190,4 +166,3 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
-
