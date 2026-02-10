@@ -97,7 +97,6 @@ st.set_page_config(
 # =========================================================
 # CSS: Blueprint Background + Framed Content + Cards + Text Colors
 # =========================================================
-st.markdown("""
 /* ===== Advanced Blueprint with Technical Details ===== */
 .stApp {
     background-color: #031126; /* Deeper midnight blue */
@@ -503,6 +502,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
