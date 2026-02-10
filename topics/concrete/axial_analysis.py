@@ -328,27 +328,37 @@ def app():
         else:
             chk_col2.error("❌ Too High! (Code Max = 4%)")
 
-        # --- STEP 2: UNCONFINED CAPACITY ---
+       # --- STEP 2: UNCONFINED CAPACITY ---
         st.markdown("#### 2. Unconfined Axial Capacity ($N_{or}$)")
-        st.info("This is the capacity when the concrete shell is still intact.")
+        st.info("The total load is shared between the concrete area and the steel bars.")
 
-        # Breakdown Forces
+        # Calculate Forces
         Force_conc = 0.85 * fcd * (Ag - Ast)
         Force_steel = Ast * fyd
         Nor1 = Force_conc + Force_steel
 
-        # Display as "Force Components"
+        # DISPLAY BREAKDOWN (Explicitly written out)
         f1, f2 = st.columns(2)
-        f1.metric("Concrete Contribution", f"{Force_conc/1000:,.0f} kN", help="0.85 * fcd * (Ag - Ast)")
-        f2.metric("Steel Contribution", f"{Force_steel/1000:,.0f} kN", help="Ast * fyd")
         
-        st.markdown("**Total Unconfined Capacity:**")
-        st.latex(r"N_{or} = F_{conc} + F_{steel}")
-        st.latex(fr"N_{{or}} = {Force_conc/1000:.0f} + {Force_steel/1000:.0f} = \mathbf{{{Nor1/1000:.0f} \text{{ kN}}}}")
+        with f1:
+            st.metric("Concrete Contribution ($F_c$)", f"{Force_conc/1000:,.0f} kN")
+            # Show the formula and substitution clearly below the number
+            st.latex(r"F_c = 0.85 f_{cd} (A_g - A_{st})")
+            st.caption(f"$0.85 \cdot {fcd:.1f} \cdot ({Ag:.0f} - {Ast:.0f})$")
+            
+        with f2:
+            st.metric("Steel Contribution ($F_s$)", f"{Force_steel/1000:,.0f} kN")
+            # Show the formula and substitution clearly below the number
+            st.latex(r"F_s = A_{st} f_{yd}")
+            st.caption(f"${Ast:.0f} \cdot {fyd:.1f}$")
+        
+        # Total Sum
+        st.markdown("---")
+        st.markdown("**Total Capacity Summation:**")
+        st.latex(fr"N_{{or}} = F_c + F_s = {Force_conc/1000:.0f} + {Force_steel/1000:.0f} = \mathbf{{{Nor1/1000:.0f} \text{{ kN}}}}")
 
         graph_N1 = Nor1 / 1000
         graph_N2 = 0
-
         # --- STEP 3: CONFINED CAPACITY (IF SPIRAL) ---
         if "Spiral" in reinf_style:
             st.markdown("#### 3. Confined Core Capacity ($N_{or2}$)")
