@@ -18,7 +18,7 @@ try:
     icon_img = Image.open("assets/Sticker.png").convert("RGBA")
     icon_img = prepare_icon(icon_img, 64)
 except:
-    icon_img = "🛠️"  # fallback emoji
+    icon_img = "🛠️"
 
 # =========================================================
 # App Config
@@ -30,34 +30,29 @@ st.set_page_config(
 )
 
 # =========================================================
-# CSS: Blueprint Background + Framed Content + Cards + Text Colors
+# CSS: Instagram Blueprint Style Background
 # =========================================================
 st.markdown("""
 <style>
 
-/* ===== Blueprint Background ===== */
+/* ===== INSTAGRAM BLUEPRINT BACKGROUND ===== */
 .stApp {
-    background-color: #1a3a5a;
-    background-image: 
-        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
-        radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px),
-        repeating-linear-gradient(
-            45deg,
-            rgba(255,255,255,0.01),
-            rgba(255,255,255,0.01) 5px,
-            transparent 5px,
-            transparent 10px
-        );
-    background-size: 
-        20px 20px,
-        20px 20px,
-        100px 100px,
-        100px 100px,
-        500px 500px,
-        100px 100px;
+    background-color: #0b2a45;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+        radial-gradient(circle at 85% 15%, rgba(255,255,255,0.08), transparent 35%),
+        radial-gradient(circle at 15% 85%, rgba(255,255,255,0.08), transparent 35%);
+    background-size:
+        24px 24px,
+        24px 24px,
+        120px 120px,
+        120px 120px,
+        100% 100%,
+        100% 100%;
+    background-attachment: fixed;
 }
 
 /* ===== Framed Content Area ===== */
@@ -65,65 +60,54 @@ main > div:first-child {
     max-width: 1200px;
     margin: 30px auto;
     padding: 30px 40px;
-    border: 2px solid rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.18);
     border-radius: 12px;
-    background-color: rgba(26,58,90,0.5);
-    box-shadow: 0 0 30px rgba(0,0,0,0.2);
+    background-color: rgba(11,42,69,0.55);
+    box-shadow: 0 0 35px rgba(0,0,0,0.35);
 }
 
-/* ===== LOCK TEXT COLOR (LIGHT MODE FIX) ===== */
-main > div:first-child p,
-main > div:first-child h1,
-main > div:first-child h2,
-main > div:first-child h3,
-main > div:first-child h4,
-main > div:first-child h5,
-main > div:first-child li,
-main > div:first-child span,
-main > div:first-child label,
-main > div:first-child small {
-    color: #eee !important;
+/* ===== FORCE TEXT COLOR (LIGHT MODE SAFE) ===== */
+h1, h2, h3, h4, h5, h6,
+p, li, span, label {
+    color: #eef3f8 !important;
 }
 
 /* Links */
-main > div:first-child a {
-    color: #aad4ff !important;
+a {
+    color: #a8d6ff !important;
     text-decoration: none;
 }
 
-/* ===== Card Styling ===== */
+/* ===== Module Cards ===== */
 [data-testid="stPageLink-NavLink"] {
-    background-color: rgba(255,255,255,0.85) !important;
-    border: 1px solid #dee2e6 !important;
+    background-color: rgba(255,255,255,0.9) !important;
     border-radius: 10px !important;
     padding: 18px !important;
-    transition: background-color 0.15s ease !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(6px);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 [data-testid="stPageLink-NavLink"]:hover {
-    background-color: rgba(255,255,255,0.95) !important;
-    border-color: #ced4da !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
 [data-testid="stPageLink-NavLink"] p {
-    color: #212529 !important;
+    color: #1f2d3a !important;
     font-size: 17px !important;
     font-weight: 600 !important;
-    margin: 0 !important;
-    line-height: 1.4 !important;
     text-align: center !important;
-    width: 100% !important;
+    margin: 0 !important;
 }
 
 [data-testid="stPageLink-NavLink"] svg {
     display: none !important;
 }
 
-/* Hide Streamlit header icons */
+/* Hide Streamlit icons */
 [data-testid="stHeaderAction"] {
     display: none !important;
 }
@@ -171,7 +155,7 @@ def main():
         <p style="font-size:18px; line-height:1.5; max-width:700px;">
             Civil Engineering Calculation Workspace
         </p>
-        <p style="font-size:14px; color:#ddd; max-width:700px;">
+        <p style="font-size:14px; max-width:700px;">
             Verified numerical solvers aligned with standard undergraduate civil engineering coursework.
         </p>
         """, unsafe_allow_html=True)
@@ -215,15 +199,11 @@ def main():
     **Developed by Muhammad Hammad Faisal**  
     Final-Year Civil Engineering Student, METU
     """)
-    st.link_button(
-        "LinkedIn Profile",
-        "https://www.linkedin.com/in/muhammad-hammad-20059a229"
-    )
 
     # ---------- FOOTER ----------
     st.markdown("---")
     st.markdown("""
-    <div style="text-align:center; color:#bbb; font-size:12px;">
+    <div style="text-align:center; color:#bcd4e6; font-size:12px;">
         © 2026 MHF Civil · Ankara, Turkey
     </div>
     """, unsafe_allow_html=True)
