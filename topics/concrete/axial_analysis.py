@@ -242,55 +242,43 @@ def app():
             Ag = np.pi * D**2 / 4; dims = (D,)
 
         # --- E. REINFORCEMENT DETAILS ---
-       # --- REINFORCEMENT INPUTS (FIXED) ---
-        # Initialize defaults to prevent calculation crashes
-        Ast = 0
-        num_bars = 0
-        bar_dia = 0
-        spiral_dia = 0
-        spiral_spacing = 0
-        
-        # 1. LONGITUDINAL BARS (Vertical Steel)
+       # --- REINFORCEMENT INPUTS (NO ASSUMPTIONS) ---
+        Ast = 0; num_bars = 0; bar_dia = 0
+        spiral_dia = 0; spiral_spacing = 0; core_diameter_input = 0 # Initialize
+
         if "None" not in reinf_style:
             st.markdown("##### Longitudinal Reinforcement")
             rc1, rc2 = st.columns(2)
-            with rc1: bar_dia = st.number_input("Bar Diameter ($d_b$)", value=16.0, step=2.0)
+            with rc1: bar_dia = st.number_input("Bar Diameter ($d_b$)", value=16.0)
             with rc2: num_bars = st.number_input("Number of Bars", value=8, min_value=4)
             Ast = num_bars * np.pi * (bar_dia / 2) ** 2
-        
-        # 2. CONFINEMENT (Ties or Spirals)
-        # Check if the user selected a Spiral type
-        if "Spiral" in reinf_style:
-            st.markdown("##### Spiral Confinement Settings")
-            st.info("🌀 Hybrid/Spiral Mode Active")
             
-            sc1, sc2 = st.columns(2)
-            with sc1: 
-                spiral_dia = st.number_input("Spiral Bar Dia ($\phi$)", value=10.0, step=2.0)
-            with sc2: 
-                spiral_spacing = st.number_input("Spiral Spacing ($s$)", value=50.0, step=10.0)
-
-            # --- VITAL: Show the Calculated Cage Diameter ---
-            # This explains where the "Confinement Diameter" comes from
-            if shape == "Circular":
-                calc_core_diam = dims[0] - 2*cover
-            else:
-                # For Rect/Square, spiral fits in smallest dimension
-                calc_core_diam = min(dims[0], dims[1]) - 2*cover
-            
-            st.caption(f"📏 **Calculated Spiral Cage Diameter:** {calc_core_diam:.0f} mm (derived from Width - 2*Cover)")
+            # --- CONFINEMENT (SPIRAL) ---
+            if "Spiral" in reinf_style:
+                st.markdown("##### Spiral Confinement Settings")
+                st.info("🌀 Hybrid/Spiral Mode Active")
+                
+                sc1, sc2, sc3 = st.columns(3)
+                with sc1: 
+                    spiral_dia = st.number_input("Spiral Bar $\phi$", value=10.0)
+                with sc2: 
+                    spiral_spacing = st.number_input("Spiral Spacing $s$", value=50.0)
+                with sc3:
+                    # NO ASSUMPTIONS: User must define the core size
+                    # Default is suggested (Width - 2*Cover), but user can change it
+                    default_core = 0.0
+                    if shape == "Circular": default_core = dims[0] - 2*cover
+                    else: default_core = min(dims[0], dims[1]) - 2*cover
+                    
+                    core_diameter_input = st.number_input(
+                        "Core Diam ($D_{k}$)", 
+                        value=default_core,
+                        help="Outer diameter of the spiral ring. Usually Column Width - 2*Cover."
+                    )
 
         # Map to calculation variable safely
         trans_type = "Ties"
-        if "Spiral" in reinf_style: 
-            trans_type = "Spiral"
-        # --- MAP TO CALCULATION VARIABLES ---
-        trans_type = "Ties" # Default
-        if "Spiral" in reinf_style: 
-            trans_type = "Spiral"
-        elif "Longitudinal" in reinf_style or "None" in reinf_style:
-            trans_type = "None" # Used to skip tie drawing logic if needed
-
+        if "Spiral" in reinf_style: trans_type = "Spiral"
     # --- VISUALIZATION COLUMN ---
     with col_viz:
         st.subheader("2. Visualization")
