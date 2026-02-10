@@ -255,7 +255,8 @@ with col_viz:
         fig1 = draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, True, cover)
         st.pyplot(fig1, use_container_width=True)
         st.caption(f"**Section Data:** $A_g = {Ag:,.0f}$ mm², $\\rho = {(Ast/Ag)*100:.2f}\\%$")
-    st.markdown("---")
+    
+st.markdown("---")
 
     # ======================================
     # 4. CALCULATION REPORT
