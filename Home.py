@@ -36,19 +36,32 @@ st.markdown("""
 <style>
 /* ===== Blueprint Background ===== */
 .stApp {
-    background-color: #1a3a5a;
+    background-color: #031126;
     background-image: 
-        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
-        radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px),
-        repeating-linear-gradient(45deg, rgba(255,255,255,0.01), rgba(255,255,255,0.01) 5px, transparent 5px, transparent 10px);
-    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px, 500px 500px, 100px 100px;
-    background-position: 0 0, 0 0, 0 0, 0 0, center center, 0 0;
-    background-attachment: scroll;
-}
+        /* 1. Technical Arcs */
+        radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.05) 181px, transparent 183px),
+        radial-gradient(circle at 100% 0%, transparent 240px, rgba(255,255,255,0.03) 241px, transparent 245px),
+        radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.05) 201px, transparent 203px),
+        radial-gradient(circle at 0% 100%, transparent 300px, rgba(255,255,255,0.02) 301px, transparent 305px),
+        /* 2. Glow Hotspots */
+        radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+        /* 3. Major Grid */
+        linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+        /* 4. Sub Grid */
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        /* 5. Center Glow */
+        radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, #031126 90%);
 
+    background-size: 
+        100% 100%, 100% 100%, 100% 100%, 100% 100%, 
+        40px 40px, 
+        200px 200px, 200px 200px, 
+        40px 40px, 40px 40px, 
+        100% 100%;
+    background-attachment: fixed;
+}
 /* ===== Framed Content Area ===== */
 main > div:first-child {
     max-width: 1200px;
@@ -231,3 +244,4 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
