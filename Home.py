@@ -171,11 +171,14 @@ def main():
 
     # ------------------------- PURPOSE -------------------------
     st.subheader("Purpose")
-    st.markdown("""style="color: #E2E8F0"
-    MHF Civil provides transparent numerical solutions to standard civil engineering problems.
-    Each module follows established theory, clearly states assumptions, and presents intermediate
-    steps to support learning, verification, and exam preparation.
-    """)
+   st.markdown(
+    f'<p style="color: #E2E8F0;">'
+    f'MHF Civil provides transparent numerical solutions to standard civil engineering problems. '
+    f'Each module follows established theory, clearly states assumptions, and presents intermediate '
+    f'steps to support learning, verification, and exam preparation.'
+    f'</p>', 
+    unsafe_allow_html=True
+)
 
     # ------------------------- FEEDBACK -------------------------
     st.subheader("Feedback")
@@ -210,4 +213,5 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
