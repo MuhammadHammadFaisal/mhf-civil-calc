@@ -46,7 +46,7 @@ st.markdown("""
     background-color: #1a3a5a;
     background-image: 
         linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
     background-size: 20px 20px;
 }
 
@@ -209,3 +209,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
