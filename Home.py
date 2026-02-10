@@ -17,12 +17,33 @@ def prepare_icon(im, final_size=64):
     new_im = new_im.resize((final_size, final_size), Image.LANCZOS)
     return new_im
 
+# =========================================================
+# HELPER: Resize background image automatically
+# =========================================================
+def prepare_background(path, max_width=1920, max_height=1080):
+    try:
+        img = Image.open(path)
+        img.thumbnail((max_width, max_height), Image.LANCZOS)  # Maintain aspect ratio
+        resized_path = "assets/blueprint_resized.png"
+        img.save(resized_path)
+        return resized_path
+    except Exception as e:
+        st.warning(f"Background image could not be loaded: {e}")
+        return path  # fallback to original
+
+# =========================================================
 # Load favicon
+# =========================================================
 try:
     icon_img = Image.open("assets/Sticker.png").convert("RGBA")
     icon_img = prepare_icon(icon_img, 64)
 except:
     icon_img = ""
+
+# =========================================================
+# Prepare background image
+# =========================================================
+bg_path = prepare_background("assets/blueprint.png")
 
 # =========================================================
 # APP CONFIG
@@ -36,17 +57,17 @@ st.set_page_config(
 # =========================================================
 # CUSTOM CSS
 # =========================================================
-st.markdown("""
+st.markdown(f"""
 <style>
-.stApp {
+.stApp {{
     /* Gradient overlay + background image */
     background: linear-gradient(rgba(26,58,90,0.3), rgba(26,58,90,0.3)),
-                url("assets/blueprint_resized.png") no-repeat center center fixed;
+                url("{bg_path}") no-repeat center center fixed;
     background-size: cover;
-}
+}}
 
 /* --- CARD CONTAINER --- */
-[data-testid="stPageLink-NavLink"] {
+[data-testid="stPageLink-NavLink"] {{
     background-color: #f8f9fa !important;
     border: 1px solid #dee2e6 !important;
     border-radius: 10px !important;
@@ -56,16 +77,16 @@ st.markdown("""
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-}
+}}
 
 /* Hover Effect */
-[data-testid="stPageLink-NavLink"]:hover {
+[data-testid="stPageLink-NavLink"]:hover {{
     background-color: #eef4f1 !important;
     border-color: #ced4da !important;
-}
+}}
 
 /* Text styling inside cards */
-[data-testid="stPageLink-NavLink"] p {
+[data-testid="stPageLink-NavLink"] p {{
     color: #212529 !important;
     font-size: 17px !important;
     font-weight: 600 !important;
@@ -73,22 +94,22 @@ st.markdown("""
     line-height: 1.4 !important;
     text-align: center !important;
     width: 100% !important;
-}
+}}
 
 /* Hide arrow icon inside card */
-[data-testid="stPageLink-NavLink"] svg {
+[data-testid="stPageLink-NavLink"] svg {{
     display: none !important;
-}
+}}
 
 /* Hide header link icon */
-[data-testid="stHeaderAction"] {
+[data-testid="stHeaderAction"] {{
     display: none !important;
-}
+}}
 
 /* General link button */
-[data-testid="stLinkButton"] > a {
+[data-testid="stLinkButton"] > a {{
     border-radius: 8px !important;
-}
+}}
 </style>
 """, unsafe_allow_html=True)
 
