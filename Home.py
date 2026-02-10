@@ -36,17 +36,20 @@ st.markdown("""
 <style>
 /* ===== Blueprint Background ===== */
 .stApp {
-    background-color: #1a3a5a;
+    background-color: #051937; /* Darker navy base */
     background-image: 
-        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
-        radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px),
-        repeating-linear-gradient(45deg, rgba(255,255,255,0.01), rgba(255,255,255,0.01) 5px, transparent 5px, transparent 10px);
-    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px, 500px 500px, 100px 100px;
-    background-position: 0 0, 0 0, 0 0, 0 0, center center, 0 0;
-    background-attachment: scroll;
+        /* Secondary finer grid */
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        /* Primary bold grid */
+        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        /* Center Glow / Vignette */
+        radial-gradient(circle at center, rgba(30, 80, 150, 0.4) 0%, #051937 80%);
+    
+    /* Grid sizing: Small squares (20px) and large squares (100px) */
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px, 100% 100%;
+    background-attachment: fixed;
 }
 
 /* ===== Framed Content Area ===== */
@@ -213,6 +216,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
