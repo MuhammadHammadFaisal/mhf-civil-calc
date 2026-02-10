@@ -41,49 +41,74 @@ def distribute_bars_rectangular(b, h, cover, num_bars):
     return positions
 
 def draw_cross_section(shape, dims, num_bars, bar_dia, trans_type, show_ties, cover):
-    fig, ax = plt.subplots(figsize=(4, 4))
+    # Professional Setup
+    fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
     bar_r = bar_dia / 2
-    draw_cover = cover
-    
-    fig.patch.set_alpha(0); ax.patch.set_alpha(0)
+    fig.patch.set_alpha(0)
+    ax.patch.set_alpha(0)
 
+    # 1. DRAW CONCRETE SHAPE (Outer Boundary)
     if shape in ["Rectangular", "Square"]:
         b, h = dims
-        ax.add_patch(patches.Rectangle((0, 0), b, h, fill=True, facecolor='#e0e0e0', edgecolor='black', linewidth=2))
+        # Draw the gray concrete box
+        ax.add_patch(patches.Rectangle((0, 0), b, h, fill=True, 
+                                     facecolor='#e0e0e0', edgecolor='black', linewidth=2))
         ax.set_xlim(-50, b + 50); ax.set_ylim(-50, h + 50)
+        center_x, center_y = b / 2, h / 2
         
-        if num_bars > 0:
-            positions = distribute_bars_rectangular(b, h, draw_cover + bar_r, num_bars)
-            if show_ties:
-                tie_inset = draw_cover 
-                ax.add_patch(patches.Rectangle((tie_inset, tie_inset), b-2*tie_inset, h-2*tie_inset, fill=False, edgecolor='#555', linewidth=1.5, linestyle='--'))
-            for x, y in positions: ax.add_patch(patches.Circle((x, y), bar_r, color="#d32f2f", zorder=10))
+        # KEY CHANGE: Decide how to place bars based on Confinement Type
+        if trans_type == "Spiral":
+            # --- HYBRID CASE: Rectangle Shape + Circular Spiral ---
+            # Max diameter fits in the smallest dimension
+            max_d = min(b, h)
+            D_spiral = max_d - 2*cover
+            r_spiral = D_spiral / 2
             
-    else:  # Circular
+            # Draw Spiral Tie (Circle inside Rectangle)
+            if show_ties:
+                ax.add_patch(patches.Circle((center_x, center_y), r_spiral, fill=False, 
+                                          edgecolor='#555', linewidth=1.5, linestyle='-'))
+
+            # Draw Bars in a Circle
+            r_bars = r_spiral - bar_r 
+            angles = np.linspace(0, 2 * np.pi, num_bars, endpoint=False)
+            # Rotate first bar to be at top (looks better in square)
+            angles += np.pi / 2 
+            positions = [(center_x + r_bars * np.cos(a), center_y + r_bars * np.sin(a)) for a in angles]
+
+        else:
+            # --- STANDARD CASE: Rectangle Shape + Rectangular Ties ---
+            positions = distribute_bars_rectangular(b, h, cover + bar_r, num_bars)
+            if show_ties:
+                tie_inset = cover 
+                ax.add_patch(patches.Rectangle((tie_inset, tie_inset), b-2*tie_inset, h-2*tie_inset, 
+                                             fill=False, edgecolor='#555', linewidth=1.5, linestyle='--'))
+
+    else:  # Circular Column
         D = dims[0]
-        cx, cy = D / 2, D / 2
-        ax.add_patch(patches.Circle((cx, cy), D/2, fill=True, facecolor='#e0e0e0', edgecolor='black', linewidth=2))
-        
-        if trans_type == "Spiral" and show_ties:
-             # Spiral calculation usually uses centerline, but visualization looks better with slight inset
-             # We assume spiral diameter is small relative to D
-             spiral_dia_viz = 10 # approximate for drawing
-             core_D = D - 2*draw_cover
-             ax.add_patch(patches.Circle((cx, cy), core_D/2, fill=False, edgecolor='#999', linestyle=':', label="Core Limit"))
-        
+        center_x, center_y = D / 2, D / 2
+        ax.add_patch(patches.Circle((center_x, center_y), D/2, fill=True, 
+                                  facecolor='#e0e0e0', edgecolor='black', linewidth=2))
         ax.set_xlim(-50, D + 50); ax.set_ylim(-50, D + 50)
         
+        # Circular bars for circular column
         if num_bars > 0:
             angles = np.linspace(0, 2 * np.pi, num_bars, endpoint=False)
-            r_bars = D/2 - draw_cover - bar_r
-            positions = [(cx + r_bars * np.cos(a), cy + r_bars * np.sin(a)) for a in angles]
+            r_bars = D/2 - cover - bar_r
+            positions = [(center_x + r_bars * np.cos(a), center_y + r_bars * np.sin(a)) for a in angles]
             if show_ties:
                 linestyle = '-' if trans_type == "Spiral" else '--'
-                r_tie = D/2 - draw_cover
-                ax.add_patch(patches.Circle((cx, cy), r_tie, fill=False, edgecolor='#555', linewidth=1.5, linestyle=linestyle))
-            for x, y in positions: ax.add_patch(patches.Circle((x, y), bar_r, color="#d32f2f", zorder=10))
+                r_tie = D/2 - cover
+                ax.add_patch(patches.Circle((center_x, center_y), r_tie, fill=False, 
+                                          edgecolor='#555', linewidth=1.5, linestyle=linestyle))
 
-    ax.set_aspect("equal"); ax.axis("off")
+    # 2. DRAW THE BARS (Common for all)
+    if num_bars > 0:
+        for x, y in positions: 
+            ax.add_patch(patches.Circle((x, y), bar_r, color='#d32f2f', zorder=10))
+
+    ax.set_aspect("equal")
+    ax.axis("off")
     return fig
 
 # ======================================
@@ -156,50 +181,69 @@ def app():
 
     with col_input:
         st.subheader("1. System Properties")
-        with st.expander("Code & Geometry", expanded=True):
-            design_code = st.selectbox("Design Code", ["TS 500 (Lecture Notes)", "ACI 318-19", "Eurocode 2"])
+        
+        # --- A. DESIGN CODE (HIDDEN / HARDCODED) ---
+        # User only sees the geometry, but code is locked to TS 500
+        design_code = "TS 500 (Lecture Notes)" 
+        # Optional: Add a small badge so they know the standard is active
+        st.caption("Standard: **TS 500**") 
+
+        # --- B. GEOMETRY ---
+        with st.expander("Geometry & Confinement", expanded=True):
             shape = st.selectbox("Column Shape", ["Rectangular", "Square", "Circular"])
             
-            trans_type = "Ties"
+            # --- CONFINEMENT LOGIC (THE REQUESTED EDIT) ---
             if shape == "Circular":
-                trans_type = st.radio("Confinement", ["Circular Ties", "Spiral"])
+                # Circular columns are automatically Spiral (per your request)
+                trans_type = "Spiral"
+                st.write("**Confinement:** Spiral (Automatic)")
+            else:
+                # Rectangular columns now have the OPTION
+                trans_type = st.radio("Confinement Type", ["Ties (Standard)", "Spiral (Circular Core)"])
+                # Clean up the string for calculation logic
+                if "Spiral" in trans_type: trans_type = "Spiral"
+                else: trans_type = "Ties"
 
-        st.markdown("**Materials**")
-        c1, c2 = st.columns(2)
-        with c1: fc = st.number_input("Concrete ($f_{ck}$/$f'_c$) [MPa]", value=20.0, step=5.0)
-        with c2: fy = st.number_input("Steel ($f_{yk}$/$f_y$) [MPa]", value=420.0, step=10.0)
-
+        # --- C. DIMENSIONS ---
         st.markdown("**Dimensions**")
         cover = st.number_input("Cover [mm]", value=25.0)
         
         Ag = 0; dims = (0,0)
+        
+        # If Spiral in Rectangle, we need to track the Core Diameter specifically
+        spiral_core_diameter = 0 
+
         if shape == "Rectangular":
             cc1, cc2 = st.columns(2)
             with cc1: b = st.number_input("Width (b) [mm]", value=300.0)
             with cc2: h = st.number_input("Depth (h) [mm]", value=400.0)
             Ag = b*h; dims = (b, h)
+            # Core diameter is limited by the smaller side
+            spiral_core_diameter = min(b, h) 
+
         elif shape == "Square":
             a = st.number_input("Side (a) [mm]", value=350.0)
             Ag = a**2; dims = (a, a)
-        else: 
+            spiral_core_diameter = a
+
+        else: # Circular
             D = st.number_input("Diameter (D) [mm]", value=300.0)
             Ag = np.pi * D**2 / 4; dims = (D,)
+            spiral_core_diameter = D
 
-        st.markdown("**Longitudinal Reinforcement**")
+        # --- D. REINFORCEMENT ---
+        st.markdown("**Reinforcement**")
         rc1, rc2 = st.columns(2)
         with rc1: bar_dia = st.number_input("Bar Dia [mm]", value=16.0, step=2.0)
         with rc2: num_bars = st.number_input("Total Bars", value=8, min_value=4)
         Ast = num_bars * np.pi * (bar_dia / 2) ** 2
         
-        # Spiral Inputs
-        spiral_dia = 8.0
-        spiral_spacing = 80.0
-        if "TS 500" in design_code and trans_type == "Spiral":
-            st.markdown("**Spiral Reinforcement**")
+        # Show Spiral Inputs ONLY if "Spiral" is active (for ANY shape)
+        if trans_type == "Spiral":
+            st.info(" Spiral Settings Active")
             sc1, sc2 = st.columns(2)
             with sc1: spiral_dia = st.number_input("Spiral $\phi$ [mm]", value=8.0)
-            with sc2: spiral_spacing = st.number_input("Spacing (s) [mm]", value=80.0)
-
+            with sc2: spiral_spacing = st.number_input("Spacing (s) [mm]", value=50.0) # Lower default for spirals
     with col_viz:
         st.subheader("2. Visualization")
         fig1 = draw_cross_section(shape, dims, num_bars, bar_dia, trans_type, True, cover)
@@ -263,8 +307,16 @@ def app():
                 st.markdown("---")
                 st.markdown("### Peak 2: Confined Capacity ($N_{or2}$)")
                 
-                # --- FIXED VARIABLES HERE ---
-                D_col = dims[0]
+                # --- CALCULATION UPDATE FOR HYBRID SHAPE ---
+                if shape == "Circular":
+                    D_col = dims[0]
+                else:
+                    # If Rectangular, the spiral is limited by the smaller dimension
+                    D_col = min(dims[0], dims[1])
+
+                # Now calculate core dimensions based on this effective D_col
+                d_core_outer = D_col - 2*cover
+                d_core_center = D_col - 2*(cover + spiral_dia/2)
                 d_core_outer = D_col - 2*cover
                 d_core_center = D_col - 2*(cover + spiral_dia/2)
                 
