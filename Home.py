@@ -120,11 +120,8 @@ main > div:first-child, main > div:first-child * {
     color: #1a3a5a !important;
 }
 
-/* Optional: link styling */
-a {
-    color: #aad4ff !important;
-    text-decoration: none;
-}
+
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -224,6 +221,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
