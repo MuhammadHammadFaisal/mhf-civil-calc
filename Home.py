@@ -34,22 +34,21 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Blueprint Background ===== */
+/* ===== Detailed Blueprint Background ===== */
 .stApp {
-    background-color: #051937; /* Darker navy base */
+    background-color: #051937; 
     background-image: 
-        /* Secondary finer grid */
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        /* Primary bold grid */
-        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-        /* Center Glow / Vignette */
-        radial-gradient(circle at center, rgba(30, 80, 150, 0.4) 0%, #051937 80%);
+        /* Layer 1: The major grid */
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        /* Layer 2: The center glow and technical details */
+        radial-gradient(circle at center, rgba(30, 80, 150, 0.2) 0%, #051937 100%),
+        url("https://your-image-host.com/blueprint_details.png"); /* Use your uploaded image here */
     
-    /* Grid sizing: Small squares (20px) and large squares (100px) */
-    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px, 100% 100%;
+    background-size: 100px 100px, 100px 100px, 100% 100%, cover;
+    background-position: center;
     background-attachment: fixed;
+    background-blend-mode: screen; /* This blends the grid over the image details */
 }
 
 /* ===== Framed Content Area ===== */
@@ -216,6 +215,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
