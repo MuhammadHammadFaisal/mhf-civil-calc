@@ -19,7 +19,7 @@ except:
     icon_img = "🏗️" # Fallback emoji if image is missing
 
 # =========================================================
-# APP CONFIG (MUST BE FIRST)
+# APP CONFIG
 # =========================================================
 st.set_page_config(
     page_title="MHF Civil Calc",
@@ -28,7 +28,7 @@ st.set_page_config(
 )
 
 # ==================================================
-# CUSTOM CSS (Combined into one block)
+# CUSTOM CSS
 # ==================================================
 st.markdown("""
 <style>
