@@ -36,39 +36,54 @@ st.markdown("""
 <style>
 /* ===== Blueprint Background with Side Borders ===== */
 .stApp {
-    background-color: #031126; /* Maintained your original color */
+    background-color: #031126; /* Deep Navy Base */
     background-image: 
-        /* 1. NEW: Side Border Lines (Left & Right Margins) */
-        linear-gradient(90deg, transparent 40px, rgba(255, 255, 255, 0.4) 41px, transparent 42px), /* Left Line */
-        linear-gradient(-90deg, transparent 40px, rgba(255, 255, 255, 0.4) 41px, transparent 42px), /* Right Line */
+        /* 1. Side Borders (Margins remain fixed at 40px) */
+        linear-gradient(90deg, transparent 40px, rgba(255, 255, 255, 0.4) 41px, transparent 42px),
+        linear-gradient(-90deg, transparent 40px, rgba(255, 255, 255, 0.4) 41px, transparent 42px),
 
-        /* 2. Technical Arcs (Kept) */
+        /* 2. Technical Arcs */
         radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.05) 181px, transparent 183px),
         radial-gradient(circle at 100% 0%, transparent 240px, rgba(255,255,255,0.03) 241px, transparent 245px),
         radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.05) 201px, transparent 203px),
         radial-gradient(circle at 0% 100%, transparent 300px, rgba(255,255,255,0.02) 301px, transparent 305px),
         
-        /* 3. Major Grid (Kept) */
+        /* 3. Major Grid (75px - Zoomed Out) */
         linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         
-        /* 4. Sub Grid (Kept) */
+        /* 4. Fine Sub-Grid (15px - Zoomed Out) */
         linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
         
-        /* 5. Center Glow (Kept) */
+        /* 5. Center Glow */
         radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, #031126 90%);
 
     background-size: 
         100% 100%, 100% 100%,     /* Borders */
         100% 100%, 100% 100%, 100% 100%, 100% 100%, /* Arcs */
-        200px 200px, 200px 200px, /* Major Grid */
-        40px 40px, 40px 40px,     /* Sub Grid */
+        
+        /* UPDATED SIZES HERE */
+        75px 75px, 75px 75px,     /* Major Grid (Smaller squares) */
+        15px 15px, 15px 15px,     /* Sub Grid (Finer mesh) */
+        
         100% 100%;                /* Glow */
     
     background-attachment: fixed;
 }
 
+/* ===== Glassy Card Styling (Unchanged) ===== */
+[data-testid="stPageLink-NavLink"] {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(4px);
+}
+
+[data-testid="stPageLink-NavLink"] p {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
 /* ===== Glassy Card Styling (Kept for consistency) ===== */
 [data-testid="stPageLink-NavLink"] {
     background-color: rgba(255, 255, 255, 0.04) !important;
@@ -276,6 +291,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
