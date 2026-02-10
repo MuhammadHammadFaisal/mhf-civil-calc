@@ -49,12 +49,31 @@ st.set_page_config(
 st.markdown(f"""
 <style>
 .stApp {{
-    background: linear-gradient(rgba(26,58,90,0.3), rgba(26,58,90,0.3)),
-                url("data:image/png;base64,{bg_base64}") no-repeat center center fixed;
+    /* Gradient overlay + scrolling background */
+    background: linear-gradient(rgba(26,58,90,0.5), rgba(26,58,90,0.5)),
+                url("data:image/png;base64,{bg_base64}") no-repeat center top;
     background-size: cover;
+    background-attachment: scroll;  /* Allow background to scroll */
 }}
 
-/* --- CARD CONTAINER --- */
+.stApp::before {{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(26,58,90,0.25);  /* extra dim layer behind all content */
+    z-index: 0;
+}}
+
+/* All other elements stay above background */
+main > div {{
+    position: relative;
+    z-index: 1;
+}}
+
+/* Card styles */
 [data-testid="stPageLink-NavLink"] {{
     background-color: #f8f9fa !important;
     border: 1px solid #dee2e6 !important;
@@ -94,6 +113,7 @@ st.markdown(f"""
 }}
 </style>
 """, unsafe_allow_html=True)
+
 
 # =========================================================
 # Scan Active Modules
@@ -196,3 +216,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
