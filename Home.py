@@ -159,7 +159,7 @@ def main():
     st.markdown("") 
 
     # ------------------------- MODULES -------------------------
-    st.subheader("Course Modules")
+    st.markdown('<h3 style="color: #E2E8F0;">Course Modules</h3>', unsafe_allow_html=True)
     st.markdown("")
     modules = get_active_modules()
     if modules:
@@ -184,11 +184,8 @@ def main():
     )
 
     # ------------------------- FEEDBACK -------------------------
-    st.subheader("Feedback")
-    st.write(
-        "If you identify an incorrect result, unclear assumption, or missing topic, "
-        "your feedback helps improve the reliability of this platform."
-    )
+    st.markdown('<h3 style="color: #E2E8F0;">Feedback</h3>', unsafe_allow_html=True)
+    st.markdown('<p style="color: #E2E8F0;">If you identify an incorrect result, unclear assumption, or missing topic, your feedback helps improve the reliability of this platform.</p>', unsafe_allow_html=True)
     st.link_button(
         "Open Feedback Form",
         "https://docs.google.com/forms/d/e/1FAIpQLSfKtE2MK_2JZxEK4SzyjEhjdb8PKEC8-dN5az82MaIoPZzMsg/viewform",
@@ -196,10 +193,8 @@ def main():
     )
 
     # ------------------------- ABOUT -------------------------
-    st.subheader("About")
-    st.markdown("""
-    **Developed by Muhammad Hammad Faisal** Final-Year Civil Engineering Student, METU
-    """)
+    st.markdown('<h3 style="color: #E2E8F0;">About</h3>', unsafe_allow_html=True)
+    st.markdown('<p style="color: #E2E8F0;"><strong>Developed by Muhammad Hammad Faisal</strong> Final-Year Civil Engineering Student, METU</p>', unsafe_allow_html=True)
     st.link_button(
         "LinkedIn Profile",
         "https://www.linkedin.com/in/muhammad-hammad-20059a229"
@@ -216,6 +211,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
