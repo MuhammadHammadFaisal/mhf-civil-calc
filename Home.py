@@ -30,7 +30,7 @@ st.set_page_config(
 )
 
 # =========================================================
-# CSS: Blueprint Background + Framed Content + Cards
+# CSS: Blueprint Background + Framed Content + Cards + Text Colors
 # =========================================================
 st.markdown("""
 <style>
@@ -58,6 +58,12 @@ main > div:first-child {
     border-radius: 12px;
     background-color: rgba(26,58,90,0.5);
     box-shadow: 0 0 30px rgba(0,0,0,0.2);
+    color: #eee !important; /* Ensures text is readable in light and dark modes */
+}
+
+/* Force all text inside content to be light */
+main > div:first-child, main > div:first-child * {
+    color: #eee !important;
 }
 
 /* ===== Card Styling ===== */
@@ -99,6 +105,12 @@ main > div:first-child {
 [data-testid="stLinkButton"] > a {
     border-radius: 8px !important;
 }
+
+/* Optional: link styling */
+a {
+    color: #aad4ff !important;
+    text-decoration: none;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -128,16 +140,16 @@ def get_active_modules():
 # =========================================================
 def main():
     # ------------------------- HEADER -------------------------
-    col_logo, col_text = st.columns([1, 3])  # removed deprecated vertical_alignment
+    col_logo, col_text = st.columns([1, 3])
     with col_logo:
         st.image("assets/Sticker.png", use_container_width=True)
     with col_text:
         st.markdown("""
         <h1 style="font-size:46px; margin-bottom:6px;">MHF Civil Calc</h1>
-        <p style="color:#555; font-size:18px; line-height:1.5; max-width:700px;">
+        <p style="color:#eee; font-size:18px; line-height:1.5; max-width:700px;">
             Civil Engineering Calculation Workspace
         </p>
-        <p style="color:#777; font-size:14px; max-width:700px;">
+        <p style="color:#ddd; font-size:14px; max-width:700px;">
             Verified numerical solvers aligned with standard undergraduate civil engineering coursework.
         </p>
         """, unsafe_allow_html=True)
@@ -189,7 +201,7 @@ def main():
     # ------------------------- FOOTER -------------------------
     st.markdown("---")
     st.markdown("""
-    <div style="text-align:center; color:#777; font-size:12px;">
+    <div style="text-align:center; color:#bbb; font-size:12px;">
         © 2026 MHF Civil · Ankara, Turkey
     </div>
     """, unsafe_allow_html=True)
