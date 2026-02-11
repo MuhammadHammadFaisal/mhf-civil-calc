@@ -255,7 +255,8 @@ def main():
     
     st.link_button(
         "LinkedIn Profile",
-        "https://www.linkedin.com/in/muhammad-hammad-20059a229"
+        "https://www.linkedin.com/in/muhammad-hammad-20059a229",
+        use_container_width=True
     )
 
     # ------------------------- FOOTER -------------------------
@@ -269,3 +270,4 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
