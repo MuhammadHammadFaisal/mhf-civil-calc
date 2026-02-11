@@ -34,47 +34,41 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Blueprint Background: Deep Navy + Technical Arcs ===== */
+/* ===== Blueprint Background: Depth & Detail ===== */
 .stApp {
-    background-color: #031126; /* YOUR ORIGINAL DEEP NAVY COLOR */
+    background-color: #031126; /* Deep Navy Base */
     background-image: 
-        /* === 1. TOP RIGHT COMPASS ARCS === */
-        /* Thick outer ring */
+        /* === 1. THE DIFFERENTIAL (Center Glow) === */
+        /* This creates the "lit" effect in the middle, fading to dark corners */
+        radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, rgba(3, 17, 38, 1) 90%),
+
+        /* === 2. TOP RIGHT COMPASS ARCS === */
         radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
-        /* Thin inner ring */
         radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
-        /* Dashed-style ring (simulated with opacity) */
-        radial-gradient(circle at 100% 0%, transparent 190px, rgba(255,255,255,0.08) 191px, transparent 192px),
         
-        /* === 2. BOTTOM LEFT COMPASS ARCS === */
-        /* Thick outer ring */
+        /* === 3. BOTTOM LEFT COMPASS ARCS === */
         radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
-        /* Thin inner ring */
         radial-gradient(circle at 0% 100%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
-        /* Small corner detail */
         radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px),
 
-        /* === 3. GRID LINES === */
-        /* Major Grid (75px) - Slightly sharper to pop on dark background */
+        /* === 4. GRID LINES === */
+        /* Major Grid (Bright) */
         linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
         
-        /* Minor Grid (15px) - Very faint */
+        /* Minor Grid (Faint) */
         linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
 
     background-size: 
-        100% 100%, 100% 100%, 100% 100%, /* Top Right Arcs */
+        100% 100%,                       /* Center Glow (Cover full screen) */
+        100% 100%, 100% 100%,            /* Top Right Arcs */
         100% 100%, 100% 100%, 100% 100%, /* Bottom Left Arcs */
         75px 75px, 75px 75px,            /* Major Grid */
         15px 15px, 15px 15px;            /* Minor Grid */
     
-    background-position: 
-        0 0, 0 0, 0 0,
-        0 0, 0 0, 0 0,
-        center center, center center,
-        center center, center center;
-
+    background-position: center;
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, repeat, repeat;
     background-attachment: fixed;
 }
 
@@ -274,6 +268,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
