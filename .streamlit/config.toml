@@ -15,4 +15,26 @@ primaryColor="#3B82F6"
 
 # This controls the text color
 textColor="#FAFAFA"
+[theme]
+base = "dark"
+# The Primary Color (Affects Buttons & Sliders)
+# Choose ONE of these options:
+
+# Option A: MHF Cyan (Matches your logo accents - Recommended)
+primaryColor = "#00B4D8"
+
+# Option B: Engineering Blue (Trustworthy & Professional)
+# primaryColor = "#1E88E5"
+
+# Option C: Safety Orange (High visibility like a vest, but not "Error Red")
+# primaryColor = "#FFC107"
+
+# Background color (Dark Navy - matches your blueprint style)
+backgroundColor = "#0E1117"
+
+# Secondary background (for sidebars/widgets)
+secondaryBackgroundColor = "#262730"
+
+# Text color
+textColor = "#FAFAFA"
 
