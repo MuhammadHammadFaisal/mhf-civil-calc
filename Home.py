@@ -34,42 +34,41 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Technical Blueprint: Flows with Scroll ===== */
-.stApp {
+/* ===== Technical Blueprint: Flowing Scroll Fix ===== */
+
+/* 1. Target the actual scrolling container, NOT the whole app */
+[data-testid="stAppViewContainer"] {
     background-color: #031126; /* Deep Navy Base */
     background-image: 
-        /* 1. Top Margin Line */
+        /* === A. Header Line (Moves with scroll) === */
         linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
         
-        /* 2. Center Glow (Pinned to top-center so it's visible at start) */
-        radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
+        /* === B. Center Glow (Moves with scroll) === */
+        radial-gradient(circle at 50% 300px, rgba(20, 75, 150, 0.4) 0%, transparent 60%),
 
-        /* 3. Major Grid (75px) */
+        /* === C. COMPASS ARCS (Moves with scroll) === */
+        /* Top Right: Outer Thick & Inner Thin */
+        radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+        radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
+        
+        /* Bottom Left: Outer Thick & Corner Hub */
+        radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+        radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px),
+
+        /* === D. GRID LINES (Moves with scroll) === */
         linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         
-        /* 4. Fine Sub-Grid (15px) */
         linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-
-        /* 5. STRUCTURAL ARCS (Technical Details) */
-        /* Top Right: Outer Thick Ring */
-        radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
-        /* Top Right: Inner Thin Ring */
-        radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
-        
-        /* Bottom Left: Outer Thick Ring */
-        radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
-        /* Bottom Left: Corner Hub */
-        radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px);
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 
     background-size: 
-        100% 100%,            /* Top Margin */
-        100% 100%,            /* Center Glow */
-        75px 75px, 75px 75px, /* Major Grid */
-        15px 15px, 15px 15px, /* Sub Grid */
+        100% 100%,            /* Header */
+        100% 100%,            /* Glow */
         100% 100%, 100% 100%, /* Top Right Arcs */
-        100% 100%, 100% 100%; /* Bottom Left Arcs */
+        100% 100%, 100% 100%, /* Bottom Left Arcs */
+        75px 75px, 75px 75px, /* Major Grid */
+        15px 15px, 15px 15px; /* Sub Grid */
     
     background-position: 
         0 0, 0 0, 
@@ -77,11 +76,17 @@ st.markdown("""
         0 0, 0 0, 
         0 0, 0 0, 0 0, 0 0;
 
-    background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, repeat, repeat;
     
-    /* This makes the background move with the scroll */
+    /* CRITICAL: 'local' makes it scroll with the content inside this specific container */
     background-attachment: local;
 }
+
+/* 2. Make the header transparent so it doesn't block the moving background */
+.stApp > header {
+    background-color: transparent !important;
+}
+
 
 /* ===== Glassy Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
@@ -279,6 +284,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
