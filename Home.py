@@ -34,28 +34,28 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Technical Blueprint: Flowing Scroll Fix ===== */
+/* ===== FIX: SCROLLING BLUEPRINT BACKGROUND ===== */
 
-/* 1. Target the actual scrolling container, NOT the whole app */
+/* Target the main scrollable container */
 [data-testid="stAppViewContainer"] {
     background-color: #031126; /* Deep Navy Base */
     background-image: 
-        /* === A. Header Line (Moves with scroll) === */
+        /* 1. Header Line (Moves with scroll) */
         linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
         
-        /* === B. Center Glow (Moves with scroll) === */
+        /* 2. Center Glow (Fixed size, moves with scroll) */
         radial-gradient(circle at 50% 300px, rgba(20, 75, 150, 0.4) 0%, transparent 60%),
 
-        /* === C. COMPASS ARCS (Moves with scroll) === */
-        /* Top Right: Outer Thick & Inner Thin */
+        /* 3. COMPASS ARCS (Top Right) */
         radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
         radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
         
-        /* Bottom Left: Outer Thick & Corner Hub */
+        /* 4. COMPASS ARCS (Bottom Left) */
+        /* Note: We position these at the bottom of the *viewport height* initially */
         radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
         radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px),
 
-        /* === D. GRID LINES (Moves with scroll) === */
+        /* 5. GRID LINES */
         linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         
@@ -63,29 +63,35 @@ st.markdown("""
         linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 
     background-size: 
-        100% 100%,            /* Header */
-        100% 100%,            /* Glow */
-        100% 100%, 100% 100%, /* Top Right Arcs */
-        100% 100%, 100% 100%, /* Bottom Left Arcs */
-        75px 75px, 75px 75px, /* Major Grid */
-        15px 15px, 15px 15px; /* Sub Grid */
+        100% auto,             /* Header: Width 100%, Height Auto */
+        100% 800px,            /* Glow: Limit height so it doesn't stretch infinitely */
+        400px 400px, 400px 400px, /* Top Right Arcs: Fixed square size to keep circles round */
+        400px 400px, 400px 400px, /* Bottom Left Arcs: Fixed square size */
+        75px 75px, 75px 75px,  /* Major Grid */
+        15px 15px, 15px 15px;  /* Sub Grid */
     
     background-position: 
-        0 0, 0 0, 
-        0 0, 0 0, 
-        0 0, 0 0, 
-        0 0, 0 0, 0 0, 0 0;
+        top center,            /* Header */
+        top center,            /* Glow */
+        top right, top right,  /* Top Right Arcs */
+        bottom left, bottom left, /* Bottom Left Arcs */
+        top left, top left,    /* Major Grid */
+        top left, top left;    /* Sub Grid */
 
-    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, repeat, repeat;
+    background-repeat: 
+        no-repeat, no-repeat, 
+        no-repeat, no-repeat, 
+        no-repeat, no-repeat, 
+        repeat, repeat, 
+        repeat, repeat;
     
-    /* CRITICAL: 'local' makes it scroll with the content inside this specific container */
-    background-attachment: local;
+    /* THE KEY FIX: 'local' makes it scroll with content */
+    background-attachment: local !important;
 }
 
-/* 2. Make the header transparent so it doesn't block the moving background */
+/* Ensure header is clear so it doesn't block the view */
 .stApp > header {
     background-color: transparent !important;
-}
 
 
 /* ===== Glassy Card Styling ===== */
@@ -284,6 +290,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
