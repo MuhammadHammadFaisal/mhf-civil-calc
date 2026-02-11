@@ -4,12 +4,6 @@ import matplotlib.patches as patches
 import numpy as np
 
 # ============================================================
-# SESSION STORAGE
-# ============================================================
-if "results" not in st.session_state:
-    st.session_state.results = None
-
-# ============================================================
 # HELPER FUNCTIONS
 # ============================================================
 
@@ -105,6 +99,9 @@ def calculate_pore_pressure(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, s
 # ============================================================
 
 def app():
+    # --- MOVED INSIDE THE FUNCTION TO FIX ATTRIBUTE ERROR ---
+    if "results" not in st.session_state:
+        st.session_state.results = None
     
     tab1, tab2 = st.tabs(["1D Seepage", "Permeability"])
     
@@ -175,7 +172,7 @@ def app():
                     gamma_effective = gamma_sub
                     bracket_term = gamma_sub
                 
-                sigma_prime_2 = depth_A_soil * gamma_effective
+                sigma_prime_2 = depth_A_soil * bracket_term
 
                 # STORE RESULTS
                 st.session_state.results = {
