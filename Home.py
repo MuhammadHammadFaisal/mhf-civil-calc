@@ -99,6 +99,41 @@ main > div:first-child {
     color: #E2E8F0 !important; 
 }
 
+/* ================= MOBILE FIX ================= */
+@media (max-width: 768px) {
+
+    /* Reduce frame thickness */
+    .stApp {
+        background-image: 
+            linear-gradient(to right, #031126 0%, #031126 18px, rgba(255,255,255,0.5) 18px, rgba(255,255,255,0.5) 20px, transparent 20px),
+            linear-gradient(to left, #031126 0%, #031126 18px, rgba(255,255,255,0.5) 18px, rgba(255,255,255,0.5) 20px, transparent 20px),
+            linear-gradient(to bottom, #031126 0%, #031126 18px, rgba(255,255,255,0.5) 18px, rgba(255,255,255,0.5) 20px, transparent 20px),
+
+            radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.05) 181px, transparent 183px),
+            radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.05) 201px, transparent 203px),
+
+            linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+
+            linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+
+            radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, #031126 90%);
+    }
+
+    /* Reduce content padding */
+    main > div:first-child {
+        margin: 15px 12px;
+        padding: 20px 18px;
+    }
+
+    /* Prevent text overflow */
+    h1 {
+        font-size: 36px !important;
+    }
+}
+
+
 /* Force all text inside content to be the requested color */
 main > div:first-child, main > div:first-child * {
     color: #E2E8F0 !important; 
@@ -269,6 +304,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
