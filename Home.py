@@ -34,38 +34,39 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Blueprint: Open-Bottom Frame ===== */
+/* ===== Technical Blueprint with Deep Gradient ===== */
 .stApp {
-    background-color: #031126; /* Deep Navy Base */
+    /* 1. Deepest Base Color (Midnight Navy) */
+    background-color: #020a1a;
+    
     background-image: 
-
-
-        /* === 2. Technical Arcs === */
-        radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.05) 181px, transparent 183px),
-        radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.05) 201px, transparent 203px),
+        /* 2. Center Glow (Restoring the gradient you liked) */
+        radial-gradient(circle at center, rgba(20, 75, 140, 0.5) 0%, rgba(2, 10, 26, 1) 90%),
         
-        /* === 3. Major Grid (75px) === */
+        /* 3. Fine Grid (Sharp & Faint) */
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        
+        /* 4. Major Grid (Distinct Structural Lines) */
         linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         
-        /* === 4. Fine Sub-Grid (15px) === */
-        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-        
-        /* === 5. Center Glow === */
-        radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, #031126 90%);
+        /* 5. Technical Arcs (Subtle Geometry in Corners) */
+        radial-gradient(circle at 100% 0%, transparent 120px, rgba(255,255,255,0.05) 121px, transparent 123px),
+        radial-gradient(circle at 100% 0%, transparent 160px, rgba(255,255,255,0.03) 161px, transparent 163px),
+        radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.04) 201px, transparent 203px);
 
+    /* Exact sizing for the layered effect */
     background-size: 
-        100% 100%, 100% 100%, 100% 100%, /* 3 Frame Borders Only */
-        100% 100%, 100% 100%,            /* Arcs */
-        75px 75px, 75px 75px,            /* Major Grid */
-        15px 15px, 15px 15px,            /* Sub Grid */
-        100% 100%;                       /* Glow */
-    
+        100% 100%,                  /* Glow fills the screen */
+        20px 20px, 20px 20px,       /* Fine Grid */
+        100px 100px, 100px 100px,   /* Major Grid */
+        100% 100%, 100% 100%, 100% 100%; /* Arcs */
+        
     background-attachment: fixed;
 }
 
-/* ===== Glassy Card Styling (Unchanged) ===== */
+/* ===== Glassy Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
     background-color: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -77,6 +78,7 @@ st.markdown("""
     color: #FFFFFF !important;
     font-weight: 600 !important;
 }
+
 /* ===== Framed Content Area ===== */
 main > div:first-child {
     max-width: 1200px;
@@ -260,5 +262,6 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
