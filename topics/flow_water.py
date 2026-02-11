@@ -22,6 +22,84 @@ def format_scientific(val):
         return f"{val:.4f}"
     return f"{mantissa:.2f} \\times 10^{{{exponent}}}"
 
+def get_complex_potential_sheet_pile(x, y, pile_depth, pile_x, h_up, h_down, soil_depth):
+    # Pile tip location
+    pile_tip_x = pile_x
+    pile_tip_y = -pile_depth
+    
+    z = x + 1j * y
+    z_tip = pile_tip_x + 1j * pile_tip_y
+    z_from_tip = z - z_tip
+    
+    epsilon = 0.01
+    z_from_tip = np.where(np.abs(z_from_tip) < epsilon, epsilon * (1 + 1j), z_from_tip)
+    
+    with np.errstate(all="ignore"):
+        flow_velocity = (h_up - h_down) / 24.0
+        W_uniform = flow_velocity * z
+        
+        source_strength = pile_depth * flow_velocity * 8.0
+        W_source = source_strength * np.log(z_from_tip + 0j)
+        
+        dipole_strength = pile_depth**1.5 * flow_velocity * 6.0
+        W_dipole = dipole_strength / z_from_tip
+        
+        z_from_base = z - (pile_tip_x + 1j * (-soil_depth))
+        z_from_base = np.where(np.abs(z_from_base) < epsilon, epsilon * (1 + 1j), z_from_base)
+        W_base = -source_strength * 0.3 * np.log(z_from_base + 0j)
+        
+        W = W_uniform + W_source + W_dipole + W_base
+        return W
+
+def get_complex_potential_dam(x, y, dam_width, h_up, h_down):
+    b = max(dam_width / 2, 0.1)
+    z = x + 1j * y
+    
+    with np.errstate(all="ignore"):
+        zeta = z / b
+        w = b * (zeta + np.sqrt(zeta**2 - 1 + 0j))
+        flow_scale = (h_up - h_down) / 20.0
+        W = flow_scale * w
+        return W
+
+def get_complex_potential(x, y, mode, pile_depth, pile_x, dam_width, h_up, h_down, soil_depth):
+    if mode == "Sheet Pile Only":
+        return get_complex_potential_sheet_pile(x, y, pile_depth, pile_x, h_up, h_down, soil_depth)
+    elif mode == "Concrete Dam Only":
+        return get_complex_potential_dam(x, y, dam_width, h_up, h_down)
+    elif mode == "Combined (Dam + Pile)":
+        W_pile = get_complex_potential_sheet_pile(x, y, pile_depth, pile_x, h_up, h_down, soil_depth)
+        W_dam = get_complex_potential_dam(x, y, dam_width, h_up, h_down)
+        return 0.6 * W_pile + 0.4 * W_dam
+    return 0 + 0j
+
+def calculate_pore_pressure(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, soil_d):
+    if py > 0:
+        return None
+    gamma_w = 10
+    w_pt = get_complex_potential(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, soil_d)
+    phi_pt = np.real(w_pt)
+    
+    w_up = get_complex_potential(-15.0, py, mode, pile_d, pile_x, dam_w, h_up, h_down, soil_d)
+    w_down = get_complex_potential(15.0, py, mode, pile_d, pile_x, dam_w, h_up, h_down, soil_d)
+    
+    phi_up = np.real(w_up)
+    phi_down = np.real(w_down)
+    
+    if not np.isfinite(phi_pt) or not np.isfinite(phi_up) or not np.isfinite(phi_down):
+        return None
+    
+    if abs(phi_up - phi_down) < 1e-6:
+        h_total = (h_up + h_down) / 2
+    else:
+        ratio = (phi_pt - phi_down) / (phi_up - phi_down)
+        ratio = np.clip(ratio, 0, 1)
+        h_total = h_down + ratio * (h_up - h_down)
+    
+    pressure_head = h_total - py
+    u = pressure_head * gamma_w
+    return {"u": u, "h_total": h_total, "pressure_head": pressure_head}
+
 # ============================================================
 # MAIN APP
 # ============================================================
@@ -114,7 +192,10 @@ def app():
                     "gamma_effective": gamma_effective, # Stored for detail
                     "val_z_snap": val_z,
                     "val_A_snap": val_A,
-                    "val_y_snap": val_y
+                    "val_y_snap": val_y,
+                    "H_top": H_top,
+                    "H_bot": H_bot,
+                    "delta_H": delta_H
                 }
 
         # --- PLOT COLUMN ---
@@ -209,7 +290,7 @@ def app():
             ax.axis('off')
             st.pyplot(fig)
 
-        # ------------------------- RESULTS -------------------------
+        # ------------------------- RESULTS (FULL WIDTH) -------------------------
         if st.session_state.results:
             results = st.session_state.results
             
@@ -242,20 +323,24 @@ def app():
                 
                 st.markdown("---")
                 
-                # --- DETAILED SECTION FOR SEEPAGE FORCE ---
+                # --- NEW DETAILED SECTION FOR SEEPAGE FORCE ---
                 st.markdown("#### Method 2: Seepage Force Approach")
                 st.caption("We adjust the submerged weight of the soil by the drag force (j) of the water.")
 
+                # A. Calculate Gradient
+                st.markdown("**A. Hydraulic Gradient ($i$)**")
+                st.latex(rf"i = \frac{{\Delta H}}{{L}} = \frac{{|{results['H_top']:.2f} - {results['H_bot']:.2f}|}}{{{z_s:.2f}}} = {results['i']:.3f}")
+
                 # 1. Submerged Weight
-                st.markdown("**1. Submerged Unit Weight ($\gamma'$)**")
+                st.markdown("**B. Submerged Unit Weight ($\gamma'$)**")
                 st.latex(rf"\gamma' = \gamma_{{sat}} - \gamma_w = {gamma_sat} - {gamma_w} = {results['gamma_sub']:.2f} \text{{ kN/m}}^3")
                 
                 # 2. Seepage Force per unit volume
-                st.markdown("**2. Seepage Force per Unit Volume ($j$)**")
+                st.markdown("**C. Seepage Force per Unit Volume ($j$)**")
                 st.latex(rf"j = i \cdot \gamma_w = {results['i']:.3f} \cdot {gamma_w} = {results['j_seepage']:.2f} \text{{ kN/m}}^3")
                 
                 # 3. Combine
-                st.markdown(f"**3. Effective Unit Weight ($\gamma'_{{eff}}$)** ({results['flow_type']} Flow)")
+                st.markdown(f"**D. Effective Unit Weight ($\gamma'_{{eff}}$)** ({results['flow_type']} Flow)")
                 if results['flow_type'] == "Upward":
                     sign_latex = "-"
                     text_logic = r"\text{Upward flow reduces weight (} \gamma' - j \text{)}"
@@ -270,8 +355,7 @@ def app():
                 st.latex(rf"\gamma'_{{eff}} = {results['gamma_sub']:.2f} {sign_latex} {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \text{{ kN/m}}^3")
                 
                 # 4. Final
-                st.markdown("**4. Calculate Effective Stress**")
-                # --- FIXED STRING HERE ---
+                st.markdown("**E. Calculate Effective Stress**")
                 st.latex(rf"\sigma' = z \cdot \gamma'_{{eff}} = {results['depth_A_soil']:.2f} \cdot {results['gamma_effective']:.2f} = \mathbf{{{results['sigma_prime_2']:.2f} \text{{ kPa}}}}")
 
     # =================================================================
