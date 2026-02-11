@@ -39,7 +39,7 @@ def app():
 
         col_setup, col_plot = st.columns([1, 1.2])
 
-# ------------------------- INPUT COLUMN -------------------------
+        # ------------------------- LEFT COLUMN: INPUTS -------------------------
         with col_setup:
 
             st.markdown("### 1. Problem Setup")
@@ -94,7 +94,7 @@ def app():
 
                 sigma_prime_2 = depth_A_soil * bracket_term
 
-                # STORE RESULTS
+                # STORE RESULTS (AND INPUT SNAPSHOTS TO PREVENT GLITCHES)
                 st.session_state.results = {
                     "flow_type": flow_type,
                     "i": i,
@@ -105,20 +105,14 @@ def app():
                     "sigma_prime_1": sigma_prime_1,
                     "sigma_prime_2": sigma_prime_2,
                     "gamma_sub": gamma_sub,
-                    "bracket_term": bracket_term
+                    "bracket_term": bracket_term,
+                    # Snapshots of inputs at calculation time
+                    "z_snap": val_z,
+                    "y_snap": val_y,
+                    "A_snap": val_A
                 }
 
-            results = st.session_state.results
-
-            if results:
-
-                st.success(f"Flow Condition: {results['flow_type']} (i = {results['i']:.3f})")
-
-                st.metric("Total Stress (σ)", f"{results['sigma_total']:.2f} kPa")
-                st.metric("Pore Pressure (u)", f"{results['u_val']:.2f} kPa")
-                st.metric("Effective Stress (σ')", f"{results['sigma_prime_1']:.2f} kPa")
-
-# ------------------------- PLOT COLUMN -------------------------
+        # ------------------------- RIGHT COLUMN: PLOT -------------------------
         with col_plot:
 
             fig, ax = plt.subplots(figsize=(7, 8))
@@ -151,20 +145,40 @@ def app():
 
             st.pyplot(fig)
 
-# --------------------- FULL WIDTH DERIVATION ---------------------
+        # ------------------------- FULL WIDTH RESULTS (BELOW COLUMNS) -------------------------
+        # This block is now OUTSIDE 'with col_setup:' and 'with col_plot:'
+        
+        results = st.session_state.results
+        
         if results:
+            st.divider() # Adds a nice line separator
+            st.markdown("### Results")
+            
+            st.success(f"Flow Condition: {results['flow_type']} (i = {results['i']:.3f})")
 
+            # Create 3 new wide columns just for results
+            res_col1, res_col2, res_col3 = st.columns(3)
+            res_col1.metric("Total Stress (σ)", f"{results['sigma_total']:.2f} kPa")
+            res_col2.metric("Pore Pressure (u)", f"{results['u_val']:.2f} kPa")
+            res_col3.metric("Effective Stress (σ')", f"{results['sigma_prime_1']:.2f} kPa")
+
+            # Derivation Expander (Full Width)
             with st.expander("View Detailed Step-by-Step Derivation (2 Methods)", expanded=True):
+                
+                # Retrieve snapshots so derivation matches the answer even if you move sliders
+                z_s = results['z_snap']
+                y_s = results['y_snap']
+                A_s = results['A_snap']
 
                 st.markdown("#### Method 1: Definition (σ' = σ − u)")
 
-                st.latex(rf"Depth = {val_z} - {val_A} = {results['depth_A_soil']:.2f} m")
+                st.latex(rf"Depth = {z_s} - {A_s} = {results['depth_A_soil']:.2f} m")
 
                 st.markdown("Step 1: Total Stress")
-                st.latex(rf"\sigma = ({gamma_w} \cdot {val_y}) + ({gamma_sat} \cdot {results['depth_A_soil']:.2f}) = {results['sigma_total']:.2f} kPa")
+                st.latex(rf"\sigma = ({gamma_w} \cdot {y_s}) + ({gamma_sat} \cdot {results['depth_A_soil']:.2f}) = {results['sigma_total']:.2f} kPa")
 
                 st.markdown("Step 2: Pore Pressure")
-                st.latex(rf"u = ({results['H_A']:.2f} - {val_A:.2f}) \cdot {gamma_w} = {results['u_val']:.2f} kPa")
+                st.latex(rf"u = ({results['H_A']:.2f} - {A_s:.2f}) \cdot {gamma_w} = {results['u_val']:.2f} kPa")
 
                 st.markdown("Step 3: Effective Stress")
                 st.latex(rf"\sigma' = {results['sigma_total']:.2f} - {results['u_val']:.2f} = {results['sigma_prime_1']:.2f} kPa")
@@ -195,7 +209,7 @@ def app():
             A = st.number_input("Specimen Area (A) [cm²]", value=40.0)
             t = st.number_input("Time Interval (t) [sec]", value=60.0)
 
-            if st.button("Calculate Permeability (k)"):
+            if st.button("Calculate Permeability (k)", key="btn_const"):
 
                 if A*h*t > 0:
                     k_val = (Q*L)/(A*h*t)
@@ -213,7 +227,7 @@ def app():
             h2 = st.number_input("Final Head (h2) [cm]", value=30.0)
             t_fall = st.number_input("Time Interval (t) [sec]", value=300.0)
 
-            if st.button("Calculate Permeability (k)"):
+            if st.button("Calculate Permeability (k)", key="btn_fall"):
 
                 if h1 > h2 > 0 and A_soil*t_fall > 0:
                     k_val = (2.303*a*L_fall/(A_soil*t_fall))*np.log10(h1/h2)
