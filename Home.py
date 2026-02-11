@@ -34,25 +34,21 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Technical Blueprint: Flows with Scroll ===== */
-.stApp {
+
+/* Apply background to actual scrolling container */
+.main {
     background-color: #031126;
     background-image: 
-        /* 1. Top Margin Line */
         linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
         
-        /* 2. Center Glow */
         radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
 
-        /* 3. Major Grid */
         linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         
-        /* 4. Fine Grid */
         linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
 
-        /* 5. Structural Arcs */
         radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
         radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
         
@@ -73,9 +69,6 @@ st.markdown("""
         repeat, repeat,
         no-repeat, no-repeat,
         no-repeat, no-repeat;
-
-    /* ✅ This makes it scroll naturally */
-    background-attachment: scroll;
 }
 
 /* ===== Glassy Card Styling ===== */
@@ -274,6 +267,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
