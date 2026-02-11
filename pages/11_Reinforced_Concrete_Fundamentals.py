@@ -44,7 +44,48 @@ st.set_page_config(
 
 
 def app():
+# =========================================================
+    # PASTE THIS RIGHT AT THE START OF YOUR app() FUNCTION
+    # =========================================================
+    st.markdown("""
+    <style>
+        /* 1. Fix the Sidebar Color to match the Blueprint theme */
+        [data-testid="stSidebar"] {
+            background-color: #031126;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
+        /* 2. Your Blueprint Background Code */
+        [data-testid="stAppViewContainer"] {
+            background-color: #031126;
+            background-image: 
+                linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
+                radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
+                linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+                radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
+                radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+                radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px);
+            background-size: 
+                100% 100%, 100% 100%,
+                75px 75px, 75px 75px,
+                15px 15px, 15px 15px,
+                100% 100%, 100% 100%,
+                100% 100%, 100% 100%;
+            background-repeat: 
+                no-repeat, no-repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+            background-attachment: local;
+        }
+
+        /* 3. Make text readable on the dark background */
+        h1, h2, h3, h4, p, li, .stMarkdown {
+            color: #E2E8F0 !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
     # --- PROFESSIONAL HEADER SECTION ---
     # Adjusted column ratio to give the bigger logo enough space
     col_logo, col_text = st.columns([1, 5], vertical_alignment="center")
