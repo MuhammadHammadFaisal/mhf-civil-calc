@@ -34,34 +34,34 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Technical Blueprint Background ===== */
+/* ===== Blueprint Background: Deep Navy + Technical Arcs ===== */
 .stApp {
-    background-color: #0e2a47; /* Lighter "Blueprint" Blue to match your image */
+    background-color: #031126; /* YOUR ORIGINAL DEEP NAVY COLOR */
     background-image: 
         /* === 1. TOP RIGHT COMPASS ARCS === */
         /* Thick outer ring */
-        radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.15) 251px, transparent 253px),
+        radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
         /* Thin inner ring */
         radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
         /* Dashed-style ring (simulated with opacity) */
-        radial-gradient(circle at 100% 0%, transparent 190px, rgba(255,255,255,0.1) 191px, transparent 192px),
+        radial-gradient(circle at 100% 0%, transparent 190px, rgba(255,255,255,0.08) 191px, transparent 192px),
         
         /* === 2. BOTTOM LEFT COMPASS ARCS === */
         /* Thick outer ring */
-        radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.15) 251px, transparent 253px),
+        radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
         /* Thin inner ring */
         radial-gradient(circle at 0% 100%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
         /* Small corner detail */
-        radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.2) 51px, transparent 53px),
+        radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px),
 
         /* === 3. GRID LINES === */
-        /* Major Grid (Bright) */
-        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        /* Major Grid (75px) - Slightly sharper to pop on dark background */
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
         
-        /* Minor Grid (Faint) */
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        /* Minor Grid (15px) - Very faint */
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
 
     background-size: 
         100% 100%, 100% 100%, 100% 100%, /* Top Right Arcs */
@@ -274,6 +274,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
