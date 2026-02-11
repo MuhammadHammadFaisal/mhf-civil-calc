@@ -70,7 +70,7 @@ st.markdown("""
         no-repeat, no-repeat,
         no-repeat, no-repeat;
 
-    background-attachment: scroll;
+    background-attachment: local;;
 }
 /* ===== Glassy Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
@@ -268,6 +268,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
