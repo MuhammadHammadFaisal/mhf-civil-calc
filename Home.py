@@ -38,17 +38,7 @@ st.markdown("""
 .stApp {
     background-color: #031126; /* Deep Navy Base */
     background-image: 
-        /* === 1. THE FRAME (Left, Right, Top Only) === */
-        /* Left Margin: Solid Navy + White Line */
-        linear-gradient(to right, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 43px, transparent 43px),
-        
-        /* Right Margin: Solid Navy + White Line */
-        linear-gradient(to left, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 43px, transparent 43px),
-        
-        /* Top Margin: Solid Navy + White Line */
-        linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 43px, transparent 43px),
-        
-        /* (Bottom Margin Removed - Grid extends to bottom edge) */
+
 
         /* === 2. Technical Arcs === */
         radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.05) 181px, transparent 183px),
@@ -270,4 +260,5 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
