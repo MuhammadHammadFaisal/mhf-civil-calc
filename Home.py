@@ -34,38 +34,67 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Technical Blueprint with Deep Gradient ===== */
-/* ===== Blueprint: Full Width Background Fix ===== */
+/* ===== Premium Technical Blueprint Background ===== */
+
 .stApp {
-    background-color: #031126; /* Deep Navy Base */
-    background-image: 
-        /* 1. Top Margin Line */
-        linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
-        
-        /* 2. Center Glow (Moved up to blend behind text) */
-        radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
+    background-color: #031126;
 
-        /* 3. Major Grid (75px) */
-        linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
-        
-        /* 4. Fine Sub-Grid (15px) */
-        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    background-image:
 
-        /* 5. Subtle Arcs for technical feel */
-        radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.03) 181px, transparent 183px),
-        radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.03) 201px, transparent 203px);
+        /* 1. Vertical Depth Gradient */
+        linear-gradient(
+            to bottom,
+            #020d1f 0%,
+            #031126 40%,
+            #031126 60%,
+            #020d1f 100%
+        ),
 
-    background-size: 
-        100% 100%,           /* Top Margin */
-        100% 100%,           /* Center Glow */
-        75px 75px, 75px 75px, /* Major Grid */
-        15px 15px, 15px 15px, /* Sub Grid */
-        100% 100%, 100% 100%; /* Arcs */
-    
+        /* 2. Focus Glow Behind Header */
+        radial-gradient(
+            circle at 50% 25%,
+            rgba(35, 110, 210, 0.35) 0%,
+            rgba(10, 40, 90, 0.15) 40%,
+            transparent 70%
+        ),
+
+        /* 3. Major Blueprint Grid */
+        linear-gradient(rgba(255,255,255,0.07) 1.5px, transparent 1.5px),
+        linear-gradient(90deg, rgba(255,255,255,0.07) 1.5px, transparent 1.5px),
+
+        /* 4. Fine Grid */
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+
+        /* 5. Subtle Engineering Diagonal Guides */
+        repeating-linear-gradient(
+            45deg,
+            rgba(255,255,255,0.015),
+            rgba(255,255,255,0.015) 1px,
+            transparent 1px,
+            transparent 120px
+        ),
+
+        /* 6. Edge Vignette */
+        radial-gradient(
+            ellipse at center,
+            transparent 60%,
+            rgba(0,0,0,0.35) 100%
+        );
+
+    background-size:
+        100% 100%,   /* Depth */
+        100% 100%,   /* Glow */
+        80px 80px,   /* Major Grid */
+        80px 80px,
+        16px 16px,   /* Fine Grid */
+        16px 16px,
+        100% 100%,   /* Diagonal */
+        100% 100%;   /* Vignette */
+
     background-attachment: fixed;
 }
+</style>
 
 /* ===== Glassy Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
@@ -263,6 +292,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
