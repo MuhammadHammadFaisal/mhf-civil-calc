@@ -17,7 +17,6 @@ def format_scientific(val):
     return f"{mantissa:.2f} \\times 10^{{{exponent}}}"
 
 def get_complex_potential_sheet_pile(x, y, pile_depth, pile_x, h_up, h_down, soil_depth):
-    # Pile tip location
     pile_tip_x = pile_x
     pile_tip_y = -pile_depth
     
@@ -99,8 +98,9 @@ def calculate_pore_pressure(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, s
 # ============================================================
 
 def app():
-    # Initialize Session State inside app() to avoid scope errors
-    if "results" not in st.session_state:
+    # --- SANITIZATION CHECK ---
+    # This prevents the AttributeError by resetting corrupted data
+    if "results" not in st.session_state or not isinstance(st.session_state.results, dict):
         st.session_state.results = None
     
     tab1, tab2 = st.tabs(["1D Seepage", "Permeability"])
@@ -126,7 +126,7 @@ def app():
             
             if st.button("Calculate Effective Stress", type="primary"):
                 # --- PRELIMINARY CALCULATIONS ---
-                gamma_sub = gamma_sat - gamma_w  # Effective Unit Weight
+                gamma_sub = gamma_sat - gamma_w
                 
                 # Heads
                 H_top = val_z + val_y
@@ -185,8 +185,8 @@ def app():
                     "sigma_prime_1": sigma_prime_1,
                     "sigma_prime_2": sigma_prime_2,
                     "gamma_sub": gamma_sub,
-                    "j_seepage": j_seepage,            # Stored for detail
-                    "gamma_effective": gamma_effective, # Stored for detail
+                    "j_seepage": j_seepage,            
+                    "gamma_effective": gamma_effective, 
                     "val_z_snap": val_z,
                     "val_A_snap": val_A,
                     "val_y_snap": val_y,
@@ -321,7 +321,7 @@ def app():
                 
                 st.markdown("---")
                 
-                # --- NEW: FULLY DETAILED STEP-BY-STEP FOR METHOD 2 ---
+                # --- NEW DETAILED SECTION FOR SEEPAGE FORCE ---
                 st.markdown("#### Method 2: Seepage Force Approach")
                 st.caption("We adjust the submerged weight of the soil by the drag force (j) of the water.")
 
@@ -329,15 +329,15 @@ def app():
                 st.markdown("**Step A: Calculate Hydraulic Gradient ($i$)**")
                 st.latex(rf"i = \frac{{\Delta H}}{{L}} = \frac{{|{results['H_top']:.2f} - {results['H_bot']:.2f}|}}{{{z_s:.2f}}} = {results['i']:.3f}")
 
-                # B. Submerged Weight
+                # 1. Submerged Weight
                 st.markdown("**Step B: Calculate Submerged Unit Weight ($\gamma'$)**")
                 st.latex(rf"\gamma' = \gamma_{{sat}} - \gamma_w = {g_sat_s:.2f} - {gamma_w:.2f} = {results['gamma_sub']:.2f} \text{{ kN/m}}^3")
                 
-                # C. Seepage Force
+                # 2. Seepage Force per unit volume
                 st.markdown("**Step C: Calculate Seepage Force ($j$)**")
                 st.latex(rf"j = i \times \gamma_w = {results['i']:.3f} \times {gamma_w:.2f} = {results['j_seepage']:.2f} \text{{ kN/m}}^3")
                 
-                # D. Combine
+                # 3. Combine
                 st.markdown(f"**Step D: Determine Effective Unit Weight ($\gamma'_{{eff}}$)**")
                 if results['flow_type'] == "Upward":
                     sign_latex = "-"
@@ -352,7 +352,7 @@ def app():
                 st.latex(text_logic)
                 st.latex(rf"\gamma'_{{eff}} = \gamma' {sign_latex} j = {results['gamma_sub']:.2f} {sign_latex} {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \text{{ kN/m}}^3")
                 
-                # E. Final
+                # 4. Final
                 st.markdown("**Step E: Calculate Effective Stress ($\sigma'$)**")
                 st.latex(rf"\sigma' = z \times \gamma'_{{eff}} = {results['depth_A_soil']:.2f} \times {results['gamma_effective']:.2f} = \mathbf{{{results['sigma_prime_2']:.2f} \text{{ kPa}}}}")
 
