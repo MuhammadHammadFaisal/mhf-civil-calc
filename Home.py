@@ -34,60 +34,50 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== FIX: SCROLLING BLUEPRINT BACKGROUND ===== */
-
-/* Target the main scrollable container */
-[data-testid="stAppViewContainer"] {
-    background-color: #031126; /* Deep Navy Base */
+/* ===== Technical Blueprint: Flows with Scroll ===== */
+.stApp {
+    background-color: #031126;
     background-image: 
-        /* 1. Header Line (Moves with scroll) */
+        /* 1. Top Margin Line */
         linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
         
-        /* 2. Center Glow (Fixed size, moves with scroll) */
-        radial-gradient(circle at 50% 300px, rgba(20, 75, 150, 0.4) 0%, transparent 60%),
+        /* 2. Center Glow */
+        radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
 
-        /* 3. COMPASS ARCS (Top Right) */
-        radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
-        radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
-        
-        /* 4. COMPASS ARCS (Bottom Left) */
-        /* Note: We position these at the bottom of the *viewport height* initially */
-        radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
-        radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px),
-
-        /* 5. GRID LINES */
+        /* 3. Major Grid */
         linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         
+        /* 4. Fine Grid */
         linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+
+        /* 5. Structural Arcs */
+        radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+        radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
+        
+        radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+        radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px);
 
     background-size: 
-        100% auto,             /* Header: Width 100%, Height Auto */
-        100% 800px,            /* Glow: Limit height so it doesn't stretch infinitely */
-        400px 400px, 400px 400px, /* Top Right Arcs: Fixed square size to keep circles round */
-        400px 400px, 400px 400px, /* Bottom Left Arcs: Fixed square size */
-        75px 75px, 75px 75px,  /* Major Grid */
-        15px 15px, 15px 15px;  /* Sub Grid */
-    
-    background-position: 
-        top center,            /* Header */
-        top center,            /* Glow */
-        top right, top right,  /* Top Right Arcs */
-        bottom left, bottom left, /* Bottom Left Arcs */
-        top left, top left,    /* Major Grid */
-        top left, top left;    /* Sub Grid */
+        100% 100%,
+        100% 100%,
+        75px 75px, 75px 75px,
+        15px 15px, 15px 15px,
+        100% 100%, 100% 100%,
+        100% 100%, 100% 100%;
 
     background-repeat: 
-        no-repeat, no-repeat, 
-        no-repeat, no-repeat, 
-        no-repeat, no-repeat, 
-        repeat, repeat, 
-        repeat, repeat;
-    
-    /* THE KEY FIX: 'local' makes it scroll with content */
-    background-attachment: local !important;
+        no-repeat, no-repeat,
+        repeat, repeat,
+        repeat, repeat,
+        no-repeat, no-repeat,
+        no-repeat, no-repeat;
+
+    /* ✅ This makes it scroll naturally */
+    background-attachment: scroll;
 }
+
 
 /* Ensure header is clear so it doesn't block the view */
 .stApp > header {
@@ -290,6 +280,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
