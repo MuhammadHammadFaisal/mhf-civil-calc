@@ -34,38 +34,39 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ================================================================= */
-/* 1. THE BLUEPRINT BACKGROUND (Borders & Grid)                      */
-/* ================================================================= */
+/* ===== Blueprint: Open-Bottom Frame ===== */
 .stApp {
-    background-color: #031126;
+    background-color: #031126; /* Deep Navy Base */
     background-image: 
-        /* --- FRAMES (Top, Left, Right) --- */
-        /* Left Border: 40px Dark + 3px White Line */
+        /* === 1. THE FRAME (Left, Right, Top Only) === */
+        /* Left Margin: Solid Navy + White Line */
         linear-gradient(to right, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 43px, transparent 43px),
-        /* Right Border: 40px Dark + 3px White Line */
+        
+        /* Right Margin: Solid Navy + White Line */
         linear-gradient(to left, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 43px, transparent 43px),
-        /* Top Border: 40px Dark + 3px White Line */
+        
+        /* Top Margin: Solid Navy + White Line */
         linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 43px, transparent 43px),
+        
+        /* (Bottom Margin Removed - Grid extends to bottom edge) */
 
-        /* --- DECORATIONS --- */
-        /* Technical Arcs */
+        /* === 2. Technical Arcs === */
         radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.05) 181px, transparent 183px),
         radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.05) 201px, transparent 203px),
-
-        /* --- GRIDS --- */
-        /* Major Grid (75px) */
+        
+        /* === 3. Major Grid (75px) === */
         linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
-        /* Fine Sub-Grid (15px) */
+        
+        /* === 4. Fine Sub-Grid (15px) === */
         linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-
-        /* --- LIGHTING --- */
+        
+        /* === 5. Center Glow === */
         radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, #031126 90%);
 
     background-size: 
-        100% 100%, 100% 100%, 100% 100%, /* Frames */
+        100% 100%, 100% 100%, 100% 100%, /* 3 Frame Borders Only */
         100% 100%, 100% 100%,            /* Arcs */
         75px 75px, 75px 75px,            /* Major Grid */
         15px 15px, 15px 15px,            /* Sub Grid */
@@ -73,54 +74,6 @@ st.markdown("""
     
     background-attachment: fixed;
 }
-
-/* ================================================================= */
-/* 2. CONTENT PADDING FIX (Keeps text inside the border)             */
-/* ================================================================= */
-[data-testid="stAppViewContainer"] > .main .block-container {
-    padding-top: 60px !important;  /* Push content below Top Border */
-    padding-left: 60px !important; /* Push content right of Left Border */
-    padding-right: 60px !important;/* Push content left of Right Border */
-    max-width: 95vw !important;    /* Ensure container fits within view */
-}
-
-/* ================================================================= */
-/* 3. RESPONSIVE / MOBILE FIX                                        */
-/* ================================================================= */
-/* On screens smaller than 768px (Tablets & Phones), we shrink borders */
-@media (max-width: 768px) {
-    .stApp {
-        /* Shrink the painted borders to 10px on mobile */
-        background-image: 
-            linear-gradient(to right, #031126 0%, #031126 10px, rgba(255,255,255,0.3) 10px, rgba(255,255,255,0.3) 12px, transparent 12px),
-            linear-gradient(to left, #031126 0%, #031126 10px, rgba(255,255,255,0.3) 10px, rgba(255,255,255,0.3) 12px, transparent 12px),
-            linear-gradient(to bottom, #031126 0%, #031126 10px, rgba(255,255,255,0.3) 10px, rgba(255,255,255,0.3) 12px, transparent 12px),
-            /* (Keep the rest of the gradients same as desktop, simplified here for brevity if needed) */
-            radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, #031126 90%);
-    }
-    
-    /* Reset padding for mobile so we don't waste screen space */
-    [data-testid="stAppViewContainer"] > .main .block-container {
-        padding-top: 30px !important;
-        padding-left: 20px !important;
-        padding-right: 20px !important;
-    }
-}
-
-/* ================================================================= */
-/* 4. COMPONENT STYLING                                              */
-/* ================================================================= */
-[data-testid="stPageLink-NavLink"] {
-    background-color: rgba(255, 255, 255, 0.04) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 8px !important;
-    backdrop-filter: blur(4px);
-}
-[data-testid="stPageLink-NavLink"] p {
-    color: #FFFFFF !important;
-    font-weight: 600 !important;
-}
-
 
 /* ===== Glassy Card Styling (Unchanged) ===== */
 [data-testid="stPageLink-NavLink"] {
@@ -316,6 +269,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
