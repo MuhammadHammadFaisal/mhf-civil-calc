@@ -99,7 +99,7 @@ def calculate_pore_pressure(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, s
 # ============================================================
 
 def app():
-    # --- MOVED INSIDE THE FUNCTION TO FIX ATTRIBUTE ERROR ---
+    # Initialize Session State inside app() to avoid scope errors
     if "results" not in st.session_state:
         st.session_state.results = None
     
@@ -119,7 +119,7 @@ def app():
             val_y = st.number_input("Water Height above Soil (y) [m]", 0.0, step=0.5, value=2.0)
             val_x = st.number_input("Piezometer Head at Bottom (x) [m]", 0.0, step=0.5, value=7.5)
             gamma_sat = st.number_input("Saturated Unit Weight (γ_sat) [kN/m³]", 18.0, step=0.1)
-            gamma_w = 10
+            gamma_w = 10.0
             val_A = st.slider("Height of Point 'A' from Datum [m]", 0.0, val_z, val_z/2)
 
             st.markdown("---")
@@ -172,7 +172,7 @@ def app():
                     gamma_effective = gamma_sub
                     bracket_term = gamma_sub
                 
-                sigma_prime_2 = depth_A_soil * bracket_term
+                sigma_prime_2 = depth_A_soil * gamma_effective
 
                 # STORE RESULTS
                 st.session_state.results = {
@@ -192,7 +192,7 @@ def app():
                     "val_y_snap": val_y,
                     "H_top": H_top,
                     "H_bot": H_bot,
-                    "delta_H": delta_H
+                    "gamma_sat_snap": gamma_sat
                 }
 
         # --- PLOT COLUMN ---
@@ -305,12 +305,13 @@ def app():
                 z_s = results.get('val_z_snap', val_z)
                 a_s = results.get('val_A_snap', val_A)
                 y_s = results.get('val_y_snap', val_y)
+                g_sat_s = results.get('gamma_sat_snap', gamma_sat)
                 
                 st.markdown("#### Method 1: Definition (σ' = σ − u)")
                 st.latex(rf"\text{{Depth}} = {z_s} - {a_s} = {results['depth_A_soil']:.2f} \text{{ m}}")
                 
                 st.markdown("**Step 1: Total Stress**")
-                st.latex(rf"\sigma = ({gamma_w} \cdot {y_s}) + ({gamma_sat} \cdot {results['depth_A_soil']:.2f}) = {results['sigma_total']:.2f} \text{{ kPa}}")
+                st.latex(rf"\sigma = ({gamma_w} \cdot {y_s}) + ({g_sat_s} \cdot {results['depth_A_soil']:.2f}) = {results['sigma_total']:.2f} \text{{ kPa}}")
                 
                 st.markdown("**Step 2: Pore Pressure**")
                 st.latex(rf"u = ({results['H_A']:.2f} - {a_s:.2f}) \cdot {gamma_w} = {results['u_val']:.2f} \text{{ kPa}}")
@@ -320,24 +321,24 @@ def app():
                 
                 st.markdown("---")
                 
-                # --- NEW DETAILED SECTION FOR SEEPAGE FORCE ---
+                # --- NEW: FULLY DETAILED STEP-BY-STEP FOR METHOD 2 ---
                 st.markdown("#### Method 2: Seepage Force Approach")
                 st.caption("We adjust the submerged weight of the soil by the drag force (j) of the water.")
 
                 # A. Calculate Gradient
-                st.markdown("**A. Hydraulic Gradient ($i$)**")
+                st.markdown("**Step A: Calculate Hydraulic Gradient ($i$)**")
                 st.latex(rf"i = \frac{{\Delta H}}{{L}} = \frac{{|{results['H_top']:.2f} - {results['H_bot']:.2f}|}}{{{z_s:.2f}}} = {results['i']:.3f}")
 
-                # 1. Submerged Weight
-                st.markdown("**B. Submerged Unit Weight ($\gamma'$)**")
-                st.latex(rf"\gamma' = \gamma_{{sat}} - \gamma_w = {gamma_sat} - {gamma_w} = {results['gamma_sub']:.2f} \text{{ kN/m}}^3")
+                # B. Submerged Weight
+                st.markdown("**Step B: Calculate Submerged Unit Weight ($\gamma'$)**")
+                st.latex(rf"\gamma' = \gamma_{{sat}} - \gamma_w = {g_sat_s:.2f} - {gamma_w:.2f} = {results['gamma_sub']:.2f} \text{{ kN/m}}^3")
                 
-                # 2. Seepage Force per unit volume
-                st.markdown("**C. Seepage Force per Unit Volume ($j$)**")
-                st.latex(rf"j = i \cdot \gamma_w = {results['i']:.3f} \cdot {gamma_w} = {results['j_seepage']:.2f} \text{{ kN/m}}^3")
+                # C. Seepage Force
+                st.markdown("**Step C: Calculate Seepage Force ($j$)**")
+                st.latex(rf"j = i \times \gamma_w = {results['i']:.3f} \times {gamma_w:.2f} = {results['j_seepage']:.2f} \text{{ kN/m}}^3")
                 
-                # 3. Combine
-                st.markdown(f"**D. Effective Unit Weight ($\gamma'_{{eff}}$)** ({results['flow_type']} Flow)")
+                # D. Combine
+                st.markdown(f"**Step D: Determine Effective Unit Weight ($\gamma'_{{eff}}$)**")
                 if results['flow_type'] == "Upward":
                     sign_latex = "-"
                     text_logic = r"\text{Upward flow reduces weight (} \gamma' - j \text{)}"
@@ -349,11 +350,11 @@ def app():
                     text_logic = r"\text{No flow}"
 
                 st.latex(text_logic)
-                st.latex(rf"\gamma'_{{eff}} = {results['gamma_sub']:.2f} {sign_latex} {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \text{{ kN/m}}^3")
+                st.latex(rf"\gamma'_{{eff}} = \gamma' {sign_latex} j = {results['gamma_sub']:.2f} {sign_latex} {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \text{{ kN/m}}^3")
                 
-                # 4. Final
-                st.markdown("**E. Calculate Effective Stress**")
-                st.latex(rf"\sigma' = z \cdot \gamma'_{{eff}} = {results['depth_A_soil']:.2f} \cdot {results['gamma_effective']:.2f} = \mathbf{{{results['sigma_prime_2']:.2f} \text{{ kPa}}}}")
+                # E. Final
+                st.markdown("**Step E: Calculate Effective Stress ($\sigma'$)**")
+                st.latex(rf"\sigma' = z \times \gamma'_{{eff}} = {results['depth_A_soil']:.2f} \times {results['gamma_effective']:.2f} = \mathbf{{{results['sigma_prime_2']:.2f} \text{{ kPa}}}}")
 
     # =================================================================
     # TAB 2: PERMEABILITY
