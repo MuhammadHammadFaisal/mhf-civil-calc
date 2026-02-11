@@ -198,36 +198,109 @@ def app():
 
             st.markdown("---")
             if st.button("Calculate Effective Stress", type="primary"):
-                H_top = val_z + val_y
-                H_bot = val_x
-                h_loss = H_top - H_bot
+                # --- PRELIMINARY CALCULATIONS ---
+                gamma_sub = gamma_sat - gamma_w  # Effective Unit Weight (gamma prime)
                 
-                if h_loss > 0:
+                # Heads
+                H_top = val_z + val_y   # Total Head at Top
+                H_bot = val_x           # Total Head at Bottom
+                delta_H = H_top - H_bot # Head Loss
+                
+                # Flow Direction & Gradient (i)
+                if delta_H > 0.001:
                     flow_type = "Downward"
-                    effect_msg = "Downward Flow increases Effective Stress (+i·z·γw)"
-                elif h_loss < 0:
+                    flow_sign = "+"
+                    i = abs(delta_H) / val_z
+                elif delta_H < -0.001:
                     flow_type = "Upward"
-                    effect_msg = "Upward Flow decreases Effective Stress (-i·z·γw)"
+                    flow_sign = "-"
+                    i = abs(delta_H) / val_z
                 else:
-                    flow_type = "No Flow"
-                    effect_msg = "Hydrostatic Condition"
+                    flow_type = "No Flow (Hydrostatic)"
+                    flow_sign = "\pm" # Doesn't matter
+                    i = 0.0
 
-                i = abs(h_loss) / val_z
-                sigma_total = (val_y * gamma_w) + ((val_z - val_A) * gamma_sat)
-                H_A = H_bot + (val_A / val_z) * (H_top - H_bot)
-                h_p_A = H_A - val_A
-                u_val = h_p_A * gamma_w
-                sigma_prime = sigma_total - u_val
+                # Geometry for Point A
+                depth_A_soil = val_z - val_A  # Depth of A from soil surface (z in your notes)
+
+                # --- METHOD 1: Total Stress - Pore Pressure ---
+                # 1. Total Stress (sigma) = Water weight above soil + Saturated soil above A
+                sigma_total = (val_y * gamma_w) + (depth_A_soil * gamma_sat)
                 
-                st.success(f"**Flow Condition:** {flow_type}\n\n*{effect_msg}*")
-                st.metric("Total Stress (σ)", f"{sigma_total:.2f} kPa")
-                st.metric("Pore Pressure (u)", f"{u_val:.2f} kPa")
-                st.metric("Effective Stress (σ')", f"{sigma_prime:.2f} kPa")
+                # 2. Pore Pressure (u)
+                # Head at A interpolates linearly between Top and Bot
+                H_A = H_bot + (val_A / val_z) * (H_top - H_bot) 
+                h_p_A = H_A - val_A  # Pressure Head = Total Head - Elevation Head
+                u_val = h_p_A * gamma_w
+                
+                # 3. Effective Stress
+                sigma_prime_1 = sigma_total - u_val
+
+                # --- METHOD 2: Seepage Force Approach ---
+                # Formula: sigma' = z * (gamma_sub ± i * gamma_w)
+                seepage_force = i * gamma_w
+                
+                if flow_type == "Downward":
+                    bracket_term = gamma_sub + seepage_force
+                elif flow_type == "Upward":
+                    bracket_term = gamma_sub - seepage_force
+                else:
+                    bracket_term = gamma_sub
+                
+                sigma_prime_2 = depth_A_soil * bracket_term
+
+                # --- DISPLAY RESULTS ---
+                st.success(f"**Flow Condition:** {flow_type} ($i = {i:.3f}$)")
+                
+                # Metrics Row
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Total Stress (σ)", f"{sigma_total:.2f} kPa")
+                m2.metric("Pore Pressure (u)", f"{u_val:.2f} kPa")
+                m3.metric("Effective Stress (σ')", f"{sigma_prime_1:.2f} kPa")
+
+                # --- DETAILED CALCULATION EXPANDER ---
+                with st.expander("View Detailed Step-by-Step Derivation (2 Methods)", expanded=True):
                     
-                with st.expander("View Step-by-Step Derivation"):
-                    st.latex(rf"H_{{top}} = {H_top:.2f} m, \quad H_{{bot}} = {H_bot:.2f} m")
-                    st.latex(rf"\sigma = {sigma_total:.2f} kPa")
-                    st.latex(rf"u = {u_val:.2f} kPa")
+                    st.markdown("#### **Method 1: Definition ($\sigma' = \sigma - u$)**")
+                    st.latex(rf"\text{{Depth of A into soil }} (z) = {val_z} - {val_A} = {depth_A_soil:.2f} \text{{ m}}")
+                    
+                    st.markdown("**Step 1: Total Stress ($\sigma$)**")
+                    st.latex(rf"\sigma = (\gamma_w \cdot h_w) + (\gamma_{{sat}} \cdot z)")
+                    st.latex(rf"\sigma = ({gamma_w} \cdot {val_y}) + ({gamma_sat} \cdot {depth_A_soil:.2f}) = \mathbf{{{sigma_total:.2f} \text{{ kPa}}}}")
+                    
+                    st.markdown("**Step 2: Pore Water Pressure ($u$)**")
+                    st.latex(rf"H_{{top}} = {H_top:.2f}m, \quad H_{{bot}} = {H_bot:.2f}m \implies H_A = {H_A:.2f}m")
+                    st.latex(rf"u = (H_A - Z_A) \cdot \gamma_w = ({H_A:.2f} - {val_A:.2f}) \cdot {gamma_w} = \mathbf{{{u_val:.2f} \text{{ kPa}}}}")
+                    
+                    st.markdown("**Step 3: Effective Stress**")
+                    st.latex(rf"\sigma' = \sigma - u = {sigma_total:.2f} - {u_val:.2f} = \mathbf{{{sigma_prime_1:.2f} \text{{ kPa}}}}")
+
+                    st.markdown("---")
+
+                    st.markdown("#### **Method 2: Seepage Force ($\sigma' = z(\gamma' \pm i \gamma_w)$)**")
+                    st.caption("This method uses buoyant unit weight adjusted by the hydraulic gradient.")
+                    
+                    st.markdown("**Step 1: Calculate Gradient ($i$) and Submerged Weight ($\gamma'$)**")
+                    st.latex(rf"\gamma' = \gamma_{{sat}} - \gamma_w = {gamma_sat} - {gamma_w} = {gamma_sub:.2f} \text{{ kN/m}}^3")
+                    st.latex(rf"i = \frac{{\Delta H}}{{L}} = \frac{{|{H_top:.2f} - {H_bot:.2f}|}}{{{val_z}}} = {i:.3f}")
+                    
+                    st.markdown(f"**Step 2: Apply Seepage Formula ({flow_type})**")
+                    if flow_type == "Downward":
+                        sign_latex = "+"
+                        logic_text = "Downward flow increases effective stress (drag force adds to gravity)."
+                    elif flow_type == "Upward":
+                        sign_latex = "-"
+                        logic_text = "Upward flow decreases effective stress (drag force opposes gravity)."
+                    else:
+                        sign_latex = "\pm"
+                        logic_text = "No flow exists."
+
+                    st.write(f"*{logic_text}*")
+                    
+                    st.latex(rf"\sigma' = z \cdot [\gamma' {sign_latex} (i \cdot \gamma_w)]")
+                    st.latex(rf"\sigma' = {depth_A_soil:.2f} \cdot [{gamma_sub:.2f} {sign_latex} ({i:.3f} \cdot {gamma_w})]")
+                    st.latex(rf"\sigma' = {depth_A_soil:.2f} \cdot [{gamma_sub:.2f} {sign_latex} {seepage_force:.2f}]")
+                    st.latex(rf"\sigma' = {depth_A_soil:.2f} \cdot [{bracket_term:.2f}] = \mathbf{{{sigma_prime_2:.2f} \text{{ kPa}}}}")
 
         with col_plot:
             fig, ax = plt.subplots(figsize=(7, 8))
