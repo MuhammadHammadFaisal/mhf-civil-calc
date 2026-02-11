@@ -94,7 +94,6 @@ st.markdown("""
 
     background-attachment: fixed;
 }
-</style>
 
 /* ===== Glassy Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
@@ -292,6 +291,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
