@@ -34,44 +34,52 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Blueprint Background: Depth & Detail ===== */
+/* ===== Technical Blueprint with Deep Gradient & Structural Arcs ===== */
 .stApp {
     background-color: #031126; /* Deep Navy Base */
     background-image: 
-        /* === 1. THE DIFFERENTIAL (Center Glow) === */
-        /* This creates the "lit" effect in the middle, fading to dark corners */
-        radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, rgba(3, 17, 38, 1) 90%),
+        /* 1. Top Margin Line (Kept from your code) */
+        linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
+        
+        /* 2. Center Glow (Kept from your code) */
+        radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
 
-        /* === 2. TOP RIGHT COMPASS ARCS === */
+        /* 3. Major Grid (Kept from your code) */
+        linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+        
+        /* 4. Fine Sub-Grid (Kept from your code) */
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+
+        /* 5. NEW STRUCTURAL COMPONENTS (Technical Compass Arcs) */
+        /* Top Right: Outer Thick Ring */
         radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+        /* Top Right: Inner Thin Ring */
         radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
         
-        /* === 3. BOTTOM LEFT COMPASS ARCS === */
+        /* Bottom Left: Outer Thick Ring */
         radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
-        radial-gradient(circle at 0% 100%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
-        radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px),
-
-        /* === 4. GRID LINES === */
-        /* Major Grid (Bright) */
-        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-        
-        /* Minor Grid (Faint) */
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        /* Bottom Left: Corner Hub */
+        radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px);
 
     background-size: 
-        100% 100%,                       /* Center Glow (Cover full screen) */
-        100% 100%, 100% 100%,            /* Top Right Arcs */
-        100% 100%, 100% 100%, 100% 100%, /* Bottom Left Arcs */
-        75px 75px, 75px 75px,            /* Major Grid */
-        15px 15px, 15px 15px;            /* Minor Grid */
+        100% 100%,           /* Top Margin */
+        100% 100%,           /* Center Glow */
+        75px 75px, 75px 75px, /* Major Grid */
+        15px 15px, 15px 15px, /* Sub Grid */
+        100% 100%, 100% 100%, /* Top Right Arcs */
+        100% 100%, 100% 100%; /* Bottom Left Arcs */
     
-    background-position: center;
-    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, repeat, repeat;
+    background-position: 
+        0 0, 0 0, 
+        0 0, 0 0, 
+        0 0, 0 0, 
+        0 0, 0 0, 0 0, 0 0;
+
+    background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
     background-attachment: fixed;
 }
-
 /* ===== Glassy Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
     background-color: rgba(255, 255, 255, 0.04) !important;
@@ -268,6 +276,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
