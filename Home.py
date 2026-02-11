@@ -78,12 +78,6 @@ st.markdown("""
     background-attachment: scroll;
 }
 
-
-/* Ensure header is clear so it doesn't block the view */
-.stApp > header {
-    background-color: transparent !important;
-
-
 /* ===== Glassy Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
     background-color: rgba(255, 255, 255, 0.04) !important;
@@ -280,6 +274,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
