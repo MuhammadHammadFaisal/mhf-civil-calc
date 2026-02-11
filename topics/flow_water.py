@@ -139,7 +139,7 @@ def calculate_pore_pressure(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, s
     if py > 0:
         return None  # Above ground surface
     
-    gamma_w = 9.81  # kN/m³
+    gamma_w = 10  # kN/m³
     
     # Get complex potential at point
     w_pt = get_complex_potential(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, soil_d)
@@ -193,7 +193,7 @@ def app():
             val_y = st.number_input("Water Height above Soil (y) [m]", 0.0, step=0.5, value=2.0)
             val_x = st.number_input("Piezometer Head at Bottom (x) [m]", 0.0, step=0.5, value=7.5)
             gamma_sat = st.number_input("Saturated Unit Weight (γ_sat) [kN/m³]", 18.0, step=0.1)
-            gamma_w = 9.81
+            gamma_w = 10
             val_A = st.slider("Height of Point 'A' from Datum [m]", 0.0, val_z, val_z/2)
 
             st.markdown("---")
