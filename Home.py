@@ -34,6 +34,57 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
+
+/* ===== Scrolling Blueprint Background ===== */
+[data-testid="stAppViewContainer"] {
+    background-color: #031126;
+    background-image: 
+        linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
+        
+        radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
+
+        linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+        
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+
+        radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+        radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
+        
+        radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+        radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px);
+
+    background-size: 
+        100% 100%,
+        100% 100%,
+        75px 75px, 75px 75px,
+        15px 15px, 15px 15px,
+        100% 100%, 100% 100%,
+        100% 100%, 100% 100%;
+
+    background-repeat: 
+        no-repeat, no-repeat,
+        repeat, repeat,
+        repeat, repeat,
+        no-repeat, no-repeat,
+        no-repeat, no-repeat;
+
+    background-attachment: local;;
+}
+/* ===== Glassy Card Styling ===== */
+[data-testid="stPageLink-NavLink"] {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(4px);
+}
+
+[data-testid="stPageLink-NavLink"] p {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
 /* ===== Framed Content Area ===== */
 main > div:first-child {
     max-width: 1200px;
@@ -150,7 +201,7 @@ def main():
 
     with col_text:
         st.markdown("""
-        <h1 style="color: #FFFFFF; font-size:46px; margin-bottom:6px;">MHF Civil Calc</h1>
+        <h1 style="color: #FFFFFF; font-size:60px; margin-bottom:6px;">MHF Civil Calc</h1>
         <p style="color: #E2E8F0; font-size:18px; line-height:1.5; max-width:700px;">
             Civil Engineering Calculation Workspace
         </p>
@@ -202,7 +253,8 @@ def main():
     
     st.link_button(
         "LinkedIn Profile",
-        "https://www.linkedin.com/in/muhammad-hammad-20059a229"
+        "https://www.linkedin.com/in/muhammad-hammad-20059a229",
+        use_container_width=True
     )
 
     # ------------------------- FOOTER -------------------------
@@ -216,6 +268,17 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
+
 
 
 
