@@ -35,8 +35,8 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-/* Apply background to actual scrolling container */
-.main {
+/* ===== Scrolling Blueprint Background ===== */
+[data-testid="stAppViewContainer"] {
     background-color: #031126;
     background-image: 
         linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
@@ -69,8 +69,9 @@ st.markdown("""
         repeat, repeat,
         no-repeat, no-repeat,
         no-repeat, no-repeat;
-}
 
+    background-attachment: scroll;
+}
 /* ===== Glassy Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
     background-color: rgba(255, 255, 255, 0.04) !important;
@@ -267,6 +268,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
