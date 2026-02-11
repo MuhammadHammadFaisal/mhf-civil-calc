@@ -34,33 +34,47 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Improved Blueprint Background ===== */
+/* ===== Technical Blueprint Background ===== */
 .stApp {
-    background-color: #031126; 
+    background-color: #0e2a47; /* Lighter "Blueprint" Blue to match your image */
     background-image: 
-        /* 1. Subtle Top Header Line */
-        linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.3) 40px, rgba(255,255,255,0.3) 41px, transparent 41px),
+        /* === 1. TOP RIGHT COMPASS ARCS === */
+        /* Thick outer ring */
+        radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.15) 251px, transparent 253px),
+        /* Thin inner ring */
+        radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
+        /* Dashed-style ring (simulated with opacity) */
+        radial-gradient(circle at 100% 0%, transparent 190px, rgba(255,255,255,0.1) 191px, transparent 192px),
         
-        /* 2. Fixed Center Glow (No Tiling) */
-        radial-gradient(circle at center, rgba(20, 75, 150, 0.5) 0%, rgba(3, 17, 38, 0) 70%),
+        /* === 2. BOTTOM LEFT COMPASS ARCS === */
+        /* Thick outer ring */
+        radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.15) 251px, transparent 253px),
+        /* Thin inner ring */
+        radial-gradient(circle at 0% 100%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
+        /* Small corner detail */
+        radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.2) 51px, transparent 53px),
 
-        /* 3. Soft Major Grid (75px) */
-        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        /* === 3. GRID LINES === */
+        /* Major Grid (Bright) */
+        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
         
-        /* 4. Very Faint Sub-Grid (15px) */
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        /* Minor Grid (Faint) */
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 
     background-size: 
-        100% 100%,     /* Top Line */
-        100% 100%,     /* Center Glow */
-        75px 75px,     /* Major Grid X */
-        75px 75px,     /* Major Grid Y */
-        15px 15px,     /* Sub Grid X */
-        15px 15px;     /* Sub Grid Y */
+        100% 100%, 100% 100%, 100% 100%, /* Top Right Arcs */
+        100% 100%, 100% 100%, 100% 100%, /* Bottom Left Arcs */
+        75px 75px, 75px 75px,            /* Major Grid */
+        15px 15px, 15px 15px;            /* Minor Grid */
     
-    background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat;
+    background-position: 
+        0 0, 0 0, 0 0,
+        0 0, 0 0, 0 0,
+        center center, center center,
+        center center, center center;
+
     background-attachment: fixed;
 }
 
@@ -260,6 +274,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
