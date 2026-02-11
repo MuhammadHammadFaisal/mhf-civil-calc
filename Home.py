@@ -33,6 +33,7 @@ st.set_page_config(
 # CSS: Blueprint Background + Framed Content + Cards + Text Colors
 # =========================================================
 st.markdown("""
+<style>
 /* ===== Improved Blueprint Background ===== */
 .stApp {
     background-color: #031126; 
@@ -259,6 +260,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
