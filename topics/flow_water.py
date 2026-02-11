@@ -199,16 +199,16 @@ def app():
             st.markdown("---")
             
             # --- THIS WAS MISSING ---
-            if st.button("Calculate Effective Stress", type="primary"):
+                        if st.button("Calculate Effective Stress", type="primary"):
                 # --- PRELIMINARY CALCULATIONS ---
-                gamma_sub = gamma_sat - gamma_w  # Effective Unit Weight (gamma prime)
+                gamma_sub = gamma_sat - gamma_w  # Effective Unit Weight
                 
                 # Heads
-                H_top = val_z + val_y   # Total Head at Top
-                H_bot = val_x           # Total Head at Bottom
-                delta_H = H_top - H_bot # Head Loss
+                H_top = val_z + val_y
+                H_bot = val_x
+                delta_H = H_top - H_bot
                 
-                # Flow Direction & Gradient (i)
+                # Flow Direction & Gradient
                 if delta_H > 0.001:
                     flow_type = "Downward"
                     i = abs(delta_H) / val_z
@@ -219,13 +219,12 @@ def app():
                     flow_type = "No Flow (Hydrostatic)"
                     i = 0.0
 
-                # Geometry for Point A
-                depth_A_soil = val_z - val_A  # Depth of A from soil surface
+                # Geometry
+                depth_A_soil = val_z - val_A
 
                 # --- METHOD 1: Total Stress - Pore Pressure ---
                 sigma_total = (val_y * gamma_w) + (depth_A_soil * gamma_sat)
                 
-                # Head at A interpolates linearly between Top and Bot
                 H_A = H_bot + (val_A / val_z) * (H_top - H_bot) 
                 h_p_A = H_A - val_A 
                 u_val = h_p_A * gamma_w
@@ -234,7 +233,6 @@ def app():
 
                 # --- METHOD 2: Seepage Force Approach ---
                 seepage_force = i * gamma_w
-                
                 if flow_type == "Downward":
                     bracket_term = gamma_sub + seepage_force
                 elif flow_type == "Upward":
@@ -244,13 +242,18 @@ def app():
                 
                 sigma_prime_2 = depth_A_soil * bracket_term
 
-                # --- DISPLAY RESULTS ---
+                # --- DISPLAY RESULTS (STACKED FOR VISIBILITY) ---
                 st.success(f"**Flow Condition:** {flow_type} ($i = {i:.3f}$)")
                 
-                m1, m2, m3 = st.columns(3)
-                m1.metric("Total Stress (σ)", f"{sigma_total:.2f} kPa")
-                m2.metric("Pore Pressure (u)", f"{u_val:.2f} kPa")
-                m3.metric("Effective Stress (σ')", f"{sigma_prime_1:.2f} kPa")
+                # REMOVED st.columns(3) HERE TO FIX TRUNCATION
+                st.metric("Total Stress (σ)", f"{sigma_total:.2f} kPa")
+                st.metric("Pore Pressure (u)", f"{u_val:.2f} kPa")
+                # Highlight the final answer
+                st.markdown(f"""
+                <div style="padding:10px; border:1px solid #4CAF50; border-radius:5px; background-color:rgba(76, 175, 80, 0.1);">
+                    <h3 style="margin:0; color:#4CAF50;">Effective Stress (σ') = {sigma_prime_1:.2f} kPa</h3>
+                </div>
+                """, unsafe_allow_html=True)
 
                 # --- DETAILED CALCULATION EXPANDER ---
                 with st.expander("View Detailed Step-by-Step Derivation (2 Methods)", expanded=True):
@@ -259,38 +262,26 @@ def app():
                     st.latex(rf"\text{{Depth of A into soil }} (z) = {val_z} - {val_A} = {depth_A_soil:.2f} \text{{ m}}")
                     
                     st.markdown("**Step 1: Total Stress ($\sigma$)**")
-                    st.latex(rf"\sigma = (\gamma_w \cdot h_w) + (\gamma_{{sat}} \cdot z)")
                     st.latex(rf"\sigma = ({gamma_w} \cdot {val_y}) + ({gamma_sat} \cdot {depth_A_soil:.2f}) = \mathbf{{{sigma_total:.2f} \text{{ kPa}}}}")
                     
                     st.markdown("**Step 2: Pore Water Pressure ($u$)**")
-                    st.latex(rf"H_{{top}} = {H_top:.2f}m, \quad H_{{bot}} = {H_bot:.2f}m \implies H_A = {H_A:.2f}m")
-                    st.latex(rf"u = (H_A - Z_A) \cdot \gamma_w = ({H_A:.2f} - {val_A:.2f}) \cdot {gamma_w} = \mathbf{{{u_val:.2f} \text{{ kPa}}}}")
+                    st.latex(rf"u = ({H_A:.2f} - {val_A:.2f}) \cdot {gamma_w} = \mathbf{{{u_val:.2f} \text{{ kPa}}}}")
                     
                     st.markdown("**Step 3: Effective Stress**")
-                    st.latex(rf"\sigma' = \sigma - u = {sigma_total:.2f} - {u_val:.2f} = \mathbf{{{sigma_prime_1:.2f} \text{{ kPa}}}}")
+                    st.latex(rf"\sigma' = {sigma_total:.2f} - {u_val:.2f} = \mathbf{{{sigma_prime_1:.2f} \text{{ kPa}}}}")
 
                     st.markdown("---")
 
                     st.markdown("#### **Method 2: Seepage Force ($\sigma' = z(\gamma' \pm i \gamma_w)$)**")
+                    st.markdown(f"**Step 1:** $\gamma' = {gamma_sub:.2f}$ | $i = {i:.3f}$")
                     
-                    st.markdown("**Step 1: Calculate Gradient ($i$) and Submerged Weight ($\gamma'$)**")
-                    st.latex(rf"\gamma' = \gamma_{{sat}} - \gamma_w = {gamma_sat} - {gamma_w} = {gamma_sub:.2f} \text{{ kN/m}}^3")
-                    st.latex(rf"i = \frac{{\Delta H}}{{L}} = \frac{{|{H_top:.2f} - {H_bot:.2f}|}}{{{val_z}}} = {i:.3f}")
-                    
-                    st.markdown(f"**Step 2: Apply Seepage Formula ({flow_type})**")
                     if flow_type == "Downward":
                         sign_latex = "+"
-                        logic_text = "Downward flow increases effective stress (drag force adds to gravity)."
                     elif flow_type == "Upward":
                         sign_latex = "-"
-                        logic_text = "Upward flow decreases effective stress (drag force opposes gravity)."
                     else:
                         sign_latex = "\pm"
-                        logic_text = "No flow exists."
-
-                    st.write(f"*{logic_text}*")
                     
-                    st.latex(rf"\sigma' = z \cdot [\gamma' {sign_latex} (i \cdot \gamma_w)]")
                     st.latex(rf"\sigma' = {depth_A_soil:.2f} \cdot [{gamma_sub:.2f} {sign_latex} ({i:.3f} \cdot {gamma_w})]")
                     st.latex(rf"\sigma' = {depth_A_soil:.2f} \cdot [{bracket_term:.2f}] = \mathbf{{{sigma_prime_2:.2f} \text{{ kPa}}}}")
 
