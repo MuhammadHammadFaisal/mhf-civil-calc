@@ -63,12 +63,6 @@ st.markdown("""
     background-attachment: fixed;
 }
 
-/* ===== Content Box Polish ===== */
-main > div:first-child {
-    background-color: rgba(10, 25, 47, 0.6) !important; 
-    backdrop-filter: blur(12px); /* Makes the grid behind the text look 'frosted' */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
 /* ===== Glassy Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
     background-color: rgba(255, 255, 255, 0.04) !important;
@@ -265,6 +259,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
