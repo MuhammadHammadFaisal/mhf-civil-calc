@@ -1,2 +1,17 @@
 [server]
 runOnSave = true
+
+[theme]
+base="dark"
+# This controls the sidebar color.
+# I picked a Deep Navy Blue to match your blueprint theme.
+secondaryBackgroundColor="#05101F" 
+
+# This controls the main background (behind your grid image if it's transparent)
+backgroundColor="#0E1117"
+
+# This controls the accent color (buttons, sliders, etc.)
+primaryColor="#3B82F6" 
+
+# This controls the text color
+textColor="#FAFAFA"
