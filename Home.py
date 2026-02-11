@@ -35,34 +35,35 @@ st.set_page_config(
 st.markdown("""
 <style>
 /* ===== Technical Blueprint with Deep Gradient ===== */
+/* ===== Blueprint: Full Width Background Fix ===== */
 .stApp {
-    /* 1. Deepest Base Color (Midnight Navy) */
-    background-color: #020a1a;
-    
+    background-color: #031126; /* Deep Navy Base */
     background-image: 
-        /* 2. Center Glow (Restoring the gradient you liked) */
-        radial-gradient(circle at center, rgba(20, 75, 140, 0.5) 0%, rgba(2, 10, 26, 1) 90%),
+        /* 1. Top Margin Line */
+        linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
         
-        /* 3. Fine Grid (Sharp & Faint) */
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        
-        /* 4. Major Grid (Distinct Structural Lines) */
+        /* 2. Center Glow (Moved up to blend behind text) */
+        radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
+
+        /* 3. Major Grid (75px) */
         linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         
-        /* 5. Technical Arcs (Subtle Geometry in Corners) */
-        radial-gradient(circle at 100% 0%, transparent 120px, rgba(255,255,255,0.05) 121px, transparent 123px),
-        radial-gradient(circle at 100% 0%, transparent 160px, rgba(255,255,255,0.03) 161px, transparent 163px),
-        radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.04) 201px, transparent 203px);
+        /* 4. Fine Sub-Grid (15px) */
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
 
-    /* Exact sizing for the layered effect */
+        /* 5. Subtle Arcs for technical feel */
+        radial-gradient(circle at 100% 0%, transparent 180px, rgba(255,255,255,0.03) 181px, transparent 183px),
+        radial-gradient(circle at 0% 100%, transparent 200px, rgba(255,255,255,0.03) 201px, transparent 203px);
+
     background-size: 
-        100% 100%,                  /* Glow fills the screen */
-        20px 20px, 20px 20px,       /* Fine Grid */
-        100px 100px, 100px 100px,   /* Major Grid */
-        100% 100%, 100% 100%, 100% 100%; /* Arcs */
-        
+        100% 100%,           /* Top Margin */
+        100% 100%,           /* Center Glow */
+        75px 75px, 75px 75px, /* Major Grid */
+        15px 15px, 15px 15px, /* Sub Grid */
+        100% 100%, 100% 100%; /* Arcs */
+    
     background-attachment: fixed;
 }
 
@@ -262,6 +263,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
