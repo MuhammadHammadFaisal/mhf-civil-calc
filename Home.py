@@ -34,25 +34,25 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-/* ===== Technical Blueprint with Deep Gradient & Structural Arcs ===== */
+/* ===== Technical Blueprint: Flows with Scroll ===== */
 .stApp {
     background-color: #031126; /* Deep Navy Base */
     background-image: 
-        /* 1. Top Margin Line (Kept from your code) */
+        /* 1. Top Margin Line */
         linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
         
-        /* 2. Center Glow (Kept from your code) */
-        radial-gradient(circle at center, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
+        /* 2. Center Glow (Pinned to top-center so it's visible at start) */
+        radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
 
-        /* 3. Major Grid (Kept from your code) */
+        /* 3. Major Grid (75px) */
         linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
         
-        /* 4. Fine Sub-Grid (Kept from your code) */
+        /* 4. Fine Sub-Grid (15px) */
         linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
 
-        /* 5. NEW STRUCTURAL COMPONENTS (Technical Compass Arcs) */
+        /* 5. STRUCTURAL ARCS (Technical Details) */
         /* Top Right: Outer Thick Ring */
         radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
         /* Top Right: Inner Thin Ring */
@@ -64,8 +64,8 @@ st.markdown("""
         radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px);
 
     background-size: 
-        100% 100%,           /* Top Margin */
-        100% 100%,           /* Center Glow */
+        100% 100%,            /* Top Margin */
+        100% 100%,            /* Center Glow */
         75px 75px, 75px 75px, /* Major Grid */
         15px 15px, 15px 15px, /* Sub Grid */
         100% 100%, 100% 100%, /* Top Right Arcs */
@@ -78,8 +78,11 @@ st.markdown("""
         0 0, 0 0, 0 0, 0 0;
 
     background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-    background-attachment: fixed;
+    
+    /* This makes the background move with the scroll */
+    background-attachment: local;
 }
+
 /* ===== Glassy Card Styling ===== */
 [data-testid="stPageLink-NavLink"] {
     background-color: rgba(255, 255, 255, 0.04) !important;
@@ -276,6 +279,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
