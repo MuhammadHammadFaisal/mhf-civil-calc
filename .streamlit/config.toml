@@ -1,3 +1,18 @@
 [server]
 runOnSave = true
 
+[theme]
+base = "dark"
+
+# Primary Color: This is the "MHF Cyan" that matches your logo
+# It will turn the red button and slider into the correct blue/cyan
+primaryColor = "#00B4D8"
+
+# Background color (Dark Navy - matches your blueprint style)
+backgroundColor = "#0E1117"
+
+# Secondary background (Sidebar and widget backgrounds)
+secondaryBackgroundColor = "#05101F"
+
+# Text color
+textColor = "#FAFAFA"
