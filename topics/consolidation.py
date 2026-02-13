@@ -3,355 +3,358 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 
+# ================================================================
+# FOURIER SOLUTION FUNCTIONS
+# ================================================================
+
+def local_degree_consolidation(z, Hdr, Tv, terms=100):
+    """
+    Calculates local degree of consolidation Uz at depth z (from drainage face).
+    z should be between 0 and Hdr.
+    """
+    summation = 0
+    for n in range(terms):
+        m = 2*n + 1
+        M = m * np.pi / 2
+        # Sin argument: (m * pi * z) / (2 * Hdr)
+        term = (2/m) * np.sin(M * z / Hdr) * np.exp(-(m**2)*(np.pi**2)*Tv/4)
+        summation += term
+    
+    # Avoid small numerical noise giving values slightly > 1 or < 0
+    ue_ratio = summation
+    return max(0.0, min(1.0, 1 - ue_ratio))
+
+
+def pore_pressure_ratio(z, Hdr, Tv, terms=100):
+    """
+    Calculates excess pore pressure ratio (ue/ui) at depth z.
+    """
+    summation = 0
+    for n in range(terms):
+        m = 2*n + 1
+        M = m * np.pi / 2
+        term = (2/m) * np.sin(M * z / Hdr) * np.exp(-(m**2)*(np.pi**2)*Tv/4)
+        summation += term
+    return max(0.0, min(1.0, summation))
+
+
+# ================================================================
+# APP
+# ================================================================
 def app():
-    # ================================================================
-    # CONFIG & SIDEBAR
-    # ================================================================
-    st.set_page_config(page_title="1D Consolidation Calculator", layout="wide")
-    
-    st.write("""
-        **Assumptions:**
-        - 1D Terzaghi Consolidation
-        - Immediate Settlement ignored
-        - Uniform surface surcharge
-        - Stress evaluated at layer midpoint
-        """)
+
+    st.set_page_config(page_title="Advanced 1D Consolidation", layout="wide")
+
+    st.title("Advanced 1D Terzaghi Consolidation Analyzer")
+
+    st.info("""
+    **Reference Guidelines (Based on Course Notes):**
+    1. **Unit Weights:** If a layer straddles the Water Table, split it into two layers (one above, one below) to use the correct unit weights (Dry/Bulk vs Saturated).
+    2. **Time Factors:** Uses the piecewise equations from Source 60 ($2\sqrt{T_v/\pi}$ and standard log approximation).
+    """)
 
     # ================================================================
-    # HEADER
-    # ================================================================
-    st.title("1D Soil Consolidation Analyzer")
-    
-    calc_mode = st.radio(
-        "**Calculation Goal:**",
-        ["1. Final Ultimate Settlement ($S_{final}$)", "2. Time Rate of Consolidation ($t$ for $U_{avg}$)"],
-        horizontal=True
-    )
-
-    st.markdown("---")
-
-    # ================================================================
-    # GLOBAL PARAMETERS
+    # GLOBAL INPUT
     # ================================================================
     col_g1, col_g2, col_g3 = st.columns(3)
 
     with col_g1:
-        water_depth = st.number_input("Water Table Depth [m]", value=2.0, step=0.5, 
-                                    help="Depth from ground surface to Phreatic Surface")
+        water_depth = st.number_input("Water Table Depth [m]", 2.0)
 
     with col_g2:
-        surcharge_q = st.number_input("Surface Surcharge Δσ [kPa]", value=50.0, step=10.0)
+        surcharge_q = st.number_input("Surface Surcharge Δσ [kPa]", 50.0)
+
     with col_g3:
-        # Moved from sidebar to here
-        gamma_w = st.radio(
-            "Unit Weight of Water ($γ_w$)",
-            [9.81, 10.0],
-            horizontal=True # Optional: makes it side-by-side
-        )
-    # ================================================================
-    # INPUT SECTION
-    # ================================================================
-    col_input, col_viz = st.columns([1.5, 1])
-
-    layers_data = []
-
-    with col_input:
-        st.subheader("Soil Stratigraphy")
-        num_layers = st.number_input("Number of Layers", 1, 10, 3)
-
-        current_depth = 0.0
-
-        for i in range(int(num_layers)):
-            with st.expander(f"Layer {i+1} (Top: {current_depth:.1f} m)", expanded=(i==0)):
-                
-                c1, c2, c3 = st.columns(3)
-                thickness = c1.number_input(f"Thickness [m]", value=4.0, key=f"h_{i}", min_value=0.1)
-                gamma = c2.number_input(f"γsat [kN/m³]", value=19.0, key=f"g_{i}")
-                soil_type = c3.selectbox(f"Type", ["Clay", "Sand"], key=f"type_{i}")
-
-                mid_depth = current_depth + thickness/2
-
-                # --- Consolidation Parameters (Only for Clay) ---
-                method = "None"
-                params = {}
-
-                if soil_type == "Clay":
-                    st.caption("Consolidation Parameters")
-                    method = st.radio(
-                        f"Method (L{i+1})",
-                        ["Method A: Cc/Cr (e-log p)", "Method B: mv (Linear)", "Method C: Δe (Direct)"],
-                        key=f"m_{i}",
-                        horizontal=True
-                    )
-
-                    if "Method A" in method:
-                        rc1, rc2, rc3 = st.columns(3)
-                        e0 = rc1.number_input("Initial e0", 0.85, key=f"e0_{i}")
-                        Cc = rc2.number_input("Cc", 0.32, key=f"cc_{i}")
-                        Cr = rc3.number_input("Cr", 0.05, key=f"cr_{i}")
-                        sig_p = st.number_input("Preconsolidation σ'p [kPa]", 100.0, key=f"sp_{i}")
-                        params = {"e0": e0, "Cc": Cc, "Cr": Cr, "sigma_p": sig_p}
-
-                    elif "Method B" in method:
-                        mv = st.number_input("Coefficient mv [1/kPa]", 0.0005, format="%.5f", key=f"mv_{i}")
-                        params = {"mv": mv}
-
-                    elif "Method C" in method:
-                        rc1, rc2 = st.columns(2)
-                        e0 = rc1.number_input("Initial e0", 0.9, key=f"e0c_{i}")
-                        ef = rc2.number_input("Final ef", 0.82, key=f"efc_{i}")
-                        params = {"e0": e0, "e_final": ef}
-
-                layers_data.append({
-                    "id": i+1,
-                    "type": soil_type,
-                    "thickness": thickness,
-                    "gamma": gamma,
-                    "top": current_depth,
-                    "bottom": current_depth + thickness,
-                    "mid": mid_depth,
-                    "method": method,
-                    "params": params
-                })
-
-                current_depth += thickness
+        gamma_w = st.radio("γw [kN/m³]", [9.81, 10.0], horizontal=True)
 
     # ================================================================
-    # VISUALIZATION (Fixed Memory Issue)
+    # SOIL LAYERS
     # ================================================================
-    with col_viz:
+    layers = []
+    current_depth = 0.0
+
+    st.subheader("Stratigraphy")
+    n_layers = st.number_input("Number of Layers", 1, 10, 3)
+
+    for i in range(int(n_layers)):
+
+        with st.expander(f"Layer {i+1} Definition", expanded=True):
+
+            c1,c2,c3 = st.columns(3)
+
+            h = c1.number_input(f"Thickness [m]", 0.1, 100.0, 4.0, key=f"h{i}")
+            gamma = c2.number_input(f"Unit Weight (γ) [kN/m³]", 0.0, 30.0, 19.0, key=f"g{i}")
+            soil = c3.selectbox("Soil Type", ["Clay","Sand"], key=f"t{i}")
+
+            mid = current_depth + h/2
+
+            method="None"
+            params={}
+
+            if soil == "Clay":
+                st.markdown("---")
+                method = st.radio(
+                    f"Settlement Method (Layer {i+1})",
+                    ["Method A (Cc/Cr)","Method B (mv)","Method C (Δe)"],
+                    key=f"m{i}",
+                    horizontal=True
+                )
+
+                c_p1, c_p2, c_p3, c_p4 = st.columns(4)
+
+                if method == "Method A (Cc/Cr)":
+                    e0 = c_p1.number_input("e0", 0.0, 5.0, 0.9, key=f"e{i}")
+                    Cc = c_p2.number_input("Cc", 0.0, 5.0, 0.3, key=f"cc{i}")
+                    Cr = c_p3.number_input("Cr", 0.0, 5.0, 0.05, key=f"cr{i}")
+                    sp = c_p4.number_input("Precon. Pressure σ'p [kPa]", 0.0, 1000.0, 100.0, key=f"sp{i}")
+                    params={"e0":e0,"Cc":Cc,"Cr":Cr,"sp":sp}
+
+                if method == "Method B (mv)":
+                    mv = c_p1.number_input("mv [1/kPa]", 0.0, 1.0, 0.0005, format="%.5f", key=f"mv{i}")
+                    params={"mv":mv}
+
+                if method == "Method C (Δe)":
+                    e0 = c_p1.number_input("Initial e0", 0.0, 5.0, 0.9, key=f"e0c{i}")
+                    ef = c_p2.number_input("Final ef", 0.0, 5.0, 0.8, key=f"ef{i}")
+                    params={"e0":e0,"ef":ef}
+
+            layers.append({
+                "id":i+1,
+                "type":soil,
+                "h":h,
+                "gamma":gamma,
+                "top":current_depth,
+                "bottom":current_depth+h,
+                "mid":mid,
+                "method":method,
+                "params":params
+            })
+
+            current_depth += h
+
+    # ================================================================
+    # STRESS FUNCTION
+    # ================================================================
+    def effective_stress(z):
+        sigma = 0
+        
+        # Accumulate total stress
+        for L in layers:
+            if z > L["bottom"]:
+                sigma += L["h"] * L["gamma"]
+            elif L["top"] < z <= L["bottom"]:
+                sigma += (z - L["top"]) * L["gamma"]
+                break # Reached the depth z
+        
+        # Calculate pore pressure
+        if z > water_depth:
+            u = (z - water_depth) * gamma_w
+        else:
+            u = 0
+
+        return max(0.001, sigma - u) # Prevent log(0) or negative stress
+
+    # ================================================================
+    # PROFILE PLOT (Visual Feedback)
+    # ================================================================
+    col_res1, col_res2 = st.columns([1, 2])
+
+    with col_res1:
         st.subheader("Soil Profile")
+        fig,ax = plt.subplots(figsize=(4,6))
+        colors={"Clay":"#D7CCC8","Sand":"#FFF9C4"}
         
-        # Increased figure size for better readability
-        fig, ax = plt.subplots(figsize=(6, 10))
-        
-        # Colors: Brownish for Clay, Yellowish for Sand
-        colors = {"Clay": "#D7CCC8", "Sand": "#FFF9C4"}
-
-        for l in layers_data:
-            # Draw Layer Rectangle
-            rect = patches.Rectangle((0, l["top"]), 5, l["thickness"],
-                                     facecolor=colors[l["type"]],
-                                     edgecolor="black", linewidth=1)
+        for L in layers:
+            rect = patches.Rectangle((0, L["top"]), 4, L["h"],
+                                     facecolor=colors[L["type"]],
+                                     edgecolor="black")
             ax.add_patch(rect)
-            
-            # Label Layer
-            ax.text(2.5, l["mid"], f"L{l['id']}\n{l['type']}",
-                    ha="center", va="center", fontsize=10, fontweight='bold', color="#3e2723")
-            
-            # Label Depth Lines
-            ax.text(-0.2, l["bottom"], f"{l['bottom']:.1f} m", ha="right", fontsize=9)
-            
-        # Draw Water Table
-        ax.axhline(water_depth, color="blue", linestyle="--", linewidth=2)
-        ax.text(5.2, water_depth, f"WT\n({water_depth}m)", color="blue", va="center")
+            ax.text(2, L["mid"], f"L{L['id']}\n{L['type']}", ha='center', va='center')
 
-        # Plot settings
-        ax.set_ylim(current_depth * 1.05, -1) # Invert Y axis
-        ax.set_xlim(0, 5)
+        ax.axhline(water_depth, color="blue", linestyle="--", linewidth=2, label="Water Table")
+        ax.set_ylim(current_depth*1.05, -1) # Invert y axis
+        ax.set_xlim(0, 4)
+        ax.legend(loc='upper right')
         ax.axis("off")
-        ax.set_title(f"Total Depth: {current_depth:.1f} m")
-
         st.pyplot(fig)
-        plt.close(fig) # CLEANUP: Close figure to prevent memory leak
+        plt.close(fig)
 
     # ================================================================
-    # CALCULATION ENGINE
+    # FINAL SETTLEMENT CALCULATION
     # ================================================================
-    def calculate_layer(l, all_layers, w_depth, q, gw):
-        """
-        Calculates stress and settlement for a single layer.
-        gw = unit weight of water (user selected)
-        """
+    with col_res2:
+        st.subheader("Calculation Results")
         
-        # 1. TOTAL STRESS (σ_v)
-        sigma_val = 0.0
-        sigma_str = []
-
-        # Stress from layers above
-        for above in all_layers:
-            if above["id"] < l["id"]:
-                sigma_val += above["thickness"] * above["gamma"]
-                sigma_str.append(f"{above['thickness']}×{above['gamma']}")
-
-        # Stress to midpoint of current layer
-        sigma_val += (l["thickness"]/2) * l["gamma"]
-        sigma_str.append(f"{l['thickness']/2}×{l['gamma']}")
-        
-        sigma_expr = " + ".join(sigma_str)
-
-        # 2. PORE PRESSURE (u)
-        # Check if midpoint is below water table
-        if l["mid"] > w_depth:
-            u_val = (l["mid"] - w_depth) * gw
-            u_str = f"({l['mid']:.2f} - {w_depth}) × {gw}"
-        else:
-            u_val = 0.0
-            u_str = "0 (Above WT)"
-
-        # 3. EFFECTIVE STRESSES
-        sig_0 = sigma_val - u_val
-        sig_f = sig_0 + q
-
-        # Logging for "Show Calculations"
-        log = []
-        log.append("### Effective Stress Calculation")
-        log.append(f"**σ_total** = {sigma_expr} = **{sigma_val:.2f} kPa**")
-        log.append(f"**u** = {u_str} = **{u_val:.2f} kPa**")
-        log.append(f"**σ'₀** = {sigma_val:.2f} - {u_val:.2f} = **{sig_0:.2f} kPa**")
-        log.append(f"**σ'_final** = {sig_0:.2f} + {q} = **{sig_f:.2f} kPa**")
-
-        # 4. SETTLEMENT CALCULATION
-        settlement = 0.0
-        status = "Skipped"
-
-        if l["type"] == "Sand":
-            log.append("Sand layer → Consolidation settlement assumed negligible.")
-            return {"settlement": 0.0, "status": "Sand", "log": log}
-
-        H = l["thickness"]
-        
-        # --- Method A: Cc/Cr ---
-        if "Method A" in l["method"]:
-            p = l["params"]
-            log.append(f"### Settlement (Method A)")
-            log.append(f"Compare σ'₀ ({sig_0:.2f}) with σ'p ({p['sigma_p']})")
-
-            # Case 1: Normally Consolidated
-            if sig_0 >= p["sigma_p"]:
-                status = "Normally Consolidated (NC)"
-                log.append(f"**State:** {status}")
-                term = np.log10(sig_f/sig_0)
-                settlement = (p["Cc"] * H / (1 + p["e0"])) * term
-                log.append(f"S = [{p['Cc']}×{H} / (1+{p['e0']})] × log({sig_f:.2f}/{sig_0:.2f})")
-
-            # Case 2: Over Consolidated (Recompression Only)
-            elif sig_f <= p["sigma_p"]:
-                status = "Over Consolidated (OC)"
-                log.append(f"**State:** {status} (Recompression Only)")
-                term = np.log10(sig_f/sig_0)
-                settlement = (p["Cr"] * H / (1 + p["e0"])) * term
-                log.append(f"S = [{p['Cr']}×{H} / (1+{p['e0']})] × log({sig_f:.2f}/{sig_0:.2f})")
-
-            # Case 3: Mixed (Recompression + Virgin Compression)
-            else:
-                status = "OC to NC Transition"
-                log.append(f"**State:** {status} (Crosses Preconsolidation Pressure)")
-                
-                # Part 1: Recompression up to sigma_p
-                s1 = (p["Cr"] * H / (1 + p["e0"])) * np.log10(p["sigma_p"]/sig_0)
-                # Part 2: Virgin compression beyond sigma_p
-                s2 = (p["Cc"] * H / (1 + p["e0"])) * np.log10(sig_f/p["sigma_p"])
-                
-                settlement = s1 + s2
-                log.append(f"S_recomp = {s1:.4f} m (using Cr up to {p['sigma_p']})")
-                log.append(f"S_virgin = {s2:.4f} m (using Cc beyond {p['sigma_p']})")
-
-        # --- Method B: mv ---
-        elif "Method B" in l["method"]:
-            status = "mv Method"
-            log.append("### Settlement (Method B)")
-            settlement = l["params"]["mv"] * q * H
-            log.append(f"S = mv × Δσ × H = {l['params']['mv']} × {q} × {H}")
-
-        # --- Method C: Delta e ---
-        elif "Method C" in l["method"]:
-            status = "Δe Method"
-            p = l["params"]
-            de = p["e0"] - p["e_final"]
-            log.append("### Settlement (Method C)")
-            settlement = (de/(1+p["e0"])) * H
-            log.append(f"S = [({p['e0']} - {p['e_final']}) / (1 + {p['e0']})] × {H}")
-
-        log.append(f"**Layer Settlement = {settlement:.5f} m**")
-
-        return {
-            "settlement": settlement,
-            "status": status,
-            "log": log
-        }
-
-    # ================================================================
-    # RESULTS TAB
-    # ================================================================
-    
-    # --- Mode 1: Final Settlement ---
-    if "Final" in calc_mode:
         if st.button("Calculate Final Settlement", type="primary"):
-            st.markdown("### Results")
-            total = 0.0
-
-            for l in layers_data:
-                res = calculate_layer(l, layers_data, water_depth, surcharge_q, gamma_w)
-                total += res["settlement"]
-                
-                # Display individual layer result
-                if res["settlement"] > 0:
-                    st.success(f"**Layer {l['id']} ({l['type']})** → {res['settlement']*1000:.2f} mm | {res['status']}")
-                    with st.expander(f"View Calculations for Layer {l['id']}"):
-                        for line in res["log"]:
-                            st.write(line)
-                else:
-                    st.info(f"Layer {l['id']} ({l['type']}) → Negligible Settlement")
-
-            st.markdown("---")
-            st.metric("Total Settlement", f"{total*1000:.2f} mm", delta_color="inverse")
-
-    # --- Mode 2: Time Rate ---
-    else:
-        st.subheader("Time Rate of Consolidation")
-        
-        clay_layers = [l for l in layers_data if l["type"] == "Clay"]
-
-        if not clay_layers:
-            st.warning("No Clay layers found. Time rate calculation is not applicable.")
-        else:
-            col_t1, col_t2 = st.columns(2)
+            st.markdown("#### Final Consolidation Settlement (S_c)")
+            total=0
             
-            with col_t1:
-                choice = st.selectbox("Select Critical Clay Layer", [f"Layer {l['id']}" for l in clay_layers])
-                crit_layer = next(l for l in clay_layers if f"Layer {l['id']}" == choice)
-                
-                # --- AUTO-DRAINAGE DETECTION LOGIC ---
-                idx = crit_layer['id'] - 1 # 0-based index
-                is_top_drained = True # Assume surface is permeable
-                is_bot_drained = False
+            results_data = []
 
-                # Check layer above
-                if idx > 0:
-                    if layers_data[idx-1]['type'] == 'Sand': is_top_drained = True
-                    else: is_top_drained = False
-                
-                # Check layer below
-                if idx < len(layers_data) - 1:
-                    if layers_data[idx+1]['type'] == 'Sand': is_bot_drained = True
-                    else: is_bot_drained = False
-                
-                suggestion = "Double Drainage" if (is_top_drained and is_bot_drained) else "Single Drainage"
-                suggested_hdr = crit_layer["thickness"]/2 if suggestion == "Double Drainage" else crit_layer["thickness"]
+            for L in layers:
+                if L["type"]=="Sand":
+                    continue
 
-                st.info(f"**Drainage Suggestion:** {suggestion}\n\nBased on adjacent Sand layers.")
+                sig0 = effective_stress(L["mid"])
+                sigf = sig0 + surcharge_q
+                H = L["h"]
+                S = 0
 
-            with col_t2:
-                cv = st.number_input("Coefficient of Consolidation $C_v$ [m²/year]", value=2.0)
-                dr = st.number_input("Drainage Path $H_{dr}$ [m]", value=suggested_hdr, 
-                                   help="Distance water must travel to exit. H/2 for Double, H for Single.")
+                if L["method"] == "Method A (Cc/Cr)":
+                    p = L["params"]
+                    # Logic per Source 33, 80
+                    if sig0 >= p["sp"]:
+                        # Normally Consolidated Case
+                        S = (p["Cc"] * H / (1 + p["e0"])) * np.log10(sigf / sig0)
+                    elif sigf <= p["sp"]:
+                        # Over Consolidated (Remaining OC)
+                        S = (p["Cr"] * H / (1 + p["e0"])) * np.log10(sigf / sig0)
+                    else:
+                        # Over Consolidated (Becoming NC)
+                        s1 = (p["Cr"] * H / (1 + p["e0"])) * np.log10(p["sp"] / sig0)
+                        s2 = (p["Cc"] * H / (1 + p["e0"])) * np.log10(sigf / p["sp"])
+                        S = s1 + s2
 
-            if st.button("Calculate Time", type="primary"):
-                U_target = st.slider("Target Degree of Consolidation U (%)", 0, 99, 90) / 100.0
+                if L["method"] == "Method B (mv)":
+                    # Source 24
+                    S = L["params"]["mv"] * surcharge_q * H
 
-                # Time Factor Tv Calculation
-                if U_target <= 0.6:
-                    Tv = (np.pi/4) * (U_target**2)
+                if L["method"] == "Method C (Δe)":
+                    # Source 6
+                    p = L["params"]
+                    S = ((p["e0"] - p["ef"]) / (1 + p["e0"])) * H
+
+                total += S
+                results_data.append([f"Layer {L['id']}", f"{sig0:.1f}", f"{sigf:.1f}", f"{S*1000:.2f}"])
+
+            # Display Results Table
+            st.table([["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)"]] + results_data)
+            st.success(f"**Total Consolidation Settlement = {total*1000:.2f} mm**")
+
+    # ================================================================
+    # TIME RATE + LOCAL CONSOLIDATION
+    # ================================================================
+    st.markdown("---")
+    st.header("Time Rate Analysis (Terzaghi Theory)")
+
+    clay_layers = [L for L in layers if L["type"] == "Clay"]
+
+    if clay_layers:
+        c_t1, c_t2, c_t3 = st.columns(3)
+        
+        with c_t1:
+            choice = st.selectbox("Select Critical Clay Layer for Analysis", 
+                                  [f"Layer {L['id']}" for L in clay_layers])
+            crit = next(L for L in clay_layers if f"Layer {L['id']}" == choice)
+
+        with c_t2:
+            Cv = st.number_input("Coefficient of Consolidation Cv (m²/year)", 2.0)
+            double = st.checkbox("Double Drainage?", value=True)
+
+        # Determine Drainage Height
+        H_total = crit["h"]
+        Hdr = H_total / 2 if double else H_total
+
+        with c_t3:
+            time_val = st.slider("Time elapsed (years)", 0.1, 50.0, 1.0)
+            Tv = Cv * time_val / (Hdr**2)
+            st.metric("Time Factor (Tv)", f"{Tv:.3f}")
+
+        # ================================================================
+        # PROFILE GENERATION
+        # ================================================================
+        
+        # We plot the FULL layer depth (0 to H_total)
+        # If Double Drainage: Hdr = H/2. 
+        #   Top half (0 to Hdr): z_drain = z
+        #   Bottom half (Hdr to H_total): z_drain = 2*Hdr - z (Symmetry)
+        
+        plot_depths = np.linspace(0, H_total, 100)
+        Uz_vals = []
+        u_vals = []
+
+        for z in plot_depths:
+            if double:
+                # Map actual depth to drainage distance (symmetry)
+                if z <= Hdr:
+                    z_drain = z
                 else:
-                    Tv = -0.933 * np.log10(1 - U_target) - 0.085
+                    z_drain = 2*Hdr - z
+            else:
+                z_drain = z
                 
-                # t = Tv * d^2 / Cv
-                t_req = (Tv * dr**2) / cv
-                
-                st.success(f"Time for **Layer {crit_layer['id']}** to reach **{U_target*100:.0f}%** Consolidation:")
-                st.metric("Time Required", f"{t_req:.2f} years")
-                st.write(f"*Calculated using $T_v = {Tv:.4f}$*")
+            Uz_vals.append(local_degree_consolidation(z_drain, Hdr, Tv))
+            u_vals.append(pore_pressure_ratio(z_drain, Hdr, Tv))
 
-if __name__ == "__main__":
+        # ================================================================
+        # PLOTS
+        # ================================================================
+        tab1, tab2, tab3 = st.tabs(["Degree of Consolidation (Uz)", "Excess Pore Pressure (ue/ui)", "Average U% vs Time"])
+
+        with tab1:
+            fig1, ax1 = plt.subplots()
+            ax1.plot(Uz_vals, plot_depths, color='green', linewidth=2)
+            ax1.set_ylim(H_total, 0)
+            ax1.set_xlim(0, 1.05)
+            ax1.grid(True, which='both', linestyle='--', alpha=0.6)
+            ax1.set_xlabel("Local Degree of Consolidation, Uz")
+            ax1.set_ylabel("Depth within Layer (m)")
+            ax1.set_title(f"Isochrone at t = {time_val} years")
+            if double:
+                ax1.axhline(H_total/2, color='red', linestyle=':', label='Centerline')
+                ax1.legend()
+            st.pyplot(fig1)
+
+        with tab2:
+            fig2, ax2 = plt.subplots()
+            ax2.plot(u_vals, plot_depths, color='blue', linewidth=2)
+            ax2.set_ylim(H_total, 0)
+            ax2.set_xlim(0, 1.05)
+            ax2.grid(True, which='both', linestyle='--', alpha=0.6)
+            ax2.set_xlabel("Excess Pore Pressure Ratio (ue / ui)")
+            ax2.set_ylabel("Depth within Layer (m)")
+            ax2.set_title(f"Isochrone at t = {time_val} years")
+            st.pyplot(fig2)
+
+        with tab3:
+            # ================================================================
+            # U_avg CALCULATION (Exact Formula from Source 60)
+            # ================================================================
+            t_max = time_val * 2 if time_val > 5 else 10.0
+            times = np.linspace(0.01, t_max, 100)
+            Uavg_vals = []
+
+            for t in times:
+                Tv_t = Cv * t / (Hdr**2)
+                
+                # Source 60 Equations
+                if Tv_t <= 0.28:  # Changed threshold slightly to match standard intersection
+                    U = 2 * np.sqrt(Tv_t / np.pi)
+                else:
+                    exponent = -(Tv_t + 0.085) / 0.933
+                    U = 1 - 10**(exponent)
+                
+                Uavg_vals.append(min(1.0, U) * 100) # Convert to %
+
+            fig3, ax3 = plt.subplots()
+            ax3.plot(times, Uavg_vals, color='purple')
+            ax3.scatter([time_val], [np.interp(time_val, times, Uavg_vals)], color='red', zorder=5)
+            ax3.set_xlabel("Time (years)")
+            ax3.set_ylabel("Average Consolidation U (%)")
+            ax3.set_title("Rate of Settlement")
+            ax3.grid(True)
+            st.pyplot(fig3)
+            
+            # Current U_avg
+            Tv_curr = Cv * time_val / (Hdr**2)
+            if Tv_curr <= 0.28:
+                U_curr = 2 * np.sqrt(Tv_curr / np.pi)
+            else:
+                U_curr = 1 - 10**(-(Tv_curr + 0.085) / 0.933)
+            st.metric("Current Average Consolidation", f"{U_curr*100:.1f}%")
+
+    else:
+        st.warning("No Clay layers defined. Define a Clay layer to perform Time Rate analysis.")
+
+if __name__=="__main__":
     app()
