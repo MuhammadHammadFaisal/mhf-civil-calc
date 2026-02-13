@@ -33,7 +33,7 @@ def app():
     # ================================================================
     # GLOBAL PARAMETERS
     # ================================================================
-    col_g1, col_g2 = st.columns(3)
+    col_g1, col_g2, col_g3 = st.columns(3)
 
     with col_g1:
         water_depth = st.number_input("Water Table Depth [m]", value=2.0, step=0.5, 
