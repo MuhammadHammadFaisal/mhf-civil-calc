@@ -9,14 +9,7 @@ def app():
     # ================================================================
     st.set_page_config(page_title="1D Consolidation Calculator", layout="wide")
     
-    with st.sidebar:
-        st.header("Global Settings")
-        gamma_w = st.radio(
-            "Unit Weight of Water ($γ_w$)",
-            [9.81, 10.0],
-            help="Choose 9.81 for precision or 10 for simplified hand-calc verification."
-        )
-        
+    with st.write:        
         st.info("""
         **Assumptions:**
         - 1D Terzaghi Consolidation
@@ -41,7 +34,7 @@ def app():
     # ================================================================
     # GLOBAL PARAMETERS
     # ================================================================
-    col_g1, col_g2 = st.columns(2)
+    col_g1, col_g2 = st.columns(3)
 
     with col_g1:
         water_depth = st.number_input("Water Table Depth [m]", value=2.0, step=0.5, 
@@ -49,7 +42,13 @@ def app():
 
     with col_g2:
         surcharge_q = st.number_input("Surface Surcharge Δσ [kPa]", value=50.0, step=10.0)
-
+    with col_g3:
+        # Moved from sidebar to here
+        gamma_w = st.radio(
+            "Unit Weight of Water ($γ_w$)",
+            [9.81, 10.0],
+            horizontal=True # Optional: makes it side-by-side
+        )
     # ================================================================
     # INPUT SECTION
     # ================================================================
