@@ -9,8 +9,7 @@ def app():
     # ================================================================
     st.set_page_config(page_title="1D Consolidation Calculator", layout="wide")
     
-    with st.write:        
-        st.info("""
+    st.write("""
         **Assumptions:**
         - 1D Terzaghi Consolidation
         - Immediate Settlement ignored
