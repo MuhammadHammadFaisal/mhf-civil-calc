@@ -34,15 +34,7 @@ def pore_pressure_ratio(z, Hdr, Tv, terms=100):
 # ================================================================
 def app():
 
-    st.set_page_config(page_title="Advanced 1D Consolidation", layout="wide")
-    st.title("Advanced 1D Terzaghi Consolidation Analyzer")
-
-    st.info("""
-    **Reference Guidelines (Based on Course Notes):**
-    1. If a layer straddles the Water Table, split it into two layers (Dry/Bulk vs Saturated).
-    2. Time Factors: Piecewise equations (Source 60) for U_avg.
-    3. Supports Methods A/B/C for clay settlement.
-    """)
+    st.set_page_config(page_title="1D Consolidation", layout="wide")
 
     # ================================================================
     # TABS
