@@ -92,8 +92,9 @@ def app():
                             e0 = c_p1.number_input("e0", 0.0, 5.0, 0.9, key=f"e{i}")
                             Cc = c_p2.number_input("Cc", 0.0, 5.0, 0.3, key=f"cc{i}")
                             Cr = c_p3.number_input("Cr", 0.0, 5.0, 0.05, key=f"cr{i}")
-                            sp = c_p4.number_input("Precon. Pressure σ'p [kPa]", 0.0, 1000.0, 100.0, key=f"sp{i}")
-                            ocr = c_p4.number_input("OCR", 1.0, 10.0, 1.0, key=f"ocr{i}")
+                            sp = c_p4.number_input("Precon. Pressure σ'p [kPa] (Optional)", 0.0, 1000.0, 0.0, key=f"sp{i}")
+                            ocr = c_p4.number_input("OCR (Optional)", 1.0, 10.0, 1.0, key=f"ocr{i}")
+   
                             params={"e0":e0,"Cc":Cc,"Cr":Cr,"sp":sp,"OCR":ocr}
 
                         if method == "Method B (mv)":
@@ -194,7 +195,14 @@ def app():
                 # METHOD A: Cc / Cr
                 # -------------------------------------------------------
                 if L["method"] == "Method A (Cc/Cr)":
-                    sp = p["sp"]
+                    ocr = p.get("OCR", 1.0) 
+                    sp_input = p.get("sp", 0)  # If OCR provided → Calculate σ'p 
+                    if ocr > 1:     
+                        sp = ocr * sigma0  # If OCR = 1 and σ'p given → Use σ'p 
+                    elif sp_input > 0:     
+                        sp = sp_input  # Otherwise assume NC 
+                    else:     
+                        sp = sigma0
                     Cc = p["Cc"]
                     Cr = p["Cr"]
                     e0 = p["e0"]
