@@ -9,7 +9,7 @@ def app():
     
     with col1:
         # A simple construction icon or lottie could go here
-        st.title("🚧")
+        st.title("")
     
     with col2:
         st.subheader("Module Under Development")
