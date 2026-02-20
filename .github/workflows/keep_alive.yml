@@ -2,13 +2,14 @@ name: Keep Streamlit App Awake
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # Every 30 minutes
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Curl Streamlit App
+      - name: Ping Streamlit
         run: |
-          curl -L -s -o /dev/null -w "%{http_code}" https://mhf-civil-calc.streamlit.app/
+          curl -L --fail --retry 5 --retry-all-errors \
+          https://mhf-civil-calc.streamlit.app/
