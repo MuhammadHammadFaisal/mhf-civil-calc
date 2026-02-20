@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 import pandas as pd
-
+from theme import write_text, glass_box
 # ================================================================
 # FOURIER SOLUTION FUNCTIONS
 # ================================================================
@@ -35,8 +35,6 @@ def pore_pressure_ratio(z, Hdr, Tv, terms=100):
 # ================================================================
 def app():
 
-    st.set_page_config(page_title="1D Consolidation", layout="wide")
-
     # ================================================================
     # TABS
     # ================================================================
@@ -50,7 +48,7 @@ def app():
         col_input, col_profile = st.columns([2.2, 1])
 
         with col_input:
-            st.subheader("Global Inputs")
+            write_text("section_header","Global Inputs")
             # Create a 2-column grid for Global Inputs
             g_col1, g_col2 = st.columns(2)
             
@@ -63,7 +61,7 @@ def app():
                 n_layers = st.number_input("Number of Layers", 1, 50, 3)
 
             st.markdown("---")
-            st.subheader("Stratigraphy")
+            write_text("section_header", "Stratigraphy")
             
             # Create a 2-column grid for the Layer Expanders
             s_col1, s_col2 = st.columns(2)
@@ -127,7 +125,7 @@ def app():
         # DYNAMIC PROFILE DIAGRAM
         # ================================================================
         with col_profile:
-            st.subheader("Soil Profile Preview")
+            write_text("section_header","Soil Profile Preview")
             fig, ax = plt.subplots(figsize=(4,6))
             colors={"Clay":"#D7CCC8","Sand":"#FFF9C4"}
 
@@ -163,7 +161,7 @@ def app():
                 # ================================================================
         # STEP-BY-STEP SETTLEMENT CALCULATION (UPDATED)
         # ================================================================
-        st.subheader("Calculation Results")
+        write_text("section_header","Calculation Results")
         if st.button("Calculate Settlement", type="primary"):
 
             total_settlement = 0
@@ -316,36 +314,7 @@ def app():
                 # Convert the dataframe to HTML, hiding the index and setting border to 0
                 table_html = df_results.to_html(index=False, classes="glass-table", border=0)
 
-                # Inject custom CSS to make it transparent
-                st.markdown(
-                    """
-                    <style>
-                    .glass-table {
-                        width: 100%;
-                        background-color: rgba(0, 0, 0, 0.2) !important; /* 20% transparent body */
-                        color: #E0E0E0;
-                        border-collapse: collapse;
-                        border-radius: 8px;
-                        overflow: hidden;
-                        margin-bottom: 20px;
-                    }
-                    .glass-table th, .glass-table td {
-                        padding: 12px 15px;
-                        border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Faint gridlines */
-                        text-align: left;
-                    }
-                    .glass-table th {
-                        background-color: rgba(0, 0, 0, 0.4) !important; /* Slightly darker header */
-                        font-weight: 600;
-                        color: #FFFFFF;
-                    }
-                    .glass-table tr:hover {
-                        background-color: rgba(255, 255, 255, 0.05) !important; /* Faint hover effect */
-                    }
-                    </style>
-                    """, 
-                    unsafe_allow_html=True
-                )
+
                 
                 # Render the table itself separately so Streamlit doesn't format it as a code block
                 st.markdown(table_html, unsafe_allow_html=True)
@@ -353,54 +322,19 @@ def app():
                # 3. Detailed Steps
                 st.markdown("### Detailed Calculation Log")
                 
-                # Inject the CSS specifically for the calculation log boxes
-                st.markdown(
-                    """
-                    <style>
-                    .glass-box {
-                        background-color: rgba(0, 0, 0, 0.2) !important;
-                        padding: 20px;
-                        border-radius: 8px;
-                        border: 1px solid rgba(255, 255, 255, 0.1);
-                        margin-bottom: 15px;
-                        color: #E0E0E0;
-                    }
-                    /* Ensure the layer headers inside the box pop out */
-                    .glass-box h3 {
-                        margin-top: 0px;
-                        padding-top: 0px;
-                        color: #FFFFFF;
-                    }
-                    </style>
-                    """, 
-                    unsafe_allow_html=True
-                )
 
-                for step in step_details:
-                    if step == "---":
-                        # We can actually ignore the "---" now because the separate 
-                        # CSS boxes will visually divide the layers for us!
-                        continue
-                    else:
-                        # Wrap the step in the glass-box div. 
-                        # CRITICAL: Do not remove the empty lines above and below {step}!
-                        st.markdown(
-                            f"""
-<div class="glass-box">
-
-{step}
-
-</div>
-                            """, 
-                            unsafe_allow_html=True
-                        )
+        for step in step_details:
+                            if step == "---":
+                                continue
+                            else:
+                                glass_box(step)  # <-- Just call your new theme function!
 
 
     # ================================================================
     # TIME RATE ANALYSIS TAB
     # ================================================================
     with tab_time:
-        st.subheader("Time Rate Analysis (Terzaghi Theory)")
+        write_text("section_header","Time Rate Analysis (Terzaghi Theory)")
 
         clay_layers = [L for L in layers if L["type"]=="Clay"]
         if clay_layers:
