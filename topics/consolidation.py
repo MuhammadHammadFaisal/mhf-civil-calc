@@ -350,14 +350,50 @@ def app():
                 # Render the table itself separately so Streamlit doesn't format it as a code block
                 st.markdown(table_html, unsafe_allow_html=True)
                 
-                # 3. Detailed Steps
+               # 3. Detailed Steps
                 st.markdown("### Detailed Calculation Log")
+                
+                # Inject the CSS specifically for the calculation log boxes
+                st.markdown(
+                    """
+                    <style>
+                    .glass-box {
+                        background-color: rgba(0, 0, 0, 0.2) !important;
+                        padding: 20px;
+                        border-radius: 8px;
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        margin-bottom: 15px;
+                        color: #E0E0E0;
+                    }
+                    /* Ensure the layer headers inside the box pop out */
+                    .glass-box h3 {
+                        margin-top: 0px;
+                        padding-top: 0px;
+                        color: #FFFFFF;
+                    }
+                    </style>
+                    """, 
+                    unsafe_allow_html=True
+                )
+
                 for step in step_details:
-                    # Wrapping each log in an info box gives it a nice distinct background too
                     if step == "---":
-                        st.markdown("---")
+                        # We can actually ignore the "---" now because the separate 
+                        # CSS boxes will visually divide the layers for us!
+                        continue
                     else:
-                        st.markdown(step)
+                        # Wrap the step in the glass-box div. 
+                        # CRITICAL: Do not remove the empty lines above and below {step}!
+                        st.markdown(
+                            f"""
+<div class="glass-box">
+
+{step}
+
+</div>
+                            """, 
+                            unsafe_allow_html=True
+                        )
 
 
     # ================================================================
