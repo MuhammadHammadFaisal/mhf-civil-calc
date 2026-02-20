@@ -214,6 +214,7 @@ def main():
 
     # ------------------------- MODULES -------------------------
     st.markdown('<h3 style="color: #E2E8F0;">Available Course Calculators</h3>', unsafe_allow_html=True)
+    st.markdown("")
     modules = get_active_modules()
     if modules:
         cols = st.columns(3)
@@ -267,6 +268,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
