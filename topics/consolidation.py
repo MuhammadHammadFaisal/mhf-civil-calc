@@ -296,8 +296,9 @@ def app():
                 step_details.append(details)
                 step_details.append("---")
 
+# ================================================================
             # OUTPUT DISPLAY
-
+            # ================================================================
             st.markdown("---") # Visual divider before results
             
             # This creates a visually distinct "card" with a background
@@ -312,14 +313,14 @@ def app():
                     columns=["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]
                 )
 
-                # Convert the dataframe to HTML, hiding the index
-                table_html = df_results.to_html(index=False, classes="glass-table")
+                # Convert the dataframe to HTML, hiding the index and setting border to 0
+                table_html = df_results.to_html(index=False, classes="glass-table", border=0)
 
-                # Inject custom CSS to make it transparent, followed by the table itself
+                # Inject custom CSS to make it transparent
                 st.markdown(
-                    f"""
+                    """
                     <style>
-                    .glass-table {{
+                    .glass-table {
                         width: 100%;
                         background-color: rgba(0, 0, 0, 0.2) !important; /* 20% transparent body */
                         color: #E0E0E0;
@@ -327,25 +328,36 @@ def app():
                         border-radius: 8px;
                         overflow: hidden;
                         margin-bottom: 20px;
-                    }}
-                    .glass-table th, .glass-table td {{
+                    }
+                    .glass-table th, .glass-table td {
                         padding: 12px 15px;
                         border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Faint gridlines */
                         text-align: left;
-                    }}
-                    .glass-table th {{
+                    }
+                    .glass-table th {
                         background-color: rgba(0, 0, 0, 0.4) !important; /* Slightly darker header */
                         font-weight: 600;
                         color: #FFFFFF;
-                    }}
-                    .glass-table tr:hover {{
+                    }
+                    .glass-table tr:hover {
                         background-color: rgba(255, 255, 255, 0.05) !important; /* Faint hover effect */
-                    }}
+                    }
                     </style>
-                    {table_html}
                     """, 
                     unsafe_allow_html=True
                 )
+                
+                # Render the table itself separately so Streamlit doesn't format it as a code block
+                st.markdown(table_html, unsafe_allow_html=True)
+                
+                # 3. Detailed Steps
+                st.markdown("### Detailed Calculation Log")
+                for step in step_details:
+                    # Wrapping each log in an info box gives it a nice distinct background too
+                    if step == "---":
+                        st.markdown("---")
+                    else:
+                        st.markdown(step)
 
 
     # ================================================================
