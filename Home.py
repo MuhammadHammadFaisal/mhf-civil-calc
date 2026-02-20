@@ -5,7 +5,7 @@ from PIL import Image
 # =========================================================
 # Helper: Make Image Square and Resize for Favicon
 # =========================================================
-def prepare_icon(im, final_size=64):
+def prepare_icon(im, final_size=96):
     x, y = im.size
     size = max(x, y)
     new_im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
@@ -13,12 +13,32 @@ def prepare_icon(im, final_size=64):
     new_im = new_im.resize((final_size, final_size), Image.LANCZOS)
     return new_im
 
-# Load favicon
+# =========================================================
+# Load and Save Favicon
+# =========================================================
+# 1. Get the absolute path to your app's main directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ASSETS_DIR = os.path.join(BASE_DIR, "assets")
+
+sticker_path = os.path.join(ASSETS_DIR, "Sticker.png")
+favicon_path = os.path.join(ASSETS_DIR, "favicon_96.png")
+
 try:
-    icon_img = Image.open("assets/Sticker.png").convert("RGBA")
-    icon_img = prepare_icon(icon_img, 64)
-except:
-    icon_img = "🛠️"  # fallback emoji
+    if not os.path.exists(favicon_path):
+        # 2. Ensure the assets directory exists before trying to save
+        os.makedirs(ASSETS_DIR, exist_ok=True)
+        
+        # 3. Open, process, and save
+        icon_img = Image.open(sticker_path).convert("RGBA")
+        icon_img = prepare_icon(icon_img, 96)
+        icon_img.save(favicon_path)
+    
+    icon_to_use = favicon_path 
+
+except Exception as e:
+    # 4. If it fails, print the exact error at the top of the app!
+    st.error(f"Favicon generation failed: {e}")
+    icon_to_use = "🛠️"
 
 # =========================================================
 # App Config
@@ -268,6 +288,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
