@@ -45,7 +45,7 @@ def apply_theme(page_title="MHF Civil Calc"):
         background-attachment: local;
     }
 
-    /* Sidebar and Global Text */
+    /* Sidebar and Global Text Default */
     [data-testid="stSidebar"] {
         background-color: #031126;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -78,22 +78,64 @@ def apply_theme(page_title="MHF Civil Calc"):
     /* Buttons */
     [data-testid="stLinkButton"] > a {
         background-color: rgba(255, 255, 255, 0.9) !important;
-        color: #1a3a5a !important; 
         border: 1px solid #dee2e6 !important;
         border-radius: 8px !important;
         font-weight: 600 !important;
+        text-decoration: none !important;
+    }
+    [data-testid="stLinkButton"] > a, [data-testid="stLinkButton"] > a * {
+        color: #1a3a5a !important; 
+    }
+
+    /* =========================================
+       GLASS UI COMPONENTS (Imported from Consolidation)
+       ========================================= */
+    .glass-table {
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.2) !important; 
+        color: #E0E0E0;
+        border-collapse: collapse;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    .glass-table th, .glass-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+        text-align: left;
+    }
+    .glass-table th {
+        background-color: rgba(0, 0, 0, 0.4) !important; 
+        font-weight: 600;
+        color: #FFFFFF;
+    }
+    .glass-table tr:hover {
+        background-color: rgba(255, 255, 255, 0.05) !important; 
+    }
+
+    .glass-box {
+        background-color: rgba(0, 0, 0, 0.2) !important;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 15px;
+        color: #E0E0E0;
+    }
+    .glass-box h3 {
+        margin-top: 0px;
+        padding-top: 0px;
+        color: #FFFFFF;
     }
     </style>
     """, unsafe_allow_html=True)
 
 def render_page_header(title):
-    """Standardizes the large header with the logo across all pages."""
     col_logo, col_text = st.columns([1, 5], vertical_alignment="center")
     with col_logo:
         try:
             st.image(os.path.join("assets", "Sticker.png"))
         except:
-            pass # Fails gracefully if image isn't found
+            pass
     with col_text:
         st.markdown(
             f"""
@@ -106,73 +148,31 @@ def render_page_header(title):
     st.markdown("<div style='margin-bottom: 40px;'></div>", unsafe_allow_html=True)
 
 # =========================================================
-# TYPOGRAPHY & STYLE REGISTRY
+# TYPOGRAPHY & TEXT TOOLS
 # =========================================================
 
 TEXT_STYLES = {
-    "page_title": {
-        "size": "42px",
-        "weight": "800",
-        "color": "#FFFFFF",
-        "margin": "0px 0px 20px 0px",
-        "letter-spacing": "-0.5px"
-    },
-    "section_header": {
-        "size": "24px",
-        "weight": "700",
-        "color": "#aad4ff",  # Light blue accent for main sections
-        "margin": "25px 0px 15px 0px",
-        "letter-spacing": "0px"
-    },
-    "subheader": {
-        "size": "20px",
-        "weight": "600",
-        "color": "#E2E8F0",  # Standard white/gray for sub-sections
-        "margin": "15px 0px 10px 0px",
-        "letter-spacing": "0px"
-    },
-    "body": {
-        "size": "16px",
-        "weight": "400",
-        "color": "#CBD5E1",  # Softer gray for standard reading text
-        "margin": "5px 0px 10px 0px",
-        "letter-spacing": "0px"
-    },
-    "caption": {
-        "size": "14px",
-        "weight": "400",
-        "color": "#94A3B8",  # Dimmer gray for hints and subtext
-        "margin": "0px 0px 15px 0px",
-        "letter-spacing": "0px",
-        "font-style": "italic"
-    },
-    "math_log": {
-        "size": "15px",
-        "weight": "500",
-        "color": "#FDE047",  # Yellow/Gold for intermediate calculation steps
-        "margin": "8px 0px 4px 0px",
-        "letter-spacing": "0px"
-    }
+    "page_title": {"size": "42px", "weight": "800", "color": "#FFFFFF", "margin": "0px 0px 20px 0px"},
+    "section_header": {"size": "24px", "weight": "700", "color": "#aad4ff", "margin": "25px 0px 15px 0px"},
+    "subheader": {"size": "20px", "weight": "600", "color": "#E2E8F0", "margin": "15px 0px 10px 0px"},
+    "body": {"size": "16px", "weight": "400", "color": "#CBD5E1", "margin": "5px 0px 10px 0px"},
+    "caption": {"size": "14px", "weight": "400", "color": "#94A3B8", "margin": "0px 0px 15px 0px", "font-style": "italic"},
+    "math_log": {"size": "15px", "weight": "500", "color": "#FDE047", "margin": "8px 0px 4px 0px"}
 }
 
 def write_text(text_type, content):
-    """
-    Pulls the style from TEXT_STYLES and renders it cleanly in Streamlit.
-    Usage: write_text("section_header", "A. Global Parameters")
-    """
     style = TEXT_STYLES.get(text_type, TEXT_STYLES["body"]) 
     font_style = style.get("font-style", "normal")
-    
     html = f"""
-    <div style="
-        font-size: {style['size']}; 
-        font-weight: {style['weight']}; 
-        color: {style['color']}; 
-        margin: {style['margin']};
-        letter-spacing: {style.get('letter-spacing', '0px')};
-        font-style: {font_style};
-    ">
+    <div style="font-size: {style['size']}; font-weight: {style['weight']}; color: {style['color']}; margin: {style['margin']}; font-style: {font_style};">
         {content}
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
+
+def glass_box(content):
+    """
+    Wraps content inside your custom sleek, transparent glass box.
+    Uses double newlines so Markdown and LaTeX inside render perfectly.
+    """
+    st.markdown(f"""<div class="glass-box">\n\n{content}\n\n</div>""", unsafe_allow_html=True)
