@@ -1,25 +1,14 @@
-name: Keep Streamlit Alive
+name: Keep Streamlit App Awake
 
 on:
   schedule:
-    # Runs at 8:00 AM UTC every day
-    - cron: '0 8 * * *'
+    - cron: "*/30 * * * *"   # Every 30 minutes
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  update-repo:
+  ping:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Update date file to keep repo active
+      - name: Curl Streamlit App
         run: |
-          date > last_update.txt
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-          git add last_update.txt
-          git commit -m "Keep alive update"
-          git push
+          curl -L -s -o /dev/null -w "%{http_code}" https://mhf-civil-calc.streamlit.app/
