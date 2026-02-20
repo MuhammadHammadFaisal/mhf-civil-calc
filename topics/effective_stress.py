@@ -36,7 +36,7 @@ def app():
     with tab1:
         st.caption("Define soil layers, water table, and surcharge to calculate the stress profile.")
 
-        col_input, col_viz = st.columns([2, 1])
+        col_input, col_viz = st.columns([1.5, 1])
 
         # -------------------------------------------------
         # INPUTS
