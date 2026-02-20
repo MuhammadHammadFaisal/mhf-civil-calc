@@ -176,8 +176,7 @@ def calculate_pore_pressure(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, s
 
 def app():
 
-    
-    tab1, tab2 = st.tabs(["1D Seepage", "Permeability"])
+    tab1, tab2, tab3 = st.tabs(["1D Seepage", "Permeability", "Multi-Layer Seepage"])
     
     # =================================================================
     # TAB 1: 1D SEEPAGE (Effective Stress)
@@ -432,6 +431,108 @@ def app():
                 ax2.plot([1.5, 3], [4, 4], 'k--', lw=0.5); ax2.plot([1.5, 3], [6, 6], 'k--', lw=0.5)
 
             st.pyplot(fig2)
+        # =================================================================
+    # TAB 3: MULTI-LAYER SEEPAGE
+    # =================================================================
+    with tab3:
+        st.caption("Calculate Equivalent Permeability and Seepage Rate for Stratified Soils.")
+        col_input_3, col_plot_3 = st.columns([1, 1.2])
+
+        with col_input_3:
+            st.markdown("### 1. Soil Layers Setup")
+            num_layers = st.slider("Number of Soil Layers", 2, 4, 3)
+            flow_dir = st.radio("Flow Direction", ["Parallel to Layers (Horizontal)", "Perpendicular to Layers (Vertical)"])
+            
+            k_vals = []
+            H_vals = []
+            
+            # Dynamically generate inputs based on the slider
+            for idx in range(num_layers):
+                c1, c2 = st.columns(2)
+                with c1:
+                    H = st.number_input(f"Thickness H_{idx+1} [m]", min_value=0.1, value=2.0, key=f"H_{idx}")
+                    H_vals.append(H)
+                with c2:
+                    # Using scientific notation for permeability
+                    k = st.number_input(f"Permeability k_{idx+1} [cm/s]", min_value=1e-9, value=1e-3, format="%.2e", key=f"k_{idx}")
+                    k_vals.append(k)
+            
+            st.markdown("### 2. Flow Parameters")
+            grad_i = st.number_input("Hydraulic Gradient (i)", min_value=0.001, value=0.500, format="%.3f")
+            area_A = st.number_input("Cross-sectional Area (A) [m²]", min_value=0.1, value=1.0)
+            
+            st.markdown("---")
+            if st.button("Calculate Seepage (q_s)", type="primary"):
+                H_total = sum(H_vals)
+                
+                # Calculate Equivalent Permeability
+                if "Parallel" in flow_dir:
+                    # k_eq = sum(k_i * H_i) / H_total
+                    k_eq = sum(k * h for k, h in zip(k_vals, H_vals)) / H_total
+                    eq_label = "k_{eq(H)}"
+                else:
+                    # k_eq = H_total / sum(H_i / k_i)
+                    k_eq = H_total / sum(h / k for k, h in zip(k_vals, H_vals))
+                    eq_label = "k_{eq(V)}"
+                
+                # Convert k_eq from cm/s to m/s for seepage calculation
+                k_eq_ms = k_eq / 100.0
+                
+                # Darcy's Law: q_s = k_eq * i * A
+                q_s = k_eq_ms * grad_i * area_A
+                
+                k_formatted = format_scientific(k_eq)
+                q_formatted = format_scientific(q_s)
+                
+                st.success(f"**Equivalent Permeability:**\n\n$${eq_label} = {k_formatted} \\text{{ cm/s}}$$")
+                st.info(f"**Seepage Rate (q_s):**\n\n$$q_s = {q_formatted} \\text{{ m}}^3/\\text{{s}}$$")
+
+        with col_plot_3:
+            # Visualize the stratified layers
+            fig3, ax3 = plt.subplots(figsize=(6, 8))
+            
+            # Styling for layers
+            colors = ['#E3C195', '#D2B48C', '#F5DEB3', '#DEB887']
+            hatches = ['//', '\\\\', 'xx', '--']
+            
+            current_y = 0
+            
+            # Draw layers from bottom to top
+            for idx in range(num_layers-1, -1, -1):
+                h = H_vals[idx]
+                ax3.add_patch(patches.Rectangle((0, current_y), 5, h, 
+                                                facecolor=colors[idx], 
+                                                edgecolor='black', 
+                                                hatch=hatches[idx], 
+                                                lw=2))
+                
+                # Label each layer
+                ax3.text(2.5, current_y + h/2, 
+                         f"Layer {idx+1}\n$k = {k_vals[idx]:.1e}$ cm/s\n$H = {h}$ m", 
+                         ha='center', va='center', 
+                         bbox=dict(facecolor='white', alpha=0.8, edgecolor='black'))
+                current_y += h
+                
+            # Draw Flow Arrows
+            H_total = sum(H_vals)
+            if "Parallel" in flow_dir:
+                ax3.annotate('', xy=(6, H_total/2), xytext=(-1, H_total/2), 
+                             arrowprops=dict(arrowstyle='->', lw=4, color='blue'))
+                ax3.text(2.5, H_total + 0.5, "Parallel Flow (Horizontal)", 
+                         ha='center', color='blue', fontweight='bold', fontsize=12)
+            else:
+                ax3.annotate('', xy=(2.5, -1), xytext=(2.5, H_total + 1), 
+                             arrowprops=dict(arrowstyle='->', lw=4, color='blue'))
+                ax3.text(2.5, H_total + 1.2, "Perpendicular Flow (Vertical)", 
+                         ha='center', color='blue', fontweight='bold', fontsize=12)
+                
+            ax3.set_xlim(-1.5, 6.5)
+            ax3.set_ylim(-1.5, H_total + 2)
+            ax3.axis('off')
+            
+            st.pyplot(fig3)
+
+    
 
 if __name__ == "__main__":
     app()
