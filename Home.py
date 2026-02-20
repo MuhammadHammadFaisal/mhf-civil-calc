@@ -24,7 +24,7 @@ except:
 # App Config
 # =========================================================
 st.set_page_config(
-    page_title="MHF Civil Calc",
+    page_title="MHF Civil Calc (Development)",
     layout="wide",
     page_icon=icon_img
 )
@@ -268,6 +268,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
