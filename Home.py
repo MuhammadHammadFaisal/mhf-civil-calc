@@ -5,7 +5,7 @@ from PIL import Image
 # =========================================================
 # Helper: Make Image Square and Resize for Favicon
 # =========================================================
-def prepare_icon(im, final_size=64):
+def prepare_icon(im, final_size=96):
     x, y = im.size
     size = max(x, y)
     new_im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
@@ -16,7 +16,7 @@ def prepare_icon(im, final_size=64):
 # Load favicon
 try:
     icon_img = Image.open("assets/Sticker.png").convert("RGBA")
-    icon_img = prepare_icon(icon_img, 64)
+    icon_img = prepare_icon(icon_img, 96)
 except:
     icon_img = "🛠️"  # fallback emoji
 
@@ -268,6 +268,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
