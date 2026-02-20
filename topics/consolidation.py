@@ -60,7 +60,7 @@ def app():
             current_depth = 0.0
 
             st.subheader("Stratigraphy")
-            n_layers = st.number_input("Number of Layers", 1, 10, 3)
+            n_layers = st.number_input("Number of Layers", 1, 50, 3)
 
             for i in range(int(n_layers)):
 
