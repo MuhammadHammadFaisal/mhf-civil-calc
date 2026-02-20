@@ -314,20 +314,20 @@ def app():
                 # Convert the dataframe to HTML, hiding the index and setting border to 0
                 table_html = df_results.to_html(index=False, classes="glass-table", border=0)
 
-
-                
                 # Render the table itself separately so Streamlit doesn't format it as a code block
                 st.markdown(table_html, unsafe_allow_html=True)
                 
-               # 3. Detailed Steps
-                st.markdown("### Detailed Calculation Log")
+                # 3. Detailed Steps
+                write_text("subheader", "Detailed Calculation Log")
                 
+                # THIS LOOP MUST BE ALIGNED HERE:
+                for step in step_details:
+                    if step == "---":
+                        continue
+                    else:
+                        glass_box(step)  
 
-        for step in step_details:
-                            if step == "---":
-                                continue
-                            else:
-                                glass_box(step)  # <-- Just call your new theme function!
+
 
 
     # ================================================================
