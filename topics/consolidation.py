@@ -296,15 +296,33 @@ def app():
                 step_details.append("---")
 
             # OUTPUT DISPLAY
-            st.markdown(f"## Total Settlement: :red[{total_settlement*1000:.2f} mm]")
+
+            st.markdown("---") # Visual divider before results
             
-            # Summary Table
-            st.table([["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]] + results_data)
-            
-            # Detailed Steps
-            st.markdown("###  Detailed Calculation Log")
-            for step in step_details:
-                st.markdown(step)
+            # This creates a visually distinct "card" with a background
+            with st.container(border=True):
+                
+                # 1. Total Settlement Header
+                st.markdown(f"## Total Settlement: :red[{total_settlement*1000:.2f} mm]")
+                
+                # 2. Clean Summary Table using Pandas
+                # This removes the ugly 0,1,2,3 row/column indices
+                df_results = pd.DataFrame(
+                    results_data, 
+                    columns=["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]
+                )
+                st.dataframe(df_results, use_container_width=True, hide_index=True)
+                
+                st.divider() # Elegant line break
+                
+                # 3. Detailed Steps
+                st.markdown("### Detailed Calculation Log")
+                for step in step_details:
+                    # Wrapping each log in an info box gives it a nice distinct background too
+                    if step == "---":
+                        st.markdown("---")
+                    else:
+                        st.markdown(step)
 
 
 
