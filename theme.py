@@ -105,30 +105,63 @@ def render_page_header(title):
         )
     st.markdown("<div style='margin-bottom: 40px;'></div>", unsafe_allow_html=True)
 
+# =========================================================
+# TYPOGRAPHY & STYLE REGISTRY
+# =========================================================
+
 TEXT_STYLES = {
-    "section_heading": {
+    "page_title": {
+        "size": "42px",
+        "weight": "800",
+        "color": "#FFFFFF",
+        "margin": "0px 0px 20px 0px",
+        "letter-spacing": "-0.5px"
+    },
+    "section_header": {
         "size": "24px",
         "weight": "700",
-        "color": "#aad4ff", # A nice light blue to stand out from the white text
-        "margin": "20px 0px 10px 0px"
+        "color": "#aad4ff",  # Light blue accent for main sections
+        "margin": "25px 0px 15px 0px",
+        "letter-spacing": "0px"
     },
-    "subheading": {
-        "size": "18px",
+    "subheader": {
+        "size": "20px",
         "weight": "600",
-        "color": "#E2E8F0",
-        "margin": "15px 0px 5px 0px"
+        "color": "#E2E8F0",  # Standard white/gray for sub-sections
+        "margin": "15px 0px 10px 0px",
+        "letter-spacing": "0px"
     },
-    "working": {
-        "size": "15px",
+    "body": {
+        "size": "16px",
         "weight": "400",
-        "color": "#CBD5E1", # Slightly dimmer for calculation logs/working
-        "margin": "5px 0px"
+        "color": "#CBD5E1",  # Softer gray for standard reading text
+        "margin": "5px 0px 10px 0px",
+        "letter-spacing": "0px"
+    },
+    "caption": {
+        "size": "14px",
+        "weight": "400",
+        "color": "#94A3B8",  # Dimmer gray for hints and subtext
+        "margin": "0px 0px 15px 0px",
+        "letter-spacing": "0px",
+        "font-style": "italic"
+    },
+    "math_log": {
+        "size": "15px",
+        "weight": "500",
+        "color": "#FDE047",  # Yellow/Gold for intermediate calculation steps
+        "margin": "8px 0px 4px 0px",
+        "letter-spacing": "0px"
     }
 }
 
 def write_text(text_type, content):
-    """Pulls the style from TEXT_STYLES and renders it in Streamlit."""
-    style = TEXT_STYLES.get(text_type, TEXT_STYLES["working"]) # Defaults to 'working'
+    """
+    Pulls the style from TEXT_STYLES and renders it cleanly in Streamlit.
+    Usage: write_text("section_header", "A. Global Parameters")
+    """
+    style = TEXT_STYLES.get(text_type, TEXT_STYLES["body"]) 
+    font_style = style.get("font-style", "normal")
     
     html = f"""
     <div style="
@@ -136,6 +169,8 @@ def write_text(text_type, content):
         font-weight: {style['weight']}; 
         color: {style['color']}; 
         margin: {style['margin']};
+        letter-spacing: {style.get('letter-spacing', '0px')};
+        font-style: {font_style};
     ">
         {content}
     </div>
