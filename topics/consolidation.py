@@ -308,13 +308,22 @@ def app():
                 
                 # 2. Clean Summary Table using Pandas
                 # This removes the ugly 0,1,2,3 row/column indices
+                # 2. Clean Summary Table using Pandas
                 df_results = pd.DataFrame(
                     results_data, 
                     columns=["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]
                 )
-                st.dataframe(df_results, use_container_width=True, hide_index=True)
-                
-                st.divider() # Elegant line break
+
+                # Apply transparent styling using Pandas Styler
+                # rgba(0, 0, 0, 0.3) = black background with 30% opacity
+                styled_df = df_results.style.set_properties(**{
+                    'background-color': 'rgba(0, 0, 0, 0.2)', # Tweak the 0.2 to change transparency
+                    'color': '#E0E0E0',                       # Light text for contrast
+                    'border': '1px solid rgba(255, 255, 255, 0.1)' # Faint borders
+                })
+
+                # Render the styled dataframe
+                st.dataframe(styled_df, use_container_width=True, hide_index=True)
                 
                 # 3. Detailed Steps
                 st.markdown("### Detailed Calculation Log")
