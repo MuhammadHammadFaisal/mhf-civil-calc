@@ -46,7 +46,7 @@ except Exception as e:
 st.set_page_config(
     page_title="MHF Civil Calc",
     layout="wide",
-    page_icon=icon_img
+    page_icon=icon_to_use  
 )
 
 # =========================================================
@@ -288,6 +288,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
