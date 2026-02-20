@@ -9,7 +9,10 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Streamlit
+      - name: Ping Streamlit App
         run: |
-          curl -L --fail --retry 5 --retry-all-errors \
+          curl -I -L \
+          -A "Mozilla/5.0" \
+          --retry 5 \
+          --retry-all-errors \
           https://mhf-civil-calc.streamlit.app/
