@@ -41,92 +41,87 @@ def app():
     # ================================================================
     tab_settlement, tab_time = st.tabs(["Settlement Calculation", "Time Rate Analysis"])
 
-    # ================================================================
+# ================================================================
     # GLOBAL INPUTS & STRATIGRAPHY
     # ================================================================
     with tab_settlement:
-        # Create 3 columns instead of 2. 
-        # Ratios [1, 1, 1.2] give the diagram slightly more space.
-        col_global, col_strat, col_profile = st.columns([1, 1, 1.2])
+        # Main split: Inputs take up roughly 70% of the screen, Diagram takes 30%
+        col_input, col_profile = st.columns([2.2, 1])
 
-        # --- FIRST COLUMN: Global Inputs ---
-        with col_global:
+        with col_input:
             st.subheader("Global Inputs")
-            water_depth = st.number_input("Water Table Depth [m]", 2.0)
-            surcharge_q = st.number_input("Surface Surcharge Δσ [kPa]", 50.0)
-            gamma_w = st.radio("γw [kN/m³]", [9.81, 10.0], horizontal=True)
+            # Create a 2-column grid for Global Inputs
+            g_col1, g_col2 = st.columns(2)
+            
+            with g_col1:
+                water_depth = st.number_input("Water Table Depth [m]", 2.0)
+                gamma_w = st.radio("γw [kN/m³]", [9.81, 10.0], horizontal=True)
+                
+            with g_col2:
+                surcharge_q = st.number_input("Surface Surcharge Δσ [kPa]", 50.0)
+                n_layers = st.number_input("Number of Layers", 1, 50, 3)
 
-        # --- SECOND COLUMN: Stratigraphy ---
-        with col_strat:
+            st.markdown("---")
+            st.subheader("Stratigraphy")
+            
+            # Create a 2-column grid for the Layer Expanders
+            s_col1, s_col2 = st.columns(2)
+            
             layers = []
             current_depth = 0.0
 
-            st.subheader("Stratigraphy")
-            n_layers = st.number_input("Number of Layers", 1, 50, 3)
-
             for i in range(int(n_layers)):
-                with st.expander(f"Layer {i+1} Definition", expanded=True):
-                    c1,c2,c3 = st.columns(3)
+                # Alternate placing layers in the left and right columns
+                target_col = s_col1 if i % 2 == 0 else s_col2
+                
+                with target_col:
+                    with st.expander(f"Layer {i+1} Definition", expanded=True):
+                        # Adjusted internal columns so they don't get squished
+                        c1, c2 = st.columns(2)
+                        h = c1.number_input(f"Thickness [m]", 0.1, 100.0, 4.0, key=f"h{i}")
+                        gamma = c2.number_input(f"γ [kN/m³]", 0.0, 30.0, 19.0, key=f"g{i}")
+                        soil = st.selectbox("Soil Type", ["Clay","Sand"], key=f"t{i}")
 
-                    h = c1.number_input(f"Thickness [m]", 0.1, 100.0, 4.0, key=f"h{i}")
-                    gamma = c2.number_input(f"Unit Weight (γ) [kN/m³]", 0.0, 30.0, 19.0, key=f"g{i}")
-                    soil = c3.selectbox("Soil Type", ["Clay","Sand"], key=f"t{i}")
+                        mid = current_depth + h/2
+                        method = "None"
+                        params = {}
 
-                    mid = current_depth + h/2
+                        if soil == "Clay":
+                            st.markdown("---")
+                            method = st.radio(
+                                f"Method (L{i+1})",
+                                ["Method A (Cc/Cr)", "Method B (mv)", "Method C (Δe)"],
+                                key=f"m{i}",
+                            )
 
-                    method="None"
-                    params={}
+                            # Stacked the parameters slightly differently to fit the half-width card
+                            if method == "Method A (Cc/Cr)":
+                                cp1, cp2 = st.columns(2)
+                                e0 = cp1.number_input("e0", 0.0, 5.0, 0.9, key=f"e{i}")
+                                Cc = cp2.number_input("Cc", 0.0, 5.0, 0.3, key=f"cc{i}")
+                                Cr = cp1.number_input("Cr", 0.0, 5.0, 0.05, key=f"cr{i}")
+                                ocr = cp2.number_input("OCR", 1.0, 10.0, 1.0, key=f"ocr{i}")
+                                sp = st.number_input("Precon. Pressure σ'p [kPa] (Opt.)", 0.0, 1000.0, 0.0, key=f"sp{i}")
+                                params = {"e0":e0,"Cc":Cc,"Cr":Cr,"sp":sp,"OCR":ocr}
 
-                    if soil == "Clay":
-                        st.markdown("---")
-                        method = st.radio(
-                            f"Settlement Method (Layer {i+1})",
-                            ["Method A (Cc/Cr)","Method B (mv)","Method C (Δe)"],
-                            key=f"m{i}",
-                            horizontal=True
-                        )
+                            if method == "Method B (mv)":
+                                mv = st.number_input("mv [1/kPa]", 0.0, 1.0, 0.0005, format="%.5f", key=f"mv{i}")
+                                params = {"mv":mv}
 
-                        c_p1, c_p2, c_p3, c_p4 = st.columns(4)
+                            if method == "Method C (Δe)":
+                                cp1, cp2 = st.columns(2)
+                                e0 = cp1.number_input("Initial e0", 0.0, 5.0, 0.9, key=f"e0c{i}")
+                                ef = cp2.number_input("Final ef", 0.0, 5.0, 0.8, key=f"ef{i}")
+                                params = {"e0":e0,"ef":ef}
 
-                        if method == "Method A (Cc/Cr)":
-                            e0 = c_p1.number_input("e0", 0.0, 5.0, 0.9, key=f"e{i}")
-                            Cc = c_p2.number_input("Cc", 0.0, 5.0, 0.3, key=f"cc{i}")
-                            Cr = c_p3.number_input("Cr", 0.0, 5.0, 0.05, key=f"cr{i}")
-                            sp = c_p4.number_input("Precon. Pressure σ'p [kPa] (Opt.)", 0.0, 1000.0, 0.0, key=f"sp{i}")
-                            ocr = c_p4.number_input("OCR (Optional)", 1.0, 10.0, 1.0, key=f"ocr{i}")
-    
-                            params={"e0":e0,"Cc":Cc,"Cr":Cr,"sp":sp,"OCR":ocr}
+                        layers.append({
+                            "id":i+1, "type":soil, "h":h, "gamma":gamma, 
+                            "top":current_depth, "bottom":current_depth+h, 
+                            "mid":mid, "method":method, "params":params
+                        })
+                        
+                        current_depth += h
 
-                        if method == "Method B (mv)":
-                            mv = c_p1.number_input("mv [1/kPa]", 0.0, 1.0, 0.0005, format="%.5f", key=f"mv{i}")
-                            params={"mv":mv}
-
-                        if method == "Method C (Δe)":
-                            e0 = c_p1.number_input("Initial e0", 0.0, 5.0, 0.9, key=f"e0c{i}")
-                            ef = c_p2.number_input("Final ef", 0.0, 5.0, 0.8, key=f"ef{i}")
-                            params={"e0":e0,"ef":ef}
-
-                    layers.append({
-                        "id":i+1,
-                        "type":soil,
-                        "h":h,
-                        "gamma":gamma,
-                        "top":current_depth,
-                        "bottom":current_depth+h,
-                        "mid":mid,
-                        "method":method,
-                        "params":params
-                    })
-
-                    current_depth += h
-
-        # --- THIRD COLUMN: Profile Diagram ---
-        # (This remains exactly the same as your code, just nested under the new column name)
-        with col_profile:
-            st.subheader("Soil Profile Preview")
-            fig, ax = plt.subplots(figsize=(4,6))
-            colors={"Clay":"#D7CCC8","Sand":"#FFF9C4"}
-            # ... (Rest of your plotting code stays identical)
         # ================================================================
         # DYNAMIC PROFILE DIAGRAM
         # ================================================================
