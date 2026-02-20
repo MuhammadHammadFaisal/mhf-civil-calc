@@ -362,11 +362,25 @@ def app():
                     plot_results(df, title, ax)
                     st.pyplot(fig)
                     
-            with st.expander("Show Calculation Logs"):
-                st.markdown("### Initial State Logs")
-                for log in log_init: st.markdown(log)
-                st.markdown("### Long Term State Logs")
-                for log in log_long: st.markdown(log)
+                with st.expander("Show Calculation Logs", expanded=True):
+                    init_log_str = "\n".join([line for line in log_init if line != "---"])
+                    long_log_str = "\n".join([line for line in log_long if line != "---"])
+                    
+                    st.markdown(f"""
+                <div class="glass-box">
+                <h3>Initial State Logs</h3>
+                
+                {init_log_str}
+                
+                </div>
+                
+                <div class="glass-box">
+                <h3>Long Term State Logs</h3>
+                
+                {long_log_str}
+                
+                </div>
+                    """, unsafe_allow_html=True)
 
     # =====================================================
     # TAB 2 — HEAVE CHECK
