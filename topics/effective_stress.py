@@ -9,6 +9,26 @@ import numpy as np
 # =========================================================
 st.set_page_config(page_title="MHF Soil Mechanics", layout="wide")
 
+st.markdown(
+    """
+    <style>
+    .glass-table {
+        width: 100%; background-color: rgba(0, 0, 0, 0.2) !important; color: #E0E0E0;
+        border-collapse: collapse; border-radius: 8px; overflow: hidden; margin-bottom: 20px;
+    }
+    .glass-table th, .glass-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); text-align: left; }
+    .glass-table th { background-color: rgba(0, 0, 0, 0.4) !important; font-weight: 600; color: #FFFFFF; }
+    .glass-table tr:hover { background-color: rgba(255, 255, 255, 0.05) !important; }
+    
+    .glass-box {
+        background-color: rgba(0, 0, 0, 0.2) !important; padding: 20px;
+        border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); color: #E0E0E0; margin-bottom: 15px;
+    }
+    .glass-box h3, .glass-box h4 { margin-top: 0px; color: #FFFFFF; }
+    </style>
+    """, 
+    unsafe_allow_html=True
+)
 # =========================================================
 # MAIN APP
 # =========================================================
@@ -335,7 +355,9 @@ def app():
                                       ["Initial", "Long Term", "Short Term"]):
                 with col:
                     st.subheader(title)
-                    st.dataframe(df.style.format({"Depth (z)": "{:.2f}", "Total Stress (σ)": "{:.2f}", "Pore Pressure (u)": "{:.2f}", "Eff. Stress (σ')": "{:.2f}"}))
+                    # Convert to HTML and apply the CSS class
+                    html_table = df.to_html(index=False, classes="glass-table", border=0, float_format="%.2f")
+                    st.markdown(html_table, unsafe_allow_html=True)
                     fig, ax = plt.subplots(figsize=(5, 6))
                     plot_results(df, title, ax)
                     st.pyplot(fig)
