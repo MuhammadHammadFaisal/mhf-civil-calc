@@ -306,34 +306,46 @@ def app():
                 # 1. Total Settlement Header
                 st.markdown(f"## Total Settlement: :red[{total_settlement*1000:.2f} mm]")
                 
-                # 2. Clean Summary Table using Pandas
-                # This removes the ugly 0,1,2,3 row/column indices
-                # 2. Clean Summary Table using Pandas
+                # 2. Clean Summary Table using Pure HTML to force transparency
                 df_results = pd.DataFrame(
                     results_data, 
                     columns=["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]
                 )
 
-                # Apply transparent styling using Pandas Styler
-                # rgba(0, 0, 0, 0.3) = black background with 30% opacity
-                styled_df = df_results.style.set_properties(**{
-                    'background-color': 'rgba(0, 0, 0, 0.2)', # Tweak the 0.2 to change transparency
-                    'color': '#E0E0E0',                       # Light text for contrast
-                    'border': '1px solid rgba(255, 255, 255, 0.1)' # Faint borders
-                })
+                # Convert the dataframe to HTML, hiding the index
+                table_html = df_results.to_html(index=False, classes="glass-table")
 
-                # Render the styled dataframe
-                st.dataframe(styled_df, use_container_width=True, hide_index=True)
-                
-                # 3. Detailed Steps
-                st.markdown("### Detailed Calculation Log")
-                for step in step_details:
-                    # Wrapping each log in an info box gives it a nice distinct background too
-                    if step == "---":
-                        st.markdown("---")
-                    else:
-                        st.markdown(step)
-
+                # Inject custom CSS to make it transparent, followed by the table itself
+                st.markdown(
+                    f"""
+                    <style>
+                    .glass-table {{
+                        width: 100%;
+                        background-color: rgba(0, 0, 0, 0.2) !important; /* 20% transparent body */
+                        color: #E0E0E0;
+                        border-collapse: collapse;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        margin-bottom: 20px;
+                    }}
+                    .glass-table th, .glass-table td {{
+                        padding: 12px 15px;
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Faint gridlines */
+                        text-align: left;
+                    }}
+                    .glass-table th {{
+                        background-color: rgba(0, 0, 0, 0.4) !important; /* Slightly darker header */
+                        font-weight: 600;
+                        color: #FFFFFF;
+                    }}
+                    .glass-table tr:hover {{
+                        background-color: rgba(255, 255, 255, 0.05) !important; /* Faint hover effect */
+                    }}
+                    </style>
+                    {table_html}
+                    """, 
+                    unsafe_allow_html=True
+                )
 
 
     # ================================================================
