@@ -45,7 +45,7 @@ def app():
     # GLOBAL INPUTS
     # ================================================================
     with tab_settlement:
-        col_input, col_profile = st.columns([1, 1])
+        col_input, col_profile = st.columns([2, 1])
 
         with col_input:
             st.subheader("Global Inputs")
