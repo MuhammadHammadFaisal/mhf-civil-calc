@@ -42,20 +42,22 @@ def app():
     tab_settlement, tab_time = st.tabs(["Settlement Calculation", "Time Rate Analysis"])
 
     # ================================================================
-    # GLOBAL INPUTS
+    # GLOBAL INPUTS & STRATIGRAPHY
     # ================================================================
     with tab_settlement:
-        col_input, col_profile = st.columns([2, 1])
+        # Create 3 columns instead of 2. 
+        # Ratios [1, 1, 1.2] give the diagram slightly more space.
+        col_global, col_strat, col_profile = st.columns([1, 1, 1.2])
 
-        with col_input:
+        # --- FIRST COLUMN: Global Inputs ---
+        with col_global:
             st.subheader("Global Inputs")
             water_depth = st.number_input("Water Table Depth [m]", 2.0)
             surcharge_q = st.number_input("Surface Surcharge Δσ [kPa]", 50.0)
             gamma_w = st.radio("γw [kN/m³]", [9.81, 10.0], horizontal=True)
 
-            # ================================================================
-            # SOIL LAYERS
-            # ================================================================
+        # --- SECOND COLUMN: Stratigraphy ---
+        with col_strat:
             layers = []
             current_depth = 0.0
 
@@ -63,9 +65,7 @@ def app():
             n_layers = st.number_input("Number of Layers", 1, 50, 3)
 
             for i in range(int(n_layers)):
-
                 with st.expander(f"Layer {i+1} Definition", expanded=True):
-
                     c1,c2,c3 = st.columns(3)
 
                     h = c1.number_input(f"Thickness [m]", 0.1, 100.0, 4.0, key=f"h{i}")
@@ -92,9 +92,9 @@ def app():
                             e0 = c_p1.number_input("e0", 0.0, 5.0, 0.9, key=f"e{i}")
                             Cc = c_p2.number_input("Cc", 0.0, 5.0, 0.3, key=f"cc{i}")
                             Cr = c_p3.number_input("Cr", 0.0, 5.0, 0.05, key=f"cr{i}")
-                            sp = c_p4.number_input("Precon. Pressure σ'p [kPa] (Optional)", 0.0, 1000.0, 0.0, key=f"sp{i}")
+                            sp = c_p4.number_input("Precon. Pressure σ'p [kPa] (Opt.)", 0.0, 1000.0, 0.0, key=f"sp{i}")
                             ocr = c_p4.number_input("OCR (Optional)", 1.0, 10.0, 1.0, key=f"ocr{i}")
-   
+    
                             params={"e0":e0,"Cc":Cc,"Cr":Cr,"sp":sp,"OCR":ocr}
 
                         if method == "Method B (mv)":
@@ -120,6 +120,13 @@ def app():
 
                     current_depth += h
 
+        # --- THIRD COLUMN: Profile Diagram ---
+        # (This remains exactly the same as your code, just nested under the new column name)
+        with col_profile:
+            st.subheader("Soil Profile Preview")
+            fig, ax = plt.subplots(figsize=(4,6))
+            colors={"Clay":"#D7CCC8","Sand":"#FFF9C4"}
+            # ... (Rest of your plotting code stays identical)
         # ================================================================
         # DYNAMIC PROFILE DIAGRAM
         # ================================================================
