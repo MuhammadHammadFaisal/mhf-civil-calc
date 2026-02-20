@@ -5,7 +5,7 @@ from PIL import Image
 # =========================================================
 # Helper: Make Image Square and Resize for Favicon
 # =========================================================
-def prepare_icon(im, final_size=96):
+def prepare_icon(im, final_size=64):
     x, y = im.size
     size = max(x, y)
     new_im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
@@ -13,32 +13,12 @@ def prepare_icon(im, final_size=96):
     new_im = new_im.resize((final_size, final_size), Image.LANCZOS)
     return new_im
 
-# =========================================================
-# Load and Save Favicon
-# =========================================================
-# 1. Get the absolute path to your app's main directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ASSETS_DIR = os.path.join(BASE_DIR, "assets")
-
-sticker_path = os.path.join(ASSETS_DIR, "Sticker.png")
-favicon_path = os.path.join(ASSETS_DIR, "favicon_96.png")
-
+# Load favicon
 try:
-    if not os.path.exists(favicon_path):
-        # 2. Ensure the assets directory exists before trying to save
-        os.makedirs(ASSETS_DIR, exist_ok=True)
-        
-        # 3. Open, process, and save
-        icon_img = Image.open(sticker_path).convert("RGBA")
-        icon_img = prepare_icon(icon_img, 96)
-        icon_img.save(favicon_path)
-    
-    icon_to_use = favicon_path 
-
-except Exception as e:
-    # 4. If it fails, print the exact error at the top of the app!
-    st.error(f"Favicon generation failed: {e}")
-    icon_to_use = "🛠️"
+    icon_img = Image.open("assets/Sticker.png").convert("RGBA")
+    icon_img = prepare_icon(icon_img, 64)
+except:
+    icon_img = "🛠️"  # fallback emoji
 
 # =========================================================
 # App Config
@@ -46,7 +26,7 @@ except Exception as e:
 st.set_page_config(
     page_title="MHF Civil Calc",
     layout="wide",
-    page_icon=icon_to_use  
+    page_icon=icon_img
 )
 
 # =========================================================
@@ -233,13 +213,13 @@ def main():
     st.markdown("") 
 
     # ------------------------- MODULES -------------------------
-    st.markdown('<h3 style="color: #E2E8F0;">Course Modules</h3>', unsafe_allow_html=True)
+    st.markdown('<h3 style="color: #E2E8F0;">Available Course Calculators</h3>', unsafe_allow_html=True)
     st.markdown("")
     modules = get_active_modules()
     if modules:
-        cols = st.columns(3)
+        cols = st.columns(4)
         for idx, (file, title) in enumerate(modules):
-            with cols[idx % 3]:
+            with cols[idx % 4]:
                 st.page_link(f"pages/{file}", label=title, use_container_width=True)
                 st.markdown("")
 
@@ -288,27 +268,3 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
