@@ -215,6 +215,7 @@ def main():
     # ------------------------- MODULES -------------------------
     st.markdown('<h3 style="color: #E2E8F0;">Currently Deployed Modules</h3>', unsafe_allow_html=True)
     st.markdown('<p style="color: #94A3B8; font-size: 14px; margin-top: -10px; margin-bottom: 20px;">These calculation workspaces are live and functional. More modules will be deployed soon.</p>', unsafe_allow_html=True)
+    modules = get_active_modules()
     if modules:
         cols = st.columns(3)
         for idx, (file, title) in enumerate(modules):
@@ -267,6 +268,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
