@@ -304,7 +304,7 @@ def app():
         solver = SoilState()
         
         # --- TOP SECTION: INPUTS & PREVIEW ---
-        top_col1, top_col2 = st.columns([1, 1])
+        top_col1, top_col2 = st.columns([2, 1])
         
         with top_col1:
             st.markdown("### 1. Inputs")
