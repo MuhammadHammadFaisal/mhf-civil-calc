@@ -213,8 +213,8 @@ def main():
     st.markdown("") 
 
     # ------------------------- MODULES -------------------------
-    st.markdown('<h3 style="color: #E2E8F0;">Course Modules</h3>', unsafe_allow_html=True)
-    st.markdown("")
+    st.markdown('<h3 style="color: #E2E8F0;">Available Course Modules</h3>', unsafe_allow_html=True)
+    st.markdown('<p style="color: #94A3B8; font-size: 14px; margin-top: -10px; margin-bottom: 20px;">Select from the fully verified solvers below. Additional topics are currently in active development.</p>', unsafe_allow_html=True)
     modules = get_active_modules()
     if modules:
         cols = st.columns(3)
@@ -268,6 +268,7 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
 
