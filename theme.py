@@ -181,26 +181,42 @@ def glass_box(content):
 # =========================================================
 # BULLETPROOF GLASS TABLE
 # =========================================================
+
 def glass_table(df):
-    # Convert dataframe to HTML without the index
     html_table = df.to_html(index=False, escape=False)
     
-    # Wrap it in a scrollable glassmorphism container
     custom_html = f"""
     <div style="
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(15, 20, 30, 0.6); /* Restores the darker glass background */
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 15px;
-        overflow-x: auto; /* THIS ADDS THE HORIZONTAL SCROLLBAR */
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 10px;
+        overflow-x: auto; /* Keeps the horizontal scroll active */
         width: 100%;
     ">
         <style>
-            table {{ width: 100%; border-collapse: collapse; }}
-            /* Prevent text from stacking on top of itself */
-            th, td {{ white-space: nowrap; padding: 8px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                color: white;
+                font-family: sans-serif;
+                font-size: 14px;
+            }}
+            th, td {{
+                white-space: nowrap; /* Prevents text from squishing */
+                padding: 12px 15px;
+                text-align: left;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Subtle horizontal lines */
+            }}
+            th {{
+                font-weight: 600;
+            }}
+            /* Removes the border from the very last row to keep it clean */
+            tr:last-child td {{
+                border-bottom: none;
+            }}
         </style>
         {html_table}
     </div>
