@@ -26,8 +26,7 @@ def app():
         help="Select 9.81 for precise calc or 10 for simplified exams."
     )
     GAMMA_W = gamma_option
-    st.title("Effective Stress Analysis")
-    st.markdown("---")
+
 
     tab1, tab2 = st.tabs(["Stress Profile Calculator", "Heave Check"])
 
