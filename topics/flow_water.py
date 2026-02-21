@@ -4,7 +4,6 @@ import matplotlib.patches as patches
 import numpy as np
 from theme import write_text, glass_box, glass_table
 
-
 # ============================================================
 # HELPER FUNCTIONS
 # ============================================================
@@ -19,125 +18,71 @@ def format_scientific(val):
     return f"{mantissa:.2f} \\times 10^{{{exponent}}}"
 
 def get_complex_potential_sheet_pile(x, y, pile_depth, pile_x, h_up, h_down, soil_depth):
-    """
-    CORRECTED Sheet Pile Flow Net based on soil mechanics principles.
-    
-    Key observations from hand sketch:
-    1. Flow lines (blue) start horizontal upstream, curve DOWN around pile, exit horizontal downstream
-    2. Equipotentials (red dashed) are nearly vertical far away, curve around pile tip
-    3. Flow concentrates at PILE TIP (bottom of pile)
-    4. Pattern is symmetric-ish but biased by head difference
-    """
-    
-    # Pile tip location (critical point)
     pile_tip_x = pile_x
     pile_tip_y = -pile_depth
     
-    # Create complex coordinates
     z = x + 1j * y
     z_tip = pile_tip_x + 1j * pile_tip_y
-    
-    # Distance from pile tip
     z_from_tip = z - z_tip
     
-    # Avoid singularity
     epsilon = 0.01
     z_from_tip = np.where(np.abs(z_from_tip) < epsilon, epsilon * (1 + 1j), z_from_tip)
     
     with np.errstate(all="ignore"):
-        # COMPONENT 1: Uniform horizontal flow (baseline seepage)
-        # This creates the horizontal flow from left to right
-        flow_velocity = (h_up - h_down) / 24.0  # Normalized velocity
+        flow_velocity = (h_up - h_down) / 24.0
         W_uniform = flow_velocity * z
         
-        # COMPONENT 2: Source at pile tip (creates flow diverging from tip)
-        # Water flows OUT from underneath the pile
         source_strength = pile_depth * flow_velocity * 8.0
         W_source = source_strength * np.log(z_from_tip + 0j)
         
-        # COMPONENT 3: Dipole to create asymmetry and proper flow pattern
-        # This makes flow go AROUND the pile (up and down)
         dipole_strength = pile_depth**1.5 * flow_velocity * 6.0
         W_dipole = dipole_strength / z_from_tip
         
-        # COMPONENT 4: Image system for impervious base
-        # Reflection from bottom boundary
         z_from_base = z - (pile_tip_x + 1j * (-soil_depth))
         z_from_base = np.where(np.abs(z_from_base) < epsilon, epsilon * (1 + 1j), z_from_base)
         W_base = -source_strength * 0.3 * np.log(z_from_base + 0j)
         
-        # Combine all components
         W = W_uniform + W_source + W_dipole + W_base
-        
         return W
 
 def get_complex_potential_dam(x, y, dam_width, h_up, h_down):
-    """
-    Flow under concrete dam - uses conformal mapping.
-    """
     b = max(dam_width / 2, 0.1)
     z = x + 1j * y
     
     with np.errstate(all="ignore"):
-        # Normalize
         zeta = z / b
-        
-        # Conformal transformation for flow under rectangular dam
-        # Schwarz-Christoffel approximation
         w = b * (zeta + np.sqrt(zeta**2 - 1 + 0j))
-        
-        # Scale by head difference
         flow_scale = (h_up - h_down) / 20.0
         W = flow_scale * w
-        
         return W
 
 def get_complex_potential(x, y, mode, pile_depth, pile_x, dam_width, h_up, h_down, soil_depth):
-    """
-    Main function to get complex potential based on mode.
-    Returns W = Phi + i*Psi
-    """
-    
     if mode == "Sheet Pile Only":
         return get_complex_potential_sheet_pile(x, y, pile_depth, pile_x, h_up, h_down, soil_depth)
-    
     elif mode == "Concrete Dam Only":
         return get_complex_potential_dam(x, y, dam_width, h_up, h_down)
-    
     elif mode == "Combined (Dam + Pile)":
-        # Superpose both effects
         W_pile = get_complex_potential_sheet_pile(x, y, pile_depth, pile_x, h_up, h_down, soil_depth)
         W_dam = get_complex_potential_dam(x, y, dam_width, h_up, h_down)
         return 0.6 * W_pile + 0.4 * W_dam
-    
     return 0 + 0j
 
 def calculate_pore_pressure(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, soil_d):
-    """
-    Calculate pore pressure at point (px, py) based on flow net.
-    """
-    
     if py > 0:
-        return None  # Above ground surface
-    
-    gamma_w = 9.81  # kN/m³
-    
-    # Get complex potential at point
+        return None
+    gamma_w = 10
     w_pt = get_complex_potential(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, soil_d)
     phi_pt = np.real(w_pt)
     
-    # Get boundary values
     w_up = get_complex_potential(-15.0, py, mode, pile_d, pile_x, dam_w, h_up, h_down, soil_d)
     w_down = get_complex_potential(15.0, py, mode, pile_d, pile_x, dam_w, h_up, h_down, soil_d)
     
     phi_up = np.real(w_up)
     phi_down = np.real(w_down)
     
-    # Handle numerical issues
     if not np.isfinite(phi_pt) or not np.isfinite(phi_up) or not np.isfinite(phi_down):
         return None
     
-    # Interpolate total head
     if abs(phi_up - phi_down) < 1e-6:
         h_total = (h_up + h_down) / 2
     else:
@@ -145,10 +90,8 @@ def calculate_pore_pressure(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, s
         ratio = np.clip(ratio, 0, 1)
         h_total = h_down + ratio * (h_up - h_down)
     
-    # Calculate pore pressure
     pressure_head = h_total - py
     u = pressure_head * gamma_w
-    
     return {"u": u, "h_total": h_total, "pressure_head": pressure_head}
 
 # ============================================================
@@ -165,56 +108,95 @@ def app():
     with tab1:
         st.caption("Determine Effective Stress at Point A. (Datum is at the Bottom of Soil)")
         
-        col_setup, col_plot = st.columns([1, 1.2])
+        col_setup, col_plot = st.columns([2, 1])
         
         with col_setup:
-            st.markdown("### 1. Problem Setup")
-            val_z = st.number_input("Soil Specimen Height (z) [m]", 0.1, step=0.5, value=4.0)
-            val_y = st.number_input("Water Height above Soil (y) [m]", 0.0, step=0.5, value=2.0)
-            val_x = st.number_input("Piezometer Head at Bottom (x) [m]", 0.0, step=0.5, value=7.5)
-            gamma_sat = st.number_input("Saturated Unit Weight (γ_sat) [kN/m³]", 18.0, step=0.1)
-            gamma_w = 9.81
-            val_A = st.slider("Height of Point 'A' from Datum [m]", 0.0, val_z, val_z/2)
-
+            write_text("subheader", "1. Problem Setup")
+            c1, c2= st.columns(2)
+            with c1:
+                val_z = st.number_input("Soil Specimen Height (z) [m]", 0.1, step=0.5, value=4.0)
+                gamma_sat = st.number_input("Saturated Unit Weight (γ_sat) [kN/m³]", 18.0, step=0.1)
+                val_A = st.number_input("Height of Point 'A' from Datum [m]", 0.0, val_z, val_z/2)
+            with c2:
+                val_y = st.number_input("Water Height above Soil (y) [m]", 0.0, step=0.5, value=2.0)
+                val_x = st.number_input("Piezometer Head at Bottom (x) [m]", 0.0, step=0.5, value=7.5)
+                gamma_w = st.radio("γw [kN/m³]", [9.81, 10.0], index=1, horizontal=True)
+          
+            
             st.markdown("---")
+            
             if st.button("Calculate Effective Stress", type="primary"):
+                # --- PRELIMINARY CALCULATIONS ---
+                gamma_sub = gamma_sat - gamma_w
+                
+                # Heads
                 H_top = val_z + val_y
                 H_bot = val_x
-                h_loss = H_top - H_bot
+                delta_H = H_top - H_bot
                 
-                if h_loss > 0:
+                # Flow Direction & Gradient
+                if delta_H > 0.001:
                     flow_type = "Downward"
-                    effect_msg = "Downward Flow increases Effective Stress (+i·z·γw)"
-                elif h_loss < 0:
+                    i = abs(delta_H) / val_z
+                elif delta_H < -0.001:
                     flow_type = "Upward"
-                    effect_msg = "Upward Flow decreases Effective Stress (-i·z·γw)"
+                    i = abs(delta_H) / val_z
                 else:
-                    flow_type = "No Flow"
-                    effect_msg = "Hydrostatic Condition"
+                    flow_type = "No Flow (Hydrostatic)"
+                    i = 0.0
 
-                i = abs(h_loss) / val_z
-                sigma_total = (val_y * gamma_w) + ((val_z - val_A) * gamma_sat)
-                H_A = H_bot + (val_A / val_z) * (H_top - H_bot)
-                h_p_A = H_A - val_A
-                u_val = h_p_A * gamma_w
-                sigma_prime = sigma_total - u_val
+                # Geometry
+                depth_A_soil = val_z - val_A
+
+                # --- METHOD 1: Total Stress - Pore Pressure ---
+                sigma_total = (val_y * gamma_w) + (depth_A_soil * gamma_sat)
                 
-# === GLASS BOX REPLACEMENT ===
-                res_content = f"""
-**Flow Condition:** {flow_type}
-*{effect_msg}*
+                H_A = H_bot + (val_A / val_z) * (H_top - H_bot) 
+                h_p_A = H_A - val_A 
+                u_val = h_p_A * gamma_w
+                
+                sigma_prime_1 = sigma_total - u_val
 
-**Total Stress ($\sigma$):** {sigma_total:.2f} kPa
-**Pore Pressure ($u$):** {u_val:.2f} kPa
-**Effective Stress ($\sigma'$):** {sigma_prime:.2f} kPa
-"""
-                glass_box(res_content)
-                    
-                with st.expander("View Step-by-Step Derivation"):
-                    st.latex(rf"H_{{top}} = {H_top:.2f} m, \quad H_{{bot}} = {H_bot:.2f} m")
-                    st.latex(rf"\sigma = {sigma_total:.2f} kPa")
-                    st.latex(rf"u = {u_val:.2f} kPa")
+                # --- METHOD 2: Seepage Force Approach ---
+                # Calculate Seepage Force per unit volume (j)
+                j_seepage = i * gamma_w
+                
+                if flow_type == "Downward":
+                    # Downward: Gravity + Drag
+                    gamma_effective = gamma_sub + j_seepage
+                    bracket_term = gamma_effective # for storage
+                elif flow_type == "Upward":
+                    # Upward: Gravity - Drag
+                    gamma_effective = gamma_sub - j_seepage
+                    bracket_term = gamma_effective
+                else:
+                    gamma_effective = gamma_sub
+                    bracket_term = gamma_sub
+                
+                sigma_prime_2 = depth_A_soil * gamma_effective
 
+                # STORE RESULTS
+                st.session_state.results = {
+                    "flow_type": flow_type,
+                    "i": i,
+                    "depth_A_soil": depth_A_soil,
+                    "sigma_total": sigma_total,
+                    "H_A": H_A,
+                    "u_val": u_val,
+                    "sigma_prime_1": sigma_prime_1,
+                    "sigma_prime_2": sigma_prime_2,
+                    "gamma_sub": gamma_sub,
+                    "j_seepage": j_seepage,            
+                    "gamma_effective": gamma_effective, 
+                    "val_z_snap": val_z,
+                    "val_A_snap": val_A,
+                    "val_y_snap": val_y,
+                    "H_top": H_top,
+                    "H_bot": H_bot,
+                    "gamma_sat_snap": gamma_sat
+                }
+
+        # --- PLOT COLUMN ---
         with col_plot:
             fig, ax = plt.subplots(figsize=(7, 8))
             
@@ -306,6 +288,84 @@ def app():
             ax.axis('off')
             st.pyplot(fig)
 
+        # ------------------------- RESULTS (FULL WIDTH) -------------------------
+        if st.session_state.results:
+            results = st.session_state.results  # FIXED: Unified variable name
+            st.divider()
+            
+            # CHANGED: Consolidated summary into a single premium glass_box
+            summary_text = f"""
+### Analysis Results: {results['flow_type']}
+**Hydraulic Gradient (i):** {results['i']:.3f}
+
+**Total Stress ($\sigma$):** {results['sigma_total']:.2f} kPa
+
+**Pore Pressure ($u$):** {results['u_val']:.2f} kPa
+
+**Effective Stress ($\sigma'$):** {results['sigma_prime_1']:.2f} kPa
+"""
+            glass_box(summary_text)
+            
+            # --- DETAILED DERIVATION ---
+            with st.expander("View Detailed Step-by-Step Derivation (2 Methods)", expanded=True):
+                # Fetching snapshots for consistency
+                z_s = results.get('val_z_snap')
+                a_s = results.get('val_A_snap')
+                y_s = results.get('val_y_snap')
+                g_sat_s = results.get('gamma_sat_snap')
+
+                # --- METHOD 1 ---
+                # Use double backslashes (\\) so Streamlit renders the Greek symbols correctly
+                write_text("subheader", "Method 1: Stress Definition (Effective Stress = Total - Pore)")
+                
+                m1_text = f"""
+**Step 1: Calculate Depth of Point A below Soil Surface**
+$$z_A = {z_s:.2f} - {y_s:.2f} = {results['depth_A_soil']:.2f} \\, m$$
+
+**Step 2: Total Stress ($\\sigma$)**
+$$\\sigma = (\\gamma_w \\cdot y) + (\\gamma_{{sat}} \\cdot z_A) = ({gamma_w} \\cdot {y_s:.2f}) + ({g_sat_s:.2f} \\cdot {results['depth_A_soil']:.2f}) = \\mathbf{{{results['sigma_total']:.2f} \\, kPa}}$$
+
+**Step 3: Pore Water Pressure ($u$)**
+$$u = (H_A - \\text{{Elevation}}_A) \\cdot \\gamma_w = ({results['H_A']:.2f} - {a_s:.2f}) \\cdot {gamma_w} = \\mathbf{{{results['u_val']:.2f} \\, kPa}}$$
+
+**Step 4: Effective Stress ($\\sigma'$)**
+$$\\sigma' = \\sigma - u = {results['sigma_total']:.2f} - {results['u_val']:.2f} = \\mathbf{{{results['sigma_prime_1']:.2f} \\, kPa}}$$
+"""
+                glass_box(m1_text)
+
+                st.markdown("---")
+
+                # --- METHOD 2 ---
+                write_text("subheader", "Method 2: Seepage Force Approach")
+                st.caption("Adjusting submerged weight by the hydraulic drag force (j).")
+
+                # Logic for sign based on flow direction
+                if results['flow_type'] == "Upward":
+                    sign, logic = "-", r"\text{Upward flow reduces effective weight: } (\gamma' - j)"
+                elif results['flow_type'] == "Downward":
+                    sign, logic = "+", r"\text{Downward flow increases effective weight: } (\gamma' + j)"
+                else:
+                    sign, logic = "+", r"\text{Hydrostatic condition: } (\gamma')"
+
+                # Use DOUBLE BACKSLASHES (\\) for all LaTeX commands
+                m2_text = f"""
+**Step A: Hydraulic Gradient ($i$)**
+$$i = \\frac{{\\Delta H}}{{L}} = \\frac{{|{results['H_top']:.2f} - {results['H_bot']:.2f}|}}{{{z_s:.2f}}} = {results['i']:.3f}$$
+
+**Step B: Submerged Unit Weight ($\gamma'$)**
+$$\\gamma' = \\gamma_{{sat}} - \\gamma_w = {g_sat_s:.2f} - {gamma_w} = {results['gamma_sub']:.2f} \, kN/m^3$$
+
+**Step C: Seepage Force per Unit Volume ($j$)**
+$$j = i \\cdot \\gamma_w = {results['i']:.3f} \\cdot {gamma_w} = {results['j_seepage']:.2f} \, kN/m^3$$
+
+**Step D: Effective Unit Weight ($\gamma'_{{eff}}$)**
+$${logic}$$
+$$\\gamma'_{{eff}} = \\gamma' {sign} j = {results['gamma_sub']:.2f} {sign} {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \, kN/m^3$$
+
+**Step E: Final Effective Stress ($\sigma'$)**
+$$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {results['gamma_effective']:.2f} = \\mathbf{{{results['sigma_prime_2']:.2f} \, kPa}}$$
+"""
+                glass_box(m2_text)
     # =================================================================
     # TAB 2: PERMEABILITY
     # =================================================================
@@ -314,7 +374,7 @@ def app():
         col_input_2, col_plot_2 = st.columns([1, 1.2])
 
         with col_input_2:
-            st.markdown("### 1. Test Configuration")
+            write_text("subheader", "1. Test Configuration")
             test_type = st.radio("Select Method", ["Constant Head", "Falling Head"], horizontal=True)
             st.markdown("---")
 
@@ -327,19 +387,11 @@ def app():
                 t = st.number_input("Time Interval (t) [sec]", value=60.0)
                 
                 st.markdown("---")
-                if st.button("Calculate Permeability (k)", type="primary"):
+                if st.button("Calculate Permeability (k)", type="primary", key="btn_const"):
                     if A*h*t > 0: 
                         k_val = (Q*L)/(A*h*t)
                         k_formatted = format_scientific(k_val)
                         st.success(f"**Permeability Coefficient (k)**\n\n$${k_formatted} \\text{{ cm/sec}}$$")
-                        st.markdown(f"""
-                        <div style="background-color: #d1e7dd; padding: 20px; border-radius: 10px; border: 1px solid #0f5132; text-align: center; margin-top: 20px;">
-                            <p style="color: #0f5132; margin-bottom: 8px; font-size: 16px; font-weight: 600;">Permeability Coefficient (k)</p>
-                            <h2 style="color: #0f5132; margin: 0; font-size: 28px; font-weight: 800;">
-                                $${k_formatted} \\text{{ cm/sec}}$$
-                            </h2>
-                        </div>
-                        """, unsafe_allow_html=True)
                     else:
                         st.error("Inputs must be positive.")
 
@@ -353,7 +405,7 @@ def app():
                 t_fall = st.number_input("Time Interval (t) [sec]", value=300.0)
 
                 st.markdown("---")
-                if st.button("Calculate Permeability (k)", type="primary"):
+                if st.button("Calculate Permeability (k)", type="primary", key="btn_fall"):
                     if A_soil*t_fall > 0 and h2 > 0: 
                         k_val = (2.303*a*L_fall/(A_soil*t_fall))*np.log10(h1/h2)
                         k_formatted = format_scientific(k_val)
@@ -418,134 +470,201 @@ def app():
                 ax2.plot([1.5, 3], [4, 4], 'k--', lw=0.5); ax2.plot([1.5, 3], [6, 6], 'k--', lw=0.5)
 
             st.pyplot(fig2)
-        # =================================================================    # =================================================================
-    # TAB 3: MULTI-LAYER SEEPAGE
+# =================================================================
+    # TAB 3: MULTI-LAYER SEEPAGE (EXAM QUESTIONS)
     # =================================================================
     with tab3:
-        st.caption("Calculate Equivalent Permeability and Seepage Rate for Stratified Soils.")
         
-        # Split layout: Inputs take up ~68% of the screen, Diagram takes ~32%
-        col_input_3, col_profile_3 = st.columns([2.2, 1])
-
-        with col_input_3:
-            st.subheader("Global Inputs")
-            g_col1, g_col2 = st.columns(2)
+        col_setup, col_viz = st.columns([2, 1.2])
+        
+        
+        with col_setup:
+            write_text("subheader", "1. Global Parameters")
+            c_g1, c_g2, c_g3 = st.columns(3)
+            with c_g1:
+                n_layers = st.number_input("Number of Soil Layers", 1, 6, value=5, key="t3_layers")
+                gamma_w = st.radio("Unit Weight of Water (γw)", [9.81, 10.0], index=1, horizontal=True, key="t3_gw_radio")
+            with c_g2:
+                water_depth = st.number_input("Water Table Depth (m)", value=1.0, step=0.5, key="t3_wt")
+                h_surface = st.number_input("Total Head at Top (m)", value=5.0, key="t3_htop")
+            with c_g3:
+                surcharge = st.number_input("Surcharge q (kPa)", value=0.0, step=5.0, key="t3_q")
             
-            with g_col1:
-                flow_dir = st.radio("Flow Direction", ["Parallel (Horizontal)", "Perpendicular (Vertical)"])
-            with g_col2:
-                n_layers = st.number_input("Number of Soil Layers", 1, 10, 3)
-                grad_i = st.number_input("Hydraulic Gradient (i)", min_value=0.001, value=0.500, format="%.3f")
-                area_A = st.number_input("Cross-sectional Area (A) [m²]", min_value=0.1, value=1.0)
-
             st.markdown("---")
-            st.subheader("Stratigraphy")
-            
-            # 2-column grid for the Layer Expanders
-            s_col1, s_col2 = st.columns(2)
+            write_text("subheader", "2. Stratigraphy")
             
             layers = []
-            current_depth = 0.0
+            depth_tracker = 0.0
+            colors = {"Sand": "#E6D690", "Clay": "#B0A494", "Gravel": "#A89F91", "Silt": "#D2B48C"}
 
-            # Dynamically generate inputs based on n_layers
+            def_types = ["Sand", "Gravel", "Clay", "Sand", "Silt"]
+            def_h = [4.0, 2.0, 4.0, 3.0, 10.0]
+            def_g_sat = [20.0, 21.0, 18.0, 21.0, 20.0]
+            def_g_dry = [18.0, 19.0, 16.0, 18.0, 17.0]
+            def_k = [10.0, 80.0, 0.00088, 9.0, 0.0028]
+
             for i in range(int(n_layers)):
-                target_col = s_col1 if i % 2 == 0 else s_col2
-                
-                with target_col:
-                    with st.expander(f"Layer {i+1} Definition", expanded=True):
-                        c1, c2 = st.columns(2)
-                        
-                        # Keys must be unique to prevent Streamlit duplicate widget errors
-                        h = c1.number_input(f"Thickness [m]", 0.1, 50.0, 2.0, key=f"h_seep_{i}")
-                        k = c2.number_input(f"k [cm/s]", 1e-9, 10.0, 1e-3, format="%.2e", key=f"k_seep_{i}")
-                        
-                        mid = current_depth + h/2
-                        layers.append({
-                            "id": i+1, 
-                            "h": h, 
-                            "k": k,
-                            "top": current_depth, 
-                            "bottom": current_depth + h, 
-                            "mid": mid
-                        })
-                        
-                        current_depth += h
-            
-            # Calculation Execution
-            st.markdown("---")
-            if st.button("Calculate Seepage", type="primary"):
-                H_total = sum(L["h"] for L in layers)
-                
-                # Formula logic based on flow direction
-                if "Parallel" in flow_dir:
-                    k_eq = sum(L["k"] * L["h"] for L in layers) / H_total
-                    eq_label = "k_{eq(H)}"
-                    dir_text = "Horizontal (Parallel)"
-                else:
-                    k_eq = H_total / sum(L["h"] / L["k"] for L in layers)
-                    eq_label = "k_{eq(V)}"
-                    dir_text = "Vertical (Perpendicular)"
-                
-                # Convert k_eq from cm/s to m/s for volumetric seepage calculation
-                k_eq_ms = k_eq / 100.0
-                q_s = k_eq_ms * grad_i * area_A
-                
-                k_formatted = format_scientific(k_eq)
-                q_formatted = format_scientific(q_s)
+                layer_top = depth_tracker
+                t_val = def_types[i] if i < len(def_types) else "Sand"
+                h_val = def_h[i] if i < len(def_h) else 2.0
+                gsat_val = def_g_sat[i] if i < len(def_g_sat) else 20.0
+                gdry_val = def_g_dry[i] if i < len(def_g_dry) else 17.0
+                k_val = def_k[i] if i < len(def_k) else 10.0
 
-                # Output Results
-                with st.container(border=True):
-                    st.markdown(f"### Results: {dir_text} Flow")
-                    st.success(f"**Equivalent Permeability:**\n\n$${eq_label} = {k_formatted} \\text{{ cm/s}}$$")
-                    st.info(f"**Seepage Rate ($q_s$):**\n\n$$q_s = {q_formatted} \\text{{ m}}^3/\\text{{s}}$$")
+                with st.expander(f"Layer {i+1} (Top at {layer_top:.1f}m)", expanded=(i < 2)):
+                    cl = st.columns(5)
+                    s_type = cl[0].selectbox("Type", ["Sand", "Clay", "Gravel", "Silt"], 
+                                             index=["Sand", "Clay", "Gravel", "Silt"].index(t_val), key=f"t3_type{i}")
+                    thickness = cl[1].number_input("H (m)", 0.1, value=h_val, key=f"t3_h{i}")
+                    
+                    layer_bot = layer_top + thickness
+                    needs_dry = layer_top < water_depth
+                    needs_sat = layer_bot > water_depth
 
-        # ================================================================
-        # DYNAMIC PROFILE DIAGRAM
-        # ================================================================
-        with col_profile_3:
-            st.subheader("Soil Profile Preview")
-            fig3, ax3 = plt.subplots(figsize=(4, 6))
+                    # Logic to mirror Effective Stress module behavior
+                    if needs_sat:
+                        g_sat_in = cl[2].number_input("γ_sat", value=gsat_val, key=f"t3_gsat{i}")
+                    else:
+                        cl[2].text_input("γ_sat", value="N/A", disabled=True, key=f"t3_gsat_dis{i}")
+                        g_sat_in = gsat_val
+
+                    if needs_dry:
+                        g_dry_in = cl[3].number_input("γ_dry", value=gdry_val, key=f"t3_gdry{i}")
+                    else:
+                        cl[3].text_input("γ_dry", value="N/A", disabled=True, key=f"t3_gdry_dis{i}")
+                        g_dry_in = gdry_val
+                        
+                    perm = cl[4].number_input("k (m/d)", value=k_val, format="%.5f", key=f"t3_k{i}")
+                    
+                    layers.append({
+                        "id": i+1, "type": s_type, "H": thickness, "g_sat": g_sat_in, "g_dry": g_dry_in, 
+                        "k": perm, "top": layer_top, "bot": layer_bot, "color": colors[s_type]
+                    })
+                    depth_tracker += thickness
+
+            write_text("subheader", "3. Artesian Measurement & Calculation Point")
+            c_calc1, c_calc2 = st.columns(2)
+            with c_calc1:
+                target_depth = st.number_input("Calculate Stresses at Depth (m)", 0.0, depth_tracker, value=11.0, key="t3_target")
+            with c_calc2:
+                art_p = st.number_input("Measured Pore Pressure (kPa)", value=150.0, key="t3_artp")
+                art_depth = st.number_input("At Measuring Depth (m)", value=6.0, key="t3_artz")
+                art_head = (art_p / gamma_w) + (depth_tracker - art_depth)
+            solve_clicked = st.button("Solve Seepage Problem", type="primary", key="t3_solve")
+
+        with col_viz:
+            write_text("subheader", "Soil Profile Preview")
             
-            # Array of earth-tone colors for visual contrast
-            colors = ['#E3C195', '#D2B48C', '#F5DEB3', '#DEB887', '#C19A6B', '#A0522D']
+            # Dynamically set figure height based on total depth to prevent squashing
+            fig_h = max(8, depth_tracker / 2)
+            fig3, ax3 = plt.subplots(figsize=(5, fig_h))
+            
+            # Using your established color palette
+            colors = {"Sand": "#E6D690", "Clay": "#B0A494", "Gravel": "#A89F91", "Silt": "#D2B48C"}
             
             for i, L in enumerate(layers):
-                color = colors[i % len(colors)]
-                
                 # Draw the soil layer
-                rect = patches.Rectangle((0, L["top"]), 4, L["h"],
-                                         facecolor=color,
-                                         edgecolor="black", 
-                                         hatch='//')
+                rect = patches.Rectangle((0, L['top']), 4, L['H'], 
+                                         facecolor=L['color'], edgecolor='black', alpha=0.9, linewidth=1.5)
                 ax3.add_patch(rect)
                 
-                # Add layer labels in a white box for readability
-                ax3.text(2, L["mid"], f"L{L['id']}\n$k = {L['k']:.1e}$", 
-                         ha='center', va='center',
-                         bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', pad=2))
+                # Label the layer centered vertically in the layer thickness
+                ax3.text(2, L['top'] + L['H']/2, f"{L['type']}\n(L{L['id']})", 
+                         ha='center', va='center', fontweight='bold', fontsize=10)
+                
+                # Add dimension lines for thickness on the left side
+                ax3.annotate('', xy=(-0.5, L['top']), xytext=(-0.5, L['bot']),
+                             arrowprops=dict(arrowstyle='<->', color='black', lw=1))
+                ax3.text(-0.6, L['top'] + L['H']/2, f"{L['H']}m", ha='right', va='center', fontsize=9)
 
-            # Draw directional flow arrows
-            H_total_depth = current_depth
-            if "Parallel" in flow_dir:
-                # Arrow shooting left to right
-                ax3.annotate('', xy=(3.5, H_total_depth/2), xytext=(0.5, H_total_depth/2),
-                             arrowprops=dict(arrowstyle='->', color='blue', lw=3))
-                ax3.text(2, H_total_depth/2 - (H_total_depth*0.05), "Flow", color='blue', ha='center', fontweight='bold')
-            else:
-                # Arrow shooting top to bottom
-                ax3.annotate('', xy=(2, H_total_depth - (H_total_depth*0.1)), xytext=(2, H_total_depth*0.1),
-                             arrowprops=dict(arrowstyle='->', color='blue', lw=3))
-                ax3.text(2.2, H_total_depth/2, "Flow", color='blue', va='center', fontweight='bold')
+            # Draw Water Table line with standard blue dashed style
+            ax3.axhline(water_depth, color='blue', linestyle='-.', linewidth=2)
+            ax3.text(4.2, water_depth, "WT ▽", color='blue', fontweight='bold', fontsize=10)
 
-            # Formatting the plot (inverting y-axis so depth 0 is at the top)
-            ax3.set_ylim(H_total_depth * 1.05, -H_total_depth * 0.05)
-            ax3.set_xlim(0, 4)
-            ax3.axis("off")
-            st.pyplot(fig3)
-            plt.close(fig3)
+            # Draw the Calculation Point with high-visibility red
+            ax3.axhline(target_depth, color='red', linestyle='--', linewidth=2.5)
+            ax3.text(4.2, target_depth, "CALC POINT", color='red', fontweight='bold', fontsize=10)
+            
+            # Styling to match textbook diagrams
+            ax3.set_ylim(depth_tracker + 1, -1) # Buffer at top and bottom
+            ax3.set_xlim(-2, 7) # Extra space for labels
+            ax3.axis('off')
+            
+            # Ensure the plot fits the Streamlit container perfectly
+            st.pyplot(fig3, use_container_width=True)
+# === CRITICAL CHANGE: Indent the RESULTS block so it is inside the tab3 block ===
+        if solve_clicked:
+            # --- PHASE 1: MATHEMATICAL SOLVER ---
+            sum_h_k = sum(L['H'] / L['k'] for L in layers)
+            v_seepage = (h_surface - art_head) / sum_h_k
+            
+            sigma_total = surcharge
+            sum_h_k_above = 0
+            for L in layers:
+                if target_depth >= L['bot']:
+                    # Entire layer is above target point
+                    if L['bot'] <= water_depth:
+                        sigma_total += L['H'] * L['g_dry']
+                    elif L['top'] >= water_depth:
+                        sigma_total += L['H'] * L['g_sat']
+                    else:
+                        # Split by water table
+                        sigma_total += (water_depth - L['top']) * L['g_dry'] + (L['bot'] - water_depth) * L['g_sat']
+                    sum_h_k_above += L['H'] / L['k']
+                elif target_depth > L['top']:
+                    # Target point is inside this layer
+                    thick_above = target_depth - L['top']
+                    if target_depth <= water_depth:
+                        sigma_total += thick_above * L['g_dry']
+                    elif L['top'] >= water_depth:
+                        sigma_total += thick_above * L['g_sat']
+                    else:
+                        sigma_total += (water_depth - L['top']) * L['g_dry'] + (target_depth - water_depth) * L['g_sat']
+                    sum_h_k_above += thick_above / L['k']
+                    break # Stop calculating once target is reached
+            
+            h_target = h_surface - (v_seepage * sum_h_k_above)
+            z_elev = depth_tracker - target_depth
+            u_target = (h_target - z_elev) * gamma_w
+            sigma_eff = sigma_total - u_target
 
+            # --- PHASE 2: DISPLAY RESULTS ---
+            st.divider()
+            res_sum = f"""
+### Analysis Results (@ z = {target_depth}m)
+**Flow Velocity (v):** {v_seepage:.6f} m/day
 
-    
+**Total Vertical Stress ($\sigma$):** {sigma_total:.2f} kPa
+**Pore Water Pressure ($u$):** {u_target:.2f} kPa
+**Effective Vertical Stress ($\sigma'$):** {sigma_eff:.2f} kPa
+"""
+            glass_box(res_sum)
+            
+            # --- PHASE 3: DETAILED CALCULATION LOG ---
+            # FIXED INDENTATION FOR LINE 639
+            with st.expander("Detailed Calculation Log", expanded=False):
+                write_text("subheader", "1. Head Distribution & Flow Rate")
+                head_log = [
+                    f"**Total Head at Top Boundary:** {h_surface:.2f} m",
+                    f"**Total Head at Artesian Measurement:** {art_head:.2f} m",
+                    f"**Total Resistance ($\sum H/k$):** {sum_h_k:.4f} day"
+                ]
+                curr_h = h_surface
+                for L in layers:
+                    dh = v_seepage * (L['H'] / L['k'])
+                    curr_h -= dh
+                    head_log.append(f"Layer {L['id']} ({L['type']}): $\\Delta h = {dh:.4f}$m → Head at Bottom = {curr_h:.4f}m")
+                
+                glass_box("\n\n".join(head_log))
 
+                write_text("subheader", "2. Stress Derivation at Target")
+                stress_log = [
+                    f"**Total Stress ($\\sigma$):** {sigma_total:.2f} kPa (including {surcharge} kPa surcharge)",
+                    f"**Total Head at Calculation Depth ($h_{{target}}$):** {h_target:.4f} m",
+                    f"**Elevation Head ($z_{{elev}}$ relative to datum):** {z_elev:.2f} m",
+                    f"**Pore Pressure ($u$):** $({h_target:.4f} - {z_elev:.2f}) \\cdot {gamma_w} = {u_target:.2f}$ kPa",
+                    f"**Effective Stress ($\\sigma'$):** ${sigma_total:.2f} - {u_target:.2f} = \\mathbf{{{sigma_eff:.2f} \\, kPa}}$"
+                ]
+                glass_box("\n\n".join(stress_log))
 if __name__ == "__main__":
     app()
