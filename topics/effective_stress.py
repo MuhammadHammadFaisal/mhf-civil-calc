@@ -166,13 +166,7 @@ def app():
         # 3. CALCULATE
         # -------------------------------------------------
         st.markdown("---")
-        if "calc_trigger" not in st.session_state:
-            st.session_state.calc_trigger = False
-        
         if st.button("Calculate Stress Profiles", type="primary"):
-            st.session_state.calc_trigger = True
-        
-        if st.session_state.calc_trigger:
             
             z_points_set = {0.0, total_depth}
             cur = 0
