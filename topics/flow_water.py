@@ -290,11 +290,11 @@ def app():
 
         # ------------------------- RESULTS (FULL WIDTH) -------------------------
         if st.session_state.results:
-            results = st.session_state.results  # Ensure this matches
+            results = st.session_state.results  # FIXED: Unified variable name
             st.divider()
             
-            # Use 'results' instead of 'res'
-            result_summary = f"""
+            # CHANGED: Consolidated summary into a single premium glass_box
+            summary_text = f"""
 ### Analysis Results: {results['flow_type']}
 **Hydraulic Gradient (i):** {results['i']:.3f}
 
@@ -302,22 +302,66 @@ def app():
 **Pore Pressure ($u$):** {results['u_val']:.2f} kPa
 **Effective Stress ($\sigma'$):** {results['sigma_prime_1']:.2f} kPa
 """
-            glass_box(result_summary)
+            glass_box(summary_text)
             
             # --- DETAILED DERIVATION ---
-            with st.expander("View Detailed Step-by-Step Derivation (2 Methods)", expanded=False):
-                # FIXED: Changed 'res' to 'results' throughout
-                write_text("subheader", "Method 1: Definition (σ' = σ − u)")
-                st.latex(rf"\sigma = ({gamma_w} \cdot {results['val_y_snap']}) + ({results['gamma_sat_snap']} \cdot {results['depth_A_soil']:.2f}) = {results['sigma_total']:.2f} \text{{ kPa}}")
-                st.latex(rf"u = ({results['H_A']:.2f} - {results['val_A_snap']:.2f}) \cdot {gamma_w} = {results['u_val']:.2f} \text{{ kPa}}")
-                st.latex(rf"\sigma' = {results['sigma_total']:.2f} - {results['u_val']:.2f} = \mathbf{{{results['sigma_prime_1']:.2f} \text{{ kPa}}}}")
+            with st.expander("View Detailed Step-by-Step Derivation (2 Methods)", expanded=True):
+                # Fetching snapshots for consistency
+                z_s = results.get('val_z_snap')
+                a_s = results.get('val_A_snap')
+                y_s = results.get('val_y_snap')
+                g_sat_s = results.get('gamma_sat_snap')
+
+                # --- METHOD 1 ---
+                write_text("subheader", "Method 1: Stress Definition ($\sigma' = \sigma - u$)")
                 
+                m1_text = f"""
+**Step 1: Calculate Depth of Point A below Soil Surface**
+$$z_A = {z_s:.2f} - {a_s:.2f} = {results['depth_A_soil']:.2f} \, m$$
+
+**Step 2: Total Stress ($\sigma$)**
+$$\sigma = (\gamma_w \cdot y) + (\gamma_{{sat}} \cdot z_A) = ({gamma_w} \cdot {y_s:.2f}) + ({g_sat_s:.2f} \cdot {results['depth_A_soil']:.2f}) = \mathbf{{{results['sigma_total']:.2f} \, kPa}}$$
+
+**Step 3: Pore Water Pressure ($u$)**
+$$u = (H_A - \text{{Elevation}}_A) \cdot \gamma_w = ({results['H_A']:.2f} - {a_s:.2f}) \cdot {gamma_w} = \mathbf{{{results['u_val']:.2f} \, kPa}}$$
+
+**Step 4: Effective Stress ($\sigma'$)**
+$$\sigma' = \sigma - u = {results['sigma_total']:.2f} - {results['u_val']:.2f} = \mathbf{{{results['sigma_prime_1']:.2f} \, kPa}}$$
+"""
+                glass_box(m1_text)
+
                 st.markdown("---")
+
+                # --- METHOD 2 ---
                 write_text("subheader", "Method 2: Seepage Force Approach")
-                st.latex(rf"j = i \times \gamma_w = {results['i']:.3f} \times {gamma_w:.2f} = {results['j_seepage']:.2f} \text{{ kN/m}}^3")
-                st.latex(rf"\gamma'_{{eff}} = \gamma' \pm j = {results['gamma_sub']:.2f} \pm {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \text{{ kN/m}}^3")
-                st.latex(rf"\sigma' = z \times \gamma'_{{eff}} = {results['depth_A_soil']:.2f} \times {results['gamma_effective']:.2f} = \mathbf{{{results['sigma_prime_2']:.2f} \text{{ kPa}}}}")
-               
+                st.caption("Adjusting submerged weight by the hydraulic drag force (j).")
+
+                # Logic for sign based on flow direction
+                if results['flow_type'] == "Upward":
+                    sign, logic = "-", r"\text{Upward flow reduces effective weight: } (\gamma' - j)"
+                elif results['flow_type'] == "Downward":
+                    sign, logic = "+", r"\text{Downward flow increases effective weight: } (\gamma' + j)"
+                else:
+                    sign, logic = "+", r"\text{Hydrostatic condition: } (\gamma')"
+
+                m2_text = f"""
+**Step A: Hydraulic Gradient ($i$)**
+$$i = \frac{{\Delta H}}{{L}} = \frac{{|{results['H_top']:.2f} - {results['H_bot']:.2f}|}}{{{z_s:.2f}}} = {results['i']:.3f}$$
+
+**Step B: Submerged Unit Weight ($\gamma'$)**
+$$\gamma' = \gamma_{{sat}} - \gamma_w = {g_sat_s:.2f} - {gamma_w} = {results['gamma_sub']:.2f} \, kN/m^3$$
+
+**Step C: Seepage Force per Unit Volume ($j$)**
+$$j = i \cdot \gamma_w = {results['i']:.3f} \cdot {gamma_w} = {results['j_seepage']:.2f} \, kN/m^3$$
+
+**Step D: Effective Unit Weight ($\gamma'_{{eff}}$)**
+$${logic}$$
+$$\gamma'_{{eff}} = \gamma' {sign} j = {results['gamma_sub']:.2f} {sign} {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \, kN/m^3$$
+
+**Step E: Final Effective Stress ($\sigma'$)**
+$$\sigma' = z_A \cdot \gamma'_{{eff}} = {results['depth_A_soil']:.2f} \cdot {results['gamma_effective']:.2f} = \mathbf{{{results['sigma_prime_2']:.2f} \, kPa}}$$
+"""
+                glass_box(m2_text)
     # =================================================================
     # TAB 2: PERMEABILITY
     # =================================================================
