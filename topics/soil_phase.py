@@ -317,18 +317,19 @@ def app():
 
             c1, c2 = st.columns(2)
             with c1:
-                w_in = st.number_input("Water Content (w)", 0.0, step=0.01, format="%.3f")
-                Gs_in = st.number_input("Specific Gravity (Gs)", 0.0, step=0.01, format="%.2f")
-                e_in = st.number_input("Void Ratio (e)", 0.0, step=0.01)
-                n_in = st.number_input("Porosity (n)", 0.0, step=0.01)
-                Sr_in = st.number_input("Saturation (Sr)", 0.0, 1.0, step=0.01)
+                # Set default w = 0.253 and Gs = 2.70
+                w_in = st.number_input("Water Content (w)", 0.0, step=0.01, value=0.253, format="%.3f")
+                Gs_in = st.number_input("Specific Gravity (Gs)", 0.0, step=0.01, value=2.70, format="%.2f")
+                e_in = st.number_input("Void Ratio (e)", 0.0, step=0.01, value=0.0)
+                n_in = st.number_input("Porosity (n)", 0.0, step=0.01, value=0.0)
+                Sr_in = st.number_input("Saturation (Sr)", 0.0, 1.0, step=0.01, value=0.0)
                 
             with c2:
-                # UPDATED LABELS TO USE γ_bulk / γ_dry (Consistent with Symbolic Mode)
-                gamma_b_in = st.number_input("Bulk Unit Wt (γ_bulk)", 0.0, step=0.1)
-                gamma_d_in = st.number_input("Dry Unit Wt (γ_dry)", 0.0, step=0.1)
-                rho_b_in = st.number_input("Bulk Density (ρ_bulk)", 0.0, step=0.01)
-                rho_d_in = st.number_input("Dry Density (ρ_dry)", 0.0, step=0.01)
+                # Set default gamma_bulk = 19.17
+                gamma_b_in = st.number_input("Bulk Unit Wt (γ_bulk)", 0.0, step=0.1, value=19.17)
+                gamma_d_in = st.number_input("Dry Unit Wt (γ_dry)", 0.0, step=0.1, value=0.0)
+                rho_b_in = st.number_input("Bulk Density (ρ_bulk)", 0.0, step=0.01, value=0.0)
+                rho_d_in = st.number_input("Dry Density (ρ_dry)", 0.0, step=0.01, value=0.0)
 
             if w_in > 0: solver.set_param('w', w_in)
             if Gs_in > 0: solver.set_param('Gs', Gs_in)
