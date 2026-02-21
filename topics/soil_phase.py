@@ -358,7 +358,7 @@ def app():
                 st.error("Not enough information provided to solve.")
             else:
                 bot_col1, bot_col2 = st.columns([1, 1])
-                    with bot_col1:
+                with bot_col1:
                     st.success("Calculation Complete!")
                     p = solver.params
                     
