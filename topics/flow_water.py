@@ -602,25 +602,33 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
             sum_h_k = sum(L['H'] / L['k'] for L in layers)
             v_seepage = (h_surface - art_head) / sum_h_k
             
+# --- CORRECTED CALCULATION LOOP ---
             sigma_total = surcharge
             sum_h_k_above = 0
             for L in layers:
                 if target_depth >= L['bot']:
-                    if L['bot'] <= water_depth: sigma_total += L['H'] * L['g_dry']
-                    elif L['top'] >= water_depth: sigma_total += L['H'] * L['g_sat']
-                    else: sigma_total += (water_depth - L['top']) * L['g_dry'] + (L['bot'] - water_depth) * L['g_sat']
+                    # CASE 1: Entire layer is above the calculation point
+                    if L['bot'] <= water_depth:
+                        sigma_total += L['H'] * L['g_dry']
+                    elif L['top'] >= water_depth:
+                        sigma_total += L['H'] * L['g_sat']
+                    else:
+                        # Layer split by water table
+                        sigma_total += (water_depth - L['top']) * L['g_dry'] + (L['bot'] - water_depth) * L['g_sat']
                     sum_h_k_above += L['H'] / L['k']
+                
                 elif target_depth > L['top']:
+                    # CASE 2: Target depth is inside this layer
                     thick_above = target_depth - L['top']
-                    if target_depth <= water_depth: sigma_total += thick_above * L['g_dry']
-                    elif L['top'] >= water_depth: sigma_total += thick_above * L['g_sat']
-                    else: sigma_total += (water_depth - L['top']) * L['g_dry'] + (target_depth - water_depth) * L['g_sat']
+                    if target_depth <= water_depth:
+                        sigma_total += thick_above * L['g_dry']
+                    elif L['top'] >= water_depth:
+                        sigma_total += thick_above * L['g_sat']
+                    else:
+                        # Calculation point is below WT, but layer top is above WT
+                        sigma_total += (water_depth - L['top']) * L['g_dry'] + (target_depth - water_depth) * L['g_sat']
                     sum_h_k_above += thick_above / L['k']
-            
-            h_target = h_surface - (v_seepage * sum_h_k_above)
-            z_elev = depth_tracker - target_depth
-            u_target = (h_target - z_elev) * gamma_w_val
-            sigma_eff = sigma_total - u_target
+                    break # Stop calculating weights once we reach the target depth
 
             st.divider()
             res_sum = f"""
