@@ -305,21 +305,32 @@ def app():
                 # 1. Total Settlement Header
                 st.markdown(f"## Total Settlement: :red[{total_settlement*1000:.2f} mm]")
                 
-        # 2. Clean Summary Table
-                df_results = pd.DataFrame(
-                    results_data, 
-                    columns=["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]
-                )
-        
-                # Convert to standard HTML and left-justify to remove pandas default centering
-                raw_html = df_results.to_html(index=False, border=0, justify="left")
+                # 2. Clean Summary Table (Manual HTML to force CSS)
+                # We build the HTML manually to prevent Pandas and Streamlit from injecting default styles
+                table_html = '<div class="glass-table-wrapper"><table>'
                 
-                # CRITICAL FIX: Strip newlines and pandas default classes so Streamlit's 
-                # Markdown parser doesn't hijack the table and override your CSS.
-                raw_html = raw_html.replace("\n", "").replace('class="dataframe"', '')
+                # Table Header
+                table_html += "<thead><tr>"
+                table_html += "<th>Layer</th><th>σ'₀ (kPa)</th><th>σ'₁ (kPa)</th><th>Settlement (mm)</th><th>Method</th>"
+                table_html += "</tr></thead>"
+                
+                # Table Body
+                table_html += "<tbody>"
+                for row in results_data:
+                    table_html += "<tr>"
+                    # row[0]: Layer, row[1]: sigma0, row[2]: sigma_f, row[3]: settlement, row[4]: method
+                    table_html += f"<td>{row[0]}</td><td>{row[1]}</td><td>{row[2]}</td><td>{row[3]}</td><td>{row[4]}</td>"
+                    table_html += "</tr>"
+                table_html += "</tbody></table></div>"
+
+                # Render purely as HTML
+                # If you are using Streamlit 1.33+, you can use st.html(table_html) instead of st.markdown
+                try:
+                    st.html(table_html)
+                except AttributeError:
+                    st.markdown(table_html, unsafe_allow_html=True)
         
-                # Wrap it in the div to pull the style from theme.py!
-                st.markdown(f'<div class="glass-table-wrapper">{raw_html}</div>', unsafe_allow_html=True)
+
                 
                 # 3. Detailed Steps
                 write_text("subheader", "Detailed Calculation Log")
