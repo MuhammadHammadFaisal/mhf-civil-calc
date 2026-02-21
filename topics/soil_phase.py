@@ -5,15 +5,14 @@ import pandas as pd
 from theme import write_text, glass_box, glass_table
 
 def app():
-    st.markdown("---")
-    
-    # 1. SELECT MODE
-    mode = st.radio("Select Solver Mode:", ["Numeric Calculation", "Symbolic / Formula Finder"], horizontal=True)
+
+    tab1, tab2 = st.tabs(["Numeric Calculation", "Symbolic / Formula Finder"])
+
 
     # ==========================================
     # MODE A: NUMERIC CALCULATION
     # ==========================================
-    if "Numeric" in mode:
+    with tab1:
         st.caption("Enter parameters. The INPUT diagram updates live. The RESULT diagram appears after solving.")
         
         class SoilState:
@@ -412,8 +411,7 @@ def app():
     # ==========================================
     # MODE B: SYMBOLIC / FORMULA FINDER
     # ==========================================
-    elif "Symbolic" in mode:
-        st.subheader("Formula Finder")
+    with tab1:
         st.caption("Select the variables you **KNOW** to find the formula for the variable you **WANT**.")
 
         col1, col2 = st.columns(2)
