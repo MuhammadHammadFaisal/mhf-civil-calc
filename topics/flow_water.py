@@ -599,10 +599,13 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
 **Effective Vertical Stress ($\sigma'$):** {sigma_eff:.2f} kPa
 """
                 glass_box(res_sum)
-        # --- RESTORED DIAGRAM COLUMN ---
+
         with col_viz:
             write_text("subheader", "Soil Profile Preview")
-            fig3, ax3 = plt.subplots(figsize=(5, 8))
+            
+            # Dynamically set figure height based on total depth to prevent squashing
+            fig_h = max(8, depth_tracker / 2)
+            fig3, ax3 = plt.subplots(figsize=(5, fig_h))
             
             # Using your established color palette
             colors = {"Sand": "#E6D690", "Clay": "#B0A494", "Gravel": "#A89F91", "Silt": "#D2B48C"}
@@ -610,25 +613,32 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
             for i, L in enumerate(layers):
                 # Draw the soil layer
                 rect = patches.Rectangle((0, L['top']), 4, L['H'], 
-                                         facecolor=L['color'], edgecolor='black', alpha=0.9)
+                                         facecolor=L['color'], edgecolor='black', alpha=0.9, linewidth=1.5)
                 ax3.add_patch(rect)
                 
-                # Label the layer
-                ax3.text(2, L['top'] + L['H']/2, f"{L['type']}\nL{L['id']}", 
-                         ha='center', fontweight='bold', fontsize=10)
+                # Label the layer centered vertically in the layer thickness
+                ax3.text(2, L['top'] + L['H']/2, f"{L['type']}\n(L{L['id']})", 
+                         ha='center', va='center', fontweight='bold', fontsize=10)
+                
+                # Add dimension lines for thickness on the left side
+                ax3.annotate('', xy=(-0.5, L['top']), xytext=(-0.5, L['bot']),
+                             arrowprops=dict(arrowstyle='<->', color='black', lw=1))
+                ax3.text(-0.6, L['top'] + L['H']/2, f"{L['H']}m", ha='right', va='center', fontsize=9)
 
-            # Draw Water Table line
-            ax3.axhline(water_depth, color='blue', linestyle='-.', linewidth=2, label="WT")
-            ax3.text(4.2, water_depth, "WT ▽", color='blue', fontweight='bold', fontsize=9)
+            # Draw Water Table line with standard blue dashed style
+            ax3.axhline(water_depth, color='blue', linestyle='-.', linewidth=2)
+            ax3.text(4.2, water_depth, "WT ▽", color='blue', fontweight='bold', fontsize=10)
 
-            # Draw the Calculation Point
+            # Draw the Calculation Point with high-visibility red
             ax3.axhline(target_depth, color='red', linestyle='--', linewidth=2.5)
-            ax3.text(4.2, target_depth, "CALC POINT", color='red', fontweight='bold', fontsize=9)
+            ax3.text(4.2, target_depth, "CALC POINT", color='red', fontweight='bold', fontsize=10)
             
-            # Set plot limits and clean up
-            ax3.set_ylim(depth_tracker + 0.5, -0.5)
-            ax3.set_xlim(-0.5, 6)
+            # Styling to match textbook diagrams
+            ax3.set_ylim(depth_tracker + 1, -1) # Buffer at top and bottom
+            ax3.set_xlim(-2, 7) # Extra space for labels
             ax3.axis('off')
-            st.pyplot(fig3)
+            
+            # Ensure the plot fits the Streamlit container perfectly
+            st.pyplot(fig3, use_container_width=True)
 if __name__ == "__main__":
     app()
