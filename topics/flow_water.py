@@ -112,17 +112,21 @@ def app():
     with tab1:
         st.caption("Determine Effective Stress at Point A. (Datum is at the Bottom of Soil)")
         
-        col_setup, col_plot = st.columns([1, 1.2])
+        col_setup, col_plot = st.columns([2, 1])
         
         with col_setup:
             write_text("subheader", "1. Problem Setup")
-            val_z = st.number_input("Soil Specimen Height (z) [m]", 0.1, step=0.5, value=4.0)
-            val_y = st.number_input("Water Height above Soil (y) [m]", 0.0, step=0.5, value=2.0)
-            val_x = st.number_input("Piezometer Head at Bottom (x) [m]", 0.0, step=0.5, value=7.5)
-            gamma_sat = st.number_input("Saturated Unit Weight (γ_sat) [kN/m³]", 18.0, step=0.1)
-            gamma_w = 10.0
-            val_A = st.slider("Height of Point 'A' from Datum [m]", 0.0, val_z, val_z/2)
-
+            c1, c2= st.columns(2)
+            with c1:
+                val_z = st.number_input("Soil Specimen Height (z) [m]", 0.1, step=0.5, value=4.0)
+                gamma_sat = st.number_input("Saturated Unit Weight (γ_sat) [kN/m³]", 18.0, step=0.1)
+                val_A = st.number_input("Height of Point 'A' from Datum [m]", 0.0, val_z, val_z/2)
+            with c2:
+                val_y = st.number_input("Water Height above Soil (y) [m]", 0.0, step=0.5, value=2.0)
+                val_x = st.number_input("Piezometer Head at Bottom (x) [m]", 0.0, step=0.5, value=7.5)
+                gamma_w = 10.0
+          
+            
             st.markdown("---")
             
             if st.button("Calculate Effective Stress", type="primary"):
