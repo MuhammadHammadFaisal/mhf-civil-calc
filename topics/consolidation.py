@@ -305,15 +305,19 @@ def app():
                 # 1. Total Settlement Header
                 st.markdown(f"## Total Settlement: :red[{total_settlement*1000:.2f} mm]")
                 
-                # 2. Clean Summary Table
+        # 2. Clean Summary Table
                 df_results = pd.DataFrame(
                     results_data, 
                     columns=["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]
                 )
-
-                # Convert to standard HTML
-                raw_html = df_results.to_html(index=False, border=0)
-
+        
+                # Convert to standard HTML and left-justify to remove pandas default centering
+                raw_html = df_results.to_html(index=False, border=0, justify="left")
+                
+                # CRITICAL FIX: Strip newlines and pandas default classes so Streamlit's 
+                # Markdown parser doesn't hijack the table and override your CSS.
+                raw_html = raw_html.replace("\n", "").replace('class="dataframe"', '')
+        
                 # Wrap it in the div to pull the style from theme.py!
                 st.markdown(f'<div class="glass-table-wrapper">{raw_html}</div>', unsafe_allow_html=True)
                 
