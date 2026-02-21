@@ -151,21 +151,13 @@ def write_text(text_type, content):
 # =========================================================
 # BULLETPROOF GLASS BOX
 # =========================================================
+# =========================================================
+# BULLETPROOF GLASS BOX
+# =========================================================
 def glass_box(content):
     """
     Uses inline styling to guarantee Streamlit renders the dark glassy background.
+    Flattened to strictly prevent Markdown from treating indented HTML as code blocks.
     """
-    html = f"""
-    <div style="
-        background-color: rgba(0, 0, 0, 0.35); 
-        padding: 20px; 
-        border-radius: 8px; 
-        border: 1px solid rgba(255, 255, 255, 0.15); 
-        margin-bottom: 15px;
-    ">
-
-{content}
-
-    </div>
-    """
+    html = f"""<div style="background-color: rgba(0, 0, 0, 0.35); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); margin-bottom: 15px;">\n\n{content}\n\n</div>"""
     st.markdown(html, unsafe_allow_html=True)
