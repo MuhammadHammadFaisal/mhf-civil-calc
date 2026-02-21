@@ -17,7 +17,16 @@ st.set_page_config(
 # MAIN APP
 # =========================================================
 def app():
-    st.title("Advanced Effective Stress Analysis")
+    # 1. Define the variable FIRST
+    gamma_option = st.radio(
+        "Unit Weight of Water (γ_w)",
+        [9.81, 10.0],
+        index=1, # CHANGED: Now defaults to 10.0 to match your notes
+        horizontal=True, 
+        help="Select 9.81 for precise calc or 10 for simplified exams."
+    )
+    GAMMA_W = gamma_option
+    st.title("Effective Stress Analysis")
     st.markdown("---")
 
     tab1, tab2 = st.tabs(["Stress Profile Calculator", "Heave Check"])
@@ -41,21 +50,50 @@ def app():
             with c2:
                 hc = st.number_input("Capillary Rise (m)", value=0.0, step=0.1)
             with c3:
-                surcharge = st.number_input("Surcharge q (kPa)", value=50.0, step=5.0)
-                gamma_w = 9.81
+                surcharge = st.number_input("Surcharge q (kPa)", value=30.0, step=5.0)
+                gamma_w = GAMMA_W # FIXED: Now this actually listens to your radio button!
 
             write_text("subheader", " B. Stratigraphy")
-            num_layers = st.number_input("Number of Layers", 1, 5, 2)
+            num_layers = st.number_input("Number of Layers", 1, 5, value=2)
+            
+            # --- NEW ARTESIAN INPUTS ---
+            c_a1, c_a2 = st.columns(2)
+            with c_a1:
+                artesian_layer_id = st.number_input("Artesian Layer ID", 0, int(num_layers), 0, 
+                                                    help="The layer number where artesian pressure begins. Set to 0 for no artesian pressure.")
+            with c_a2:
+                artesian_head = st.number_input("Extra Artesian Head (m)", value=0.0, step=0.5, 
+                                                help="Additional piezometric head above the hydrostatic water table.")
+            st.markdown("---")
+
             layers = []
-            colors = {"Sand": "#E6D690", "Clay": "#B0A494"}
+            colors = {"Sand": "#E6D690", "Clay": "#B0A494", "Gravel": "#A89F91", "Rock": "#6D6D6D"}
             
             depth_tracker = 0.0
 
+            # --- DEFAULT VALUES FROM EXAM NOTES ---
+            def_types = [1, 2]         # 1 = "Clay", 2 = "Gravel"
+            def_h = [6.0, 4.0]         # 6m Clay, 4m Gravel
+            def_gsat = [21.0, 21.0]    # Saturated unit weights
+            def_gdry = [20.0, 20.0]    # Dry unit weights
+            # --------------------------------------
+
             for i in range(int(num_layers)):
-                with st.expander(f"Layer {i+1} (Top at {depth_tracker:.1f}m)", expanded=True):
+                layer_title = f"Layer {i+1} (Top at {depth_tracker:.1f}m)"
+                if (i + 1) == artesian_layer_id:
+                    layer_title += " - **[ARTESIAN]**"
+
+                with st.expander(layer_title, expanded=True):
                     cols = st.columns(4)
-                    soil_type = cols[0].selectbox(f"Type", ["Sand", "Clay"], key=f"t{i}")
-                    thickness = cols[1].number_input(f"Height (m)", 0.1, 20.0, 4.0, step=0.5, key=f"h{i}")
+                    
+                    # Fetch defaults safely
+                    t_idx = def_types[i] if i < len(def_types) else 0
+                    h_val = def_h[i] if i < len(def_h) else 4.0
+                    gsat_val = def_gsat[i] if i < len(def_gsat) else 20.0
+                    gdry_val = def_gdry[i] if i < len(def_gdry) else 17.0
+
+                    soil_type = cols[0].selectbox("Type", ["Sand", "Clay", "Gravel", "Rock"], index=t_idx, key=f"t{i}")
+                    thickness = cols[1].number_input("Height (m)", 0.1, 20.0, value=h_val, step=0.5, key=f"h{i}")
                     
                     layer_top = depth_tracker
                     layer_bot = depth_tracker + thickness
@@ -68,12 +106,12 @@ def app():
                     g_sat_input = 20.0
                     
                     if needs_sat:
-                        g_sat_input = cols[2].number_input(f"γ_sat", value=20.0, key=f"gs{i}")
+                        g_sat_input = cols[2].number_input(f"γ_sat", value=gsat_val, key=f"gs{i}")
                     else:
                         cols[2].text_input(f"γ_sat", value="N/A", disabled=True, key=f"gs_dis_{i}")
 
                     if needs_dry:
-                        g_dry_input = cols[3].number_input(f"γ_dry", value=17.0, key=f"gd{i}")
+                        g_dry_input = cols[3].number_input(f"γ_dry", value=gdry_val, key=f"gd{i}")
                     else:
                         cols[3].text_input(f"γ_dry", value="N/A", disabled=True, key=f"gd_dis_{i}")
 
