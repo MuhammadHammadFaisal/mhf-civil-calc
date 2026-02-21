@@ -317,20 +317,21 @@ def app():
                 g_sat_s = results.get('gamma_sat_snap')
 
                 # --- METHOD 1 ---
-                write_text("subheader", "Method 1: Stress Definition ($\sigma' = \sigma - u$)")
+                # Use double backslashes (\\) so Streamlit renders the Greek symbols correctly
+                write_text("subheader", "Method 1: Stress Definition ($\\sigma'$ = $\\sigma$ - u)")
                 
                 m1_text = f"""
 **Step 1: Calculate Depth of Point A below Soil Surface**
-$$z_A = {z_s:.2f} - {a_s:.2f} = {results['depth_A_soil']:.2f} \, m$$
+$$z_A = {z_s:.2f} - {y_s:.2f} = {results['depth_A_soil']:.2f} \\, m$$
 
-**Step 2: Total Stress ($\sigma$)**
-$$\sigma = (\gamma_w \cdot y) + (\gamma_{{sat}} \cdot z_A) = ({gamma_w} \cdot {y_s:.2f}) + ({g_sat_s:.2f} \cdot {results['depth_A_soil']:.2f}) = \mathbf{{{results['sigma_total']:.2f} \, kPa}}$$
+**Step 2: Total Stress ($\\sigma$)**
+$$\\sigma = (\\gamma_w \\cdot y) + (\\gamma_{{sat}} \\cdot z_A) = ({gamma_w} \\cdot {y_s:.2f}) + ({g_sat_s:.2f} \\cdot {results['depth_A_soil']:.2f}) = \\mathbf{{{results['sigma_total']:.2f} \\, kPa}}$$
 
 **Step 3: Pore Water Pressure ($u$)**
-$$u = (H_A - \text{{Elevation}}_A) \cdot \gamma_w = ({results['H_A']:.2f} - {a_s:.2f}) \cdot {gamma_w} = \mathbf{{{results['u_val']:.2f} \, kPa}}$$
+$$u = (H_A - \\text{{Elevation}}_A) \\cdot \\gamma_w = ({results['H_A']:.2f} - {a_s:.2f}) \\cdot {gamma_w} = \\mathbf{{{results['u_val']:.2f} \\, kPa}}$$
 
-**Step 4: Effective Stress ($\sigma'$)**
-$$\sigma' = \sigma - u = {results['sigma_total']:.2f} - {results['u_val']:.2f} = \mathbf{{{results['sigma_prime_1']:.2f} \, kPa}}$$
+**Step 4: Effective Stress ($\\sigma'$)**
+$$\\sigma' = \\sigma - u = {results['sigma_total']:.2f} - {results['u_val']:.2f} = \\mathbf{{{results['sigma_prime_1']:.2f} \\, kPa}}$$
 """
                 glass_box(m1_text)
 
