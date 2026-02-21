@@ -474,22 +474,25 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
                 ax2.plot([1.5, 3], [4, 4], 'k--', lw=0.5); ax2.plot([1.5, 3], [6, 6], 'k--', lw=0.5)
 
             st.pyplot(fig2)
-    # =================================================================
+# =================================================================
     # TAB 3: MULTI-LAYER SEEPAGE (EXAM QUESTIONS)
     # =================================================================
     with tab3:
-   
+        st.info("Solve vertical seepage and stresses in stratified soils (Ref: METU CE469 Exam).")
         
         col_setup, col_viz = st.columns([2, 1.2])
         
         with col_setup:
             write_text("subheader", "1. Global Parameters")
-            c_g1, c_g2 = st.columns(2)
+            c_g1, c_g2, c_g3 = st.columns(3)
             with c_g1:
-                n_layers = st.number_input("Number of Soil Layers", 1, 6, value=5)
+                n_layers = st.number_input("Number of Soil Layers", 1, 6, value=5, key="t3_layers")
                 gamma_w = st.radio("Unit Weight of Water (γw)", [9.81, 10.0], index=1, horizontal=True, key="t3_gw_radio")
             with c_g2:
-                h_surface = st.number_input("Total Head at Top Boundary (m)", value=5.0, help="Usually Ground surface elevation + ponding water height.")
+                water_depth = st.number_input("Water Table Depth (m)", value=1.0, step=0.5, key="t3_wt")
+                h_surface = st.number_input("Total Head at Top (m)", value=5.0, key="t3_htop")
+            with c_g3:
+                surcharge = st.number_input("Surcharge q (kPa)", value=0.0, step=5.0, key="t3_q")
             
             st.markdown("---")
             write_text("subheader", "2. Stratigraphy")
@@ -498,29 +501,48 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
             depth_tracker = 0.0
             colors = {"Sand": "#E6D690", "Clay": "#B0A494", "Gravel": "#A89F91", "Silt": "#D2B48C"}
 
-            # Default values mapped to the provided METU Exercise
             def_types = ["Sand", "Gravel", "Clay", "Sand", "Silt"]
             def_h = [4.0, 2.0, 4.0, 3.0, 10.0]
-            def_g = [20.0, 21.0, 18.0, 21.0, 20.0]
+            def_g_sat = [20.0, 21.0, 18.0, 21.0, 20.0]
+            def_g_dry = [18.0, 19.0, 16.0, 18.0, 17.0]
             def_k = [10.0, 80.0, 0.00088, 9.0, 0.0028]
 
             for i in range(int(n_layers)):
-                with st.expander(f"Layer {i+1} Properties", expanded=(i < 2)):
-                    cl1, cl2, cl3, cl4 = st.columns(4)
+                layer_top = depth_tracker
+                t_val = def_types[i] if i < len(def_types) else "Sand"
+                h_val = def_h[i] if i < len(def_h) else 2.0
+                gsat_val = def_g_sat[i] if i < len(def_g_sat) else 20.0
+                gdry_val = def_g_dry[i] if i < len(def_g_dry) else 17.0
+                k_val = def_k[i] if i < len(def_k) else 10.0
+
+                with st.expander(f"Layer {i+1} (Top at {layer_top:.1f}m)", expanded=(i < 2)):
+                    cl = st.columns(5)
+                    s_type = cl[0].selectbox("Type", ["Sand", "Clay", "Gravel", "Silt"], 
+                                             index=["Sand", "Clay", "Gravel", "Silt"].index(t_val), key=f"t3_type{i}")
+                    thickness = cl[1].number_input("H (m)", 0.1, value=h_val, key=f"t3_h{i}")
                     
-                    t_val = def_types[i] if i < len(def_types) else "Sand"
-                    h_val = def_h[i] if i < len(def_h) else 2.0
-                    g_val = def_g[i] if i < len(def_g) else 19.0
-                    k_val = def_k[i] if i < len(def_k) else 10.0 # Standardized to decimal
-                    
-                    s_type = cl1.selectbox("Type", ["Sand", "Clay", "Gravel", "Silt"], index=["Sand", "Clay", "Gravel", "Silt"].index(t_val), key=f"t3_type{i}")
-                    thickness = cl2.number_input("H (m)", 0.1, value=h_val, key=f"t3_h{i}")
-                    g_sat = cl3.number_input("γ_sat", 10.0, value=g_val, key=f"t3_g{i}")
-                    perm = cl4.number_input("k (m/day)", value=k_val, format="%.5f", key=f"t3_k{i}")
+                    layer_bot = layer_top + thickness
+                    needs_dry = layer_top < water_depth
+                    needs_sat = layer_bot > water_depth
+
+                    # Logic to mirror Effective Stress module behavior
+                    if needs_sat:
+                        g_sat_in = cl[2].number_input("γ_sat", value=gsat_val, key=f"t3_gsat{i}")
+                    else:
+                        cl[2].text_input("γ_sat", value="N/A", disabled=True, key=f"t3_gsat_dis{i}")
+                        g_sat_in = gsat_val
+
+                    if needs_dry:
+                        g_dry_in = cl[3].number_input("γ_dry", value=gdry_val, key=f"t3_gdry{i}")
+                    else:
+                        cl[3].text_input("γ_dry", value="N/A", disabled=True, key=f"t3_gdry_dis{i}")
+                        g_dry_in = gdry_val
+                        
+                    perm = cl[4].number_input("k (m/d)", value=k_val, format="%.5f", key=f"t3_k{i}")
                     
                     layers.append({
-                        "id": i+1, "type": s_type, "H": thickness, "g_sat": g_sat, "k": perm,
-                        "top": depth_tracker, "bot": depth_tracker + thickness, "color": colors[s_type]
+                        "id": i+1, "type": s_type, "H": thickness, "g_sat": g_sat_in, "g_dry": g_dry_in, 
+                        "k": perm, "top": layer_top, "bot": layer_bot, "color": colors[s_type]
                     })
                     depth_tracker += thickness
 
@@ -528,28 +550,40 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
             write_text("subheader", "3. Artesian Measurement & Calculation Point")
             c_calc1, c_calc2 = st.columns(2)
             with c_calc1:
-                target_depth = st.number_input("Calculate Stresses at Depth (m)", 0.0, depth_tracker, value=11.0)
+                target_depth = st.number_input("Calculate Stresses at Depth (m)", 0.0, depth_tracker, value=11.0, key="t3_target")
             with c_calc2:
-                art_p = st.number_input("Measured Pore Pressure (kPa)", value=150.0)
-                art_depth = st.number_input("At Measuring Depth (m)", value=6.0)
-                # Calculate artesian total head based on measured pressure
+                art_p = st.number_input("Measured Pore Pressure (kPa)", value=150.0, key="t3_artp")
+                art_depth = st.number_input("At Measuring Depth (m)", value=6.0, key="t3_artz")
                 art_head = (art_p / gamma_w) + (depth_tracker - art_depth)
 
-            if st.button("Solve Seepage Problem", type="primary"):
+            if st.button("Solve Seepage Problem", type="primary", key="t3_solve"):
                 # Total Seepage Resistance
                 sum_h_k = sum(L['H'] / L['k'] for L in layers)
-                v_seepage = (h_surface - art_head) / sum_h_k # q = ΔH / Σ(L/k)
+                v_seepage = (h_surface - art_head) / sum_h_k
                 
-                # Stress calculation loop
-                sigma_total = 0
+                # Stress calculation including Water Table logic
+                sigma_total = surcharge
                 sum_h_k_above = 0
                 for L in layers:
                     if target_depth >= L['bot']:
-                        sigma_total += L['H'] * L['g_sat']
+                        # Entire layer is above target. Check Water Table split.
+                        if L['bot'] <= water_depth:
+                            sigma_total += L['H'] * L['g_dry']
+                        elif L['top'] >= water_depth:
+                            sigma_total += L['H'] * L['g_sat']
+                        else:
+                            sigma_total += (water_depth - L['top']) * L['g_dry'] + (L['bot'] - water_depth) * L['g_sat']
                         sum_h_k_above += L['H'] / L['k']
                     elif target_depth > L['top']:
-                        sigma_total += (target_depth - L['top']) * L['g_sat']
-                        sum_h_k_above += (target_depth - L['top']) / L['k']
+                        # Target is inside this layer
+                        thick_above = target_depth - L['top']
+                        if target_depth <= water_depth:
+                            sigma_total += thick_above * L['g_dry']
+                        elif L['top'] >= water_depth:
+                            sigma_total += thick_above * L['g_sat']
+                        else:
+                            sigma_total += (water_depth - L['top']) * L['g_dry'] + (target_depth - water_depth) * L['g_sat']
+                        sum_h_k_above += thick_above / L['k']
                 
                 h_target = h_surface - (v_seepage * sum_h_k_above)
                 z_elev = depth_tracker - target_depth
@@ -565,31 +599,5 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
 **Effective Vertical Stress ($\sigma'$):** {sigma_eff:.2f} kPa
 """
                 glass_box(res_sum)
-                
-                with st.expander("Show Detailed Math (METU Method)"):
-                    write_text("subheader", "1. Head Difference & Flow Rate")
-                    st.latex(rf"h_{{artesian}} = \frac{{u_{{meas}}}}{{\gamma_w}} + z_{{elev}} = \frac{{{art_p}}}{{{gamma_w}}} + ({depth_tracker:.1f} - {art_depth:.1f}) = {art_head:.2f} \, m")
-                    st.latex(rf"v = \frac{{h_{{top}} - h_{{artesian}}}}{{\sum H/k}} = \frac{{{h_surface:.2f} - {art_head:.2f}}}{{{sum_h_k:.4f}}} = {v_seepage:.6f} \, m/day")
-                    
-                    write_text("subheader", "2. Stress at Target Point")
-                    st.latex(rf"h_{{target}} = h_{{top}} - v \cdot \sum (H/k)_{{above}} = {h_target:.2f} \, m")
-                    st.latex(rf"u = (h_{{target}} - z_{{elev}}) \cdot \gamma_w = ({h_target:.2f} - {z_elev:.2f}) \cdot {gamma_w} = {u_target:.2f} \, kPa")
-                    st.latex(rf"\sigma' = \sigma - u = {sigma_total:.2f} - {u_target:.2f} = \mathbf{{{sigma_eff:.2f} \, kPa}}")
-
-        with col_viz:
-            write_text("subheader", "Soil Profile Preview")
-            fig3, ax3 = plt.subplots(figsize=(5, 8))
-            for i, L in enumerate(layers):
-                rect = patches.Rectangle((0, L['top']), 4, L['H'], facecolor=L['color'], edgecolor='black', alpha=0.9)
-                ax3.add_patch(rect)
-                ax3.text(2, L['top'] + L['H']/2, f"{L['type']}\nL{L['id']}", ha='center', fontweight='bold', fontsize=10)
-
-            ax3.axhline(target_depth, color='red', linestyle='--', linewidth=2.5)
-            ax3.text(4.2, target_depth, "CALC POINT", color='red', fontweight='bold', fontsize=9)
-            
-            ax3.set_ylim(depth_tracker + 0.5, -0.5)
-            ax3.set_xlim(-0.5, 6)
-            ax3.axis('off')
-            st.pyplot(fig3)
 if __name__ == "__main__":
     app()
