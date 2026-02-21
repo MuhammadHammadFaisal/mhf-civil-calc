@@ -4,7 +4,6 @@ from PIL import Image
 import os
 
 def prepare_icon(im, final_size=64):
-    """Makes the image square and resizes it for the favicon."""
     x, y = im.size
     size = max(x, y)
     new_im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
@@ -12,7 +11,6 @@ def prepare_icon(im, final_size=64):
     return new_im.resize((final_size, final_size), Image.LANCZOS)
 
 def load_icon():
-    """Loads the MHF Civil Calc sticker as the favicon."""
     try:
         icon_path = os.path.join("assets", "Sticker.png")
         icon_img = Image.open(icon_path).convert("RGBA")
@@ -21,7 +19,6 @@ def load_icon():
         return "🛠️"
 
 def apply_theme(page_title="MHF Civil Calc"):
-    """Injects the global CSS and sets the page config. Call this first on main pages."""
     st.set_page_config(page_title=page_title, layout="wide", page_icon=load_icon())
 
     st.markdown("""
@@ -45,7 +42,7 @@ def apply_theme(page_title="MHF Civil Calc"):
         background-attachment: local;
     }
 
-    /* Sidebar and Global Text Default */
+    /* Sidebar and Global Text */
     [data-testid="stSidebar"] {
         background-color: #031126;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -87,12 +84,10 @@ def apply_theme(page_title="MHF Civil Calc"):
         color: #1a3a5a !important; 
     }
 
-    /* =========================================
-       GLASS UI COMPONENTS (Imported from Consolidation)
-       ========================================= */
+    /* Glass Table for Results */
     .glass-table {
         width: 100%;
-        background-color: rgba(0, 0, 0, 0.2) !important; 
+        background-color: rgba(0, 0, 0, 0.35) !important; 
         color: #E0E0E0;
         border-collapse: collapse;
         border-radius: 8px;
@@ -105,25 +100,8 @@ def apply_theme(page_title="MHF Civil Calc"):
         text-align: left;
     }
     .glass-table th {
-        background-color: rgba(0, 0, 0, 0.4) !important; 
+        background-color: rgba(0, 0, 0, 0.5) !important; 
         font-weight: 600;
-        color: #FFFFFF;
-    }
-    .glass-table tr:hover {
-        background-color: rgba(255, 255, 255, 0.05) !important; 
-    }
-
-    .glass-box {
-        background-color: rgba(0, 0, 0, 0.2) !important;
-        padding: 20px;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        margin-bottom: 15px;
-        color: #E0E0E0;
-    }
-    .glass-box h3 {
-        margin-top: 0px;
-        padding-top: 0px;
         color: #FFFFFF;
     }
     </style>
@@ -135,7 +113,7 @@ def render_page_header(title):
         try:
             st.image(os.path.join("assets", "Sticker.png"))
         except:
-            pass
+            pass 
     with col_text:
         st.markdown(
             f"""
@@ -148,7 +126,7 @@ def render_page_header(title):
     st.markdown("<div style='margin-bottom: 40px;'></div>", unsafe_allow_html=True)
 
 # =========================================================
-# TYPOGRAPHY & TEXT TOOLS
+# TYPOGRAPHY REGISTRY
 # =========================================================
 
 TEXT_STYLES = {
@@ -170,9 +148,24 @@ def write_text(text_type, content):
     """
     st.markdown(html, unsafe_allow_html=True)
 
+# =========================================================
+# BULLETPROOF GLASS BOX
+# =========================================================
 def glass_box(content):
     """
-    Wraps content inside your custom sleek, transparent glass box.
-    Uses double newlines so Markdown and LaTeX inside render perfectly.
+    Uses inline styling to guarantee Streamlit renders the dark glassy background.
     """
-    st.markdown(f"""<div class="glass-box">\n\n{content}\n\n</div>""", unsafe_allow_html=True)
+    html = f"""
+    <div style="
+        background-color: rgba(0, 0, 0, 0.35); 
+        padding: 20px; 
+        border-radius: 8px; 
+        border: 1px solid rgba(255, 255, 255, 0.15); 
+        margin-bottom: 15px;
+    ">
+
+{content}
+
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
