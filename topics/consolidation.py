@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 import pandas as pd
-from theme import write_text, glass_box
+from theme import write_text, glass_box, glass_table
 # ================================================================
 # FOURIER SOLUTION FUNCTIONS
 # ================================================================
@@ -305,32 +305,14 @@ def app():
                 # 1. Total Settlement Header
                 st.markdown(f"## Total Settlement: :red[{total_settlement*1000:.2f} mm]")
                 
-                # 2. Clean Summary Table (Manual HTML to force CSS)
-                # We build the HTML manually to prevent Pandas and Streamlit from injecting default styles
-                table_html = '<div class="glass-table-wrapper"><table>'
+                # 2. Clean Summary Table (Using our custom inline component)
+                df_results = pd.DataFrame(
+                    results_data, 
+                    columns=["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]
+                )
                 
-                # Table Header
-                table_html += "<thead><tr>"
-                table_html += "<th>Layer</th><th>σ'₀ (kPa)</th><th>σ'₁ (kPa)</th><th>Settlement (mm)</th><th>Method</th>"
-                table_html += "</tr></thead>"
-                
-                # Table Body
-                table_html += "<tbody>"
-                for row in results_data:
-                    table_html += "<tr>"
-                    # row[0]: Layer, row[1]: sigma0, row[2]: sigma_f, row[3]: settlement, row[4]: method
-                    table_html += f"<td>{row[0]}</td><td>{row[1]}</td><td>{row[2]}</td><td>{row[3]}</td><td>{row[4]}</td>"
-                    table_html += "</tr>"
-                table_html += "</tbody></table></div>"
-
-                # Render purely as HTML
-                # If you are using Streamlit 1.33+, you can use st.html(table_html) instead of st.markdown
-                try:
-                    st.html(table_html)
-                except AttributeError:
-                    st.markdown(table_html, unsafe_allow_html=True)
-        
-
+                # Render the bulletproof glass table
+                glass_table(df_results)
                 
                 # 3. Detailed Steps
                 write_text("subheader", "Detailed Calculation Log")
