@@ -2,7 +2,8 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
-
+import pandas as pd
+from theme import write_text, glass_box
 # ================================================================
 # FOURIER SOLUTION FUNCTIONS
 # ================================================================
@@ -34,97 +35,97 @@ def pore_pressure_ratio(z, Hdr, Tv, terms=100):
 # ================================================================
 def app():
 
-    st.set_page_config(page_title="1D Consolidation", layout="wide")
-
     # ================================================================
     # TABS
     # ================================================================
     tab_settlement, tab_time = st.tabs(["Settlement Calculation", "Time Rate Analysis"])
 
-    # ================================================================
-    # GLOBAL INPUTS
+# ================================================================
+    # GLOBAL INPUTS & STRATIGRAPHY
     # ================================================================
     with tab_settlement:
-        col_input, col_profile = st.columns([2, 1])
+        # Main split: Inputs take up roughly 70% of the screen, Diagram takes 30%
+        col_input, col_profile = st.columns([2.2, 1])
 
         with col_input:
-            st.subheader("Global Inputs")
-            water_depth = st.number_input("Water Table Depth [m]", 2.0)
-            surcharge_q = st.number_input("Surface Surcharge Δσ [kPa]", 50.0)
-            gamma_w = st.radio("γw [kN/m³]", [9.81, 10.0], horizontal=True)
+            write_text("section_header","Global Inputs")
+            # Create a 2-column grid for Global Inputs
+            g_col1, g_col2 = st.columns(2)
+            
+            with g_col1:
+                water_depth = st.number_input("Water Table Depth [m]", 2.0)
+                gamma_w = st.radio("γw [kN/m³]", [9.81, 10.0], horizontal=True)
+                
+            with g_col2:
+                surcharge_q = st.number_input("Surface Surcharge Δσ [kPa]", 50.0)
+                n_layers = st.number_input("Number of Layers", 1, 50, 3)
 
-            # ================================================================
-            # SOIL LAYERS
-            # ================================================================
+            st.markdown("---")
+            write_text("section_header", "Stratigraphy")
+            
+            # Create a 2-column grid for the Layer Expanders
+            s_col1, s_col2 = st.columns(2)
+            
             layers = []
             current_depth = 0.0
 
-            st.subheader("Stratigraphy")
-            n_layers = st.number_input("Number of Layers", 1, 50, 3)
-
             for i in range(int(n_layers)):
+                # Alternate placing layers in the left and right columns
+                target_col = s_col1 if i % 2 == 0 else s_col2
+                
+                with target_col:
+                    with st.expander(f"Layer {i+1} Definition", expanded=True):
+                        # Adjusted internal columns so they don't get squished
+                        c1, c2 = st.columns(2)
+                        h = c1.number_input(f"Thickness [m]", 0.1, 100.0, 4.0, key=f"h{i}")
+                        gamma = c2.number_input(f"γ [kN/m³]", 0.0, 30.0, 19.0, key=f"g{i}")
+                        soil = st.selectbox("Soil Type", ["Clay","Sand"], key=f"t{i}")
 
-                with st.expander(f"Layer {i+1} Definition", expanded=True):
+                        mid = current_depth + h/2
+                        method = "None"
+                        params = {}
 
-                    c1,c2,c3 = st.columns(3)
+                        if soil == "Clay":
+                            st.markdown("---")
+                            method = st.radio(
+                                f"Method (L{i+1})",
+                                ["Method A (Cc/Cr)", "Method B (mv)", "Method C (Δe)"],
+                                key=f"m{i}",
+                            )
 
-                    h = c1.number_input(f"Thickness [m]", 0.1, 100.0, 4.0, key=f"h{i}")
-                    gamma = c2.number_input(f"Unit Weight (γ) [kN/m³]", 0.0, 30.0, 19.0, key=f"g{i}")
-                    soil = c3.selectbox("Soil Type", ["Clay","Sand"], key=f"t{i}")
+                            # Stacked the parameters slightly differently to fit the half-width card
+                            if method == "Method A (Cc/Cr)":
+                                cp1, cp2 = st.columns(2)
+                                e0 = cp1.number_input("e0", 0.0, 5.0, 0.9, key=f"e{i}")
+                                Cc = cp2.number_input("Cc", 0.0, 5.0, 0.3, key=f"cc{i}")
+                                Cr = cp1.number_input("Cr", 0.0, 5.0, 0.05, key=f"cr{i}")
+                                ocr = cp2.number_input("OCR", 1.0, 10.0, 1.0, key=f"ocr{i}")
+                                sp = st.number_input("Precon. Pressure σ'p [kPa] (Opt.)", 0.0, 1000.0, 0.0, key=f"sp{i}")
+                                params = {"e0":e0,"Cc":Cc,"Cr":Cr,"sp":sp,"OCR":ocr}
 
-                    mid = current_depth + h/2
+                            if method == "Method B (mv)":
+                                mv = st.number_input("mv [1/kPa]", 0.0, 1.0, 0.0005, format="%.5f", key=f"mv{i}")
+                                params = {"mv":mv}
 
-                    method="None"
-                    params={}
+                            if method == "Method C (Δe)":
+                                cp1, cp2 = st.columns(2)
+                                e0 = cp1.number_input("Initial e0", 0.0, 5.0, 0.9, key=f"e0c{i}")
+                                ef = cp2.number_input("Final ef", 0.0, 5.0, 0.8, key=f"ef{i}")
+                                params = {"e0":e0,"ef":ef}
 
-                    if soil == "Clay":
-                        st.markdown("---")
-                        method = st.radio(
-                            f"Settlement Method (Layer {i+1})",
-                            ["Method A (Cc/Cr)","Method B (mv)","Method C (Δe)"],
-                            key=f"m{i}",
-                            horizontal=True
-                        )
-
-                        c_p1, c_p2, c_p3, c_p4 = st.columns(4)
-
-                        if method == "Method A (Cc/Cr)":
-                            e0 = c_p1.number_input("e0", 0.0, 5.0, 0.9, key=f"e{i}")
-                            Cc = c_p2.number_input("Cc", 0.0, 5.0, 0.3, key=f"cc{i}")
-                            Cr = c_p3.number_input("Cr", 0.0, 5.0, 0.05, key=f"cr{i}")
-                            sp = c_p4.number_input("Precon. Pressure σ'p [kPa] (Optional)", 0.0, 1000.0, 0.0, key=f"sp{i}")
-                            ocr = c_p4.number_input("OCR (Optional)", 1.0, 10.0, 1.0, key=f"ocr{i}")
-   
-                            params={"e0":e0,"Cc":Cc,"Cr":Cr,"sp":sp,"OCR":ocr}
-
-                        if method == "Method B (mv)":
-                            mv = c_p1.number_input("mv [1/kPa]", 0.0, 1.0, 0.0005, format="%.5f", key=f"mv{i}")
-                            params={"mv":mv}
-
-                        if method == "Method C (Δe)":
-                            e0 = c_p1.number_input("Initial e0", 0.0, 5.0, 0.9, key=f"e0c{i}")
-                            ef = c_p2.number_input("Final ef", 0.0, 5.0, 0.8, key=f"ef{i}")
-                            params={"e0":e0,"ef":ef}
-
-                    layers.append({
-                        "id":i+1,
-                        "type":soil,
-                        "h":h,
-                        "gamma":gamma,
-                        "top":current_depth,
-                        "bottom":current_depth+h,
-                        "mid":mid,
-                        "method":method,
-                        "params":params
-                    })
-
-                    current_depth += h
+                        layers.append({
+                            "id":i+1, "type":soil, "h":h, "gamma":gamma, 
+                            "top":current_depth, "bottom":current_depth+h, 
+                            "mid":mid, "method":method, "params":params
+                        })
+                        
+                        current_depth += h
 
         # ================================================================
         # DYNAMIC PROFILE DIAGRAM
         # ================================================================
         with col_profile:
-            st.subheader("Soil Profile Preview")
+            write_text("section_header","Soil Profile Preview")
             fig, ax = plt.subplots(figsize=(4,6))
             colors={"Clay":"#D7CCC8","Sand":"#FFF9C4"}
 
@@ -160,7 +161,7 @@ def app():
                 # ================================================================
         # STEP-BY-STEP SETTLEMENT CALCULATION (UPDATED)
         # ================================================================
-        st.subheader("Calculation Results")
+        write_text("section_header","Calculation Results")
         if st.button("Calculate Settlement", type="primary"):
 
             total_settlement = 0
@@ -293,16 +294,39 @@ def app():
                 step_details.append(details)
                 step_details.append("---")
 
+# ================================================================
             # OUTPUT DISPLAY
-            st.markdown(f"## Total Settlement: :red[{total_settlement*1000:.2f} mm]")
+            # ================================================================
+            st.markdown("---") # Visual divider before results
             
-            # Summary Table
-            st.table([["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]] + results_data)
-            
-            # Detailed Steps
-            st.markdown("###  Detailed Calculation Log")
-            for step in step_details:
-                st.markdown(step)
+            # This creates a visually distinct "card" with a background
+            with st.container(border=True):
+                
+                # 1. Total Settlement Header
+                st.markdown(f"## Total Settlement: :red[{total_settlement*1000:.2f} mm]")
+                
+                # 2. Clean Summary Table using Pure HTML to force transparency
+                df_results = pd.DataFrame(
+                    results_data, 
+                    columns=["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]
+                )
+
+                # Convert the dataframe to HTML, hiding the index and setting border to 0
+                table_html = df_results.to_html(index=False, classes="glass-table", border=0)
+
+                # Render the table itself separately so Streamlit doesn't format it as a code block
+                st.markdown(table_html, unsafe_allow_html=True)
+                
+                # 3. Detailed Steps
+                write_text("subheader", "Detailed Calculation Log")
+                
+                # THIS LOOP MUST BE ALIGNED HERE:
+                for step in step_details:
+                    if step == "---":
+                        continue
+                    else:
+                        glass_box(step)  
+
 
 
 
@@ -310,7 +334,7 @@ def app():
     # TIME RATE ANALYSIS TAB
     # ================================================================
     with tab_time:
-        st.subheader("Time Rate Analysis (Terzaghi Theory)")
+        write_text("section_header","Time Rate Analysis (Terzaghi Theory)")
 
         clay_layers = [L for L in layers if L["type"]=="Clay"]
         if clay_layers:
