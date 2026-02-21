@@ -273,9 +273,6 @@ def app():
                         df_display[c] = df_display[c].apply(lambda x: f"{float(x):.2f}")
                     glass_table(df_display)
                     
-                    # Use native dataframe for horizontal scrolling (hides row index)
-                    st.dataframe(df_display, hide_index=True, use_container_width=True)
-                    
                     # Plot using the original numeric 'df'
                     fig, ax = plt.subplots(figsize=(5, 6))
                     plot_results(df, title, ax)
