@@ -305,22 +305,17 @@ def app():
                 # 1. Total Settlement Header
                 st.markdown(f"## Total Settlement: :red[{total_settlement*1000:.2f} mm]")
                 
-                # 1. Clean Summary Table
+                # 2. Clean Summary Table
                 df_results = pd.DataFrame(
                     results_data, 
                     columns=["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]
                 )
 
-                # 2. Convert to standard HTML
+                # Convert to standard HTML
                 raw_html = df_results.to_html(index=False, border=0)
 
-                # 3. Wrap it in the div to pull the style from theme.py!
+                # Wrap it in the div to pull the style from theme.py!
                 st.markdown(f'<div class="glass-table-wrapper">{raw_html}</div>', unsafe_allow_html=True)
-                # Convert the dataframe to HTML, hiding the index and setting border to 0
-                table_html = df_results.to_html(index=False, classes="glass-table", border=0)
-
-                # Render the table itself separately so Streamlit doesn't format it as a code block
-                st.markdown(table_html, unsafe_allow_html=True)
                 
                 # 3. Detailed Steps
                 write_text("subheader", "Detailed Calculation Log")
@@ -330,8 +325,7 @@ def app():
                     if step == "---":
                         continue
                     else:
-                        glass_box(step)  
-
+                        glass_box(step)
 
 
 
