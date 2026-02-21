@@ -270,7 +270,8 @@ def app():
                     # Force strict 2-decimal string formatting on the numeric columns
                     cols_to_format = ["Depth (z)", "Total Stress (σ)", "Pore Pressure (u)", "Eff. Stress (σ')"]
                     for c in cols_to_format:
-                        glass_table(df_display)
+                        df_display[c] = df_display[c].apply(lambda x: f"{float(x):.2f}")
+                    glass_table(df_display)
                     
                     # Use native dataframe for horizontal scrolling (hides row index)
                     st.dataframe(df_display, hide_index=True, use_container_width=True)
