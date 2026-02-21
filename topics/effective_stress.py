@@ -295,21 +295,22 @@ def app():
                 ax.legend()
 
             write_text("subheader", " Results Comparison")
-            c_init, c_long, c_short = st.columns(3)
-
-            for col, df, title in zip([c_init, c_long, c_short],
-                                      [df_init, df_long, df_short],
-                                      ["Initial", "Long Term", "Short Term"]):
+            cols = st.columns(3)
+            for col, df, title in zip(cols, [df_i, df_l, df_s], ["Initial", "Long Term", "Short Term"]):
                 with col:
                     st.subheader(title)
                     
-                    # Create a copy for the table display
+                    # 1. Create a display copy for string formatting
                     df_display = df.copy()
                     
-                    # Force strict 2-decimal string formatting on the numeric columns
-                    cols_to_format = ["Depth (z)", "Total Stress (σ)", "Pore Pressure (u)", "Eff. Stress (σ')"]
+                    # 2. Format specific columns to strict 2 decimal places
+                    # Note: These column names must match your calculate_profile function keys
+                    cols_to_format = ["Depth (z)", "Total (σ)", "Pore (u)", "Eff (σ')"]
                     for c in cols_to_format:
-                        df_display[c] = df_display[c].apply(lambda x: f"{float(x):.2f}")
+                        if c in df_display.columns:
+                            df_display[c] = df_display[c].apply(lambda x: f"{float(x):.2f}")
+                    
+                    # 3. Call your custom glass table function ONCE
                     glass_table(df_display)
                     
                     # Plot using the original numeric 'df'
