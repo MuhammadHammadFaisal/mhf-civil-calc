@@ -1,6 +1,8 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import pandas as pd
+from theme import write_text, glass_box, glass_table
 
 def app():
     st.markdown("---")
@@ -304,7 +306,7 @@ def app():
         solver = SoilState()
         
         # --- TOP SECTION: INPUTS & PREVIEW ---
-        top_col1, top_col2 = st.columns([1, 1])
+        top_col1, top_col2 = st.columns([2, 1])
         
         with top_col1:
             st.markdown("### 1. Inputs")
@@ -315,18 +317,19 @@ def app():
 
             c1, c2 = st.columns(2)
             with c1:
-                w_in = st.number_input("Water Content (w)", 0.0, step=0.01, format="%.3f")
-                Gs_in = st.number_input("Specific Gravity (Gs)", 0.0, step=0.01, format="%.2f")
-                e_in = st.number_input("Void Ratio (e)", 0.0, step=0.01)
-                n_in = st.number_input("Porosity (n)", 0.0, step=0.01)
-                Sr_in = st.number_input("Saturation (Sr)", 0.0, 1.0, step=0.01)
+                # Set default w = 0.253 and Gs = 2.70
+                w_in = st.number_input("Water Content (w)", 0.0, step=0.01, value=0.253, format="%.3f")
+                Gs_in = st.number_input("Specific Gravity (Gs)", 0.0, step=0.01, value=2.70, format="%.2f")
+                e_in = st.number_input("Void Ratio (e)", 0.0, step=0.01, value=0.0)
+                n_in = st.number_input("Porosity (n)", 0.0, step=0.01, value=0.0)
+                Sr_in = st.number_input("Saturation (Sr)", 0.0, 1.0, step=0.01, value=0.0)
                 
             with c2:
-                # UPDATED LABELS TO USE γ_bulk / γ_dry (Consistent with Symbolic Mode)
-                gamma_b_in = st.number_input("Bulk Unit Wt (γ_bulk)", 0.0, step=0.1)
-                gamma_d_in = st.number_input("Dry Unit Wt (γ_dry)", 0.0, step=0.1)
-                rho_b_in = st.number_input("Bulk Density (ρ_bulk)", 0.0, step=0.01)
-                rho_d_in = st.number_input("Dry Density (ρ_dry)", 0.0, step=0.01)
+                # Set default gamma_bulk = 19.17
+                gamma_b_in = st.number_input("Bulk Unit Wt (γ_bulk)", 0.0, step=0.1, value=19.17)
+                gamma_d_in = st.number_input("Dry Unit Wt (γ_dry)", 0.0, step=0.1, value=0.0)
+                rho_b_in = st.number_input("Bulk Density (ρ_bulk)", 0.0, step=0.01, value=0.0)
+                rho_d_in = st.number_input("Dry Density (ρ_dry)", 0.0, step=0.01, value=0.0)
 
             if w_in > 0: solver.set_param('w', w_in)
             if Gs_in > 0: solver.set_param('Gs', Gs_in)
@@ -357,19 +360,26 @@ def app():
             else:
                 bot_col1, bot_col2 = st.columns([1, 1])
                 with bot_col1:
-                    st.success("Calculation Complete!")
-                    p = solver.params
-                    if p['w'] is not None: st.latex(f"w = {p['w']:.4f}")
-                    if p['Gs'] is not None: st.latex(f"G_s = {p['Gs']:.3f}")
-                    if p['e'] is not None: st.latex(f"e = {p['e']:.4f}")
-                    if p['Sr'] is not None: st.latex(f"S_r = {p['Sr']:.4f}")
-                    if p['gamma_bulk']: st.latex(r"\gamma_{bulk} = " + f"{p['gamma_bulk']:.2f}")
-                    if p['gamma_dry']: st.latex(r"\gamma_{dry} = " + f"{p['gamma_dry']:.2f}")
-                    if p['rho_bulk']: st.latex(r"\rho_{bulk} = " + f"{p['rho_bulk']:.2f}")
-                    if p['rho_dry']: st.latex(r"\rho_{dry} = " + f"{p['rho_dry']:.2f}")
                     
-                    if p['gamma_sat']: st.latex(r"\gamma_{sat} = " + f"{p['gamma_sat']:.2f}")
-                    if p['gamma_sub']: st.latex(r"\gamma' = " + f"{p['gamma_sub']:.2f}")
+                    p = solver.params
+                    
+                    # Gather results into a list for the table
+                    results_data = []
+                    if p['w'] is not None: results_data.append(["Water Content (w)", f"{p['w']:.4f}"])
+                    if p['Gs'] is not None: results_data.append(["Specific Gravity (Gs)", f"{p['Gs']:.3f}"])
+                    if p['e'] is not None: results_data.append(["Void Ratio (e)", f"{p['e']:.4f}"])
+                    if p['Sr'] is not None: results_data.append(["Saturation (Sr)", f"{p['Sr']:.4f}"])
+                    if p['gamma_bulk']: results_data.append(["Bulk Unit Wt (γ_bulk)", f"{p['gamma_bulk']:.2f}"])
+                    if p['gamma_dry']: results_data.append(["Dry Unit Wt (γ_dry)", f"{p['gamma_dry']:.2f}"])
+                    if p['rho_bulk']: results_data.append(["Bulk Density (ρ_bulk)", f"{p['rho_bulk']:.2f}"])
+                    if p['rho_dry']: results_data.append(["Dry Density (ρ_dry)", f"{p['rho_dry']:.2f}"])
+                    if p['gamma_sat']: results_data.append(["Sat Unit Wt (γ_sat)", f"{p['gamma_sat']:.2f}"])
+                    if p['gamma_sub']: results_data.append(["Sub Unit Wt (γ')", f"{p['gamma_sub']:.2f}"])
+
+                    # Create and display the glass table
+                    if results_data:
+                        df_results = pd.DataFrame(results_data, columns=["Parameter", "Value"])
+                        glass_table(df_results)
 
                 with bot_col2:
                     fig_final = draw_phase_diagram(solver.params, solver.inputs, is_result_mode=True)
@@ -378,7 +388,9 @@ def app():
 
                 with st.expander("Show Calculation Steps", expanded=True):
                     for step in solver.log:
-                        st.latex(f"{step['Variable']} = {step['Formula']} = {step['Substitution']} = \\mathbf{{{step['Result']:.4f}}}")
+                        # Format the math nicely with a description header
+                        step_text = f"**Finding ${step['Variable']}$:**\n\n$${step['Variable']} = {step['Formula']} = {step['Substitution']} = \\mathbf{{{step['Result']:.4f}}}$$"
+                        glass_box(step_text)
 
         # --- RELATIVE DENSITY ---
         st.markdown("---")
@@ -488,8 +500,9 @@ def app():
         if target in formulas:
             for requirements, latex, description in formulas[target]:
                 if requirements.issubset(cleaned_knowns):
-                    st.success(f"**Formula Found:** {description}")
-                    st.latex(latex)
+                    # Combine the description and formula into one stylish box
+                    content = f"**Formula Found:** {description}\n\n$${latex}$$"
+                    glass_box(content)
                     found_any = True
         
         if not found_any:
