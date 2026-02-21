@@ -179,33 +179,38 @@ def glass_box(content):
     st.markdown(html, unsafe_allow_html=True)
 
 # =========================================================
-# BULLETPROOF GLASS TABLE
+# BULLETPROOF GLASS TABLE (SCROLL FIXED)
 # =========================================================
 def glass_table(df):
+    table_style = "width: 100%; min-width: 600px; background-color: rgba(0, 0, 0, 0.35); color: #E0E0E0; border-collapse: collapse; font-family: sans-serif;"
+    th_style = "background-color: rgba(0, 0, 0, 0.5); font-weight: 600; color: #FFFFFF; padding: 12px 15px; text-align: left; border-bottom: 2px solid rgba(255,255,255,0.1); white-space: nowrap;"
+    td_style = "padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #E0E0E0; white-space: nowrap;"
+
+    html = f"""
+    <div style="
+        overflow-x: auto; 
+        display: block; 
+        width: 100%; 
+        border: 1px solid rgba(255, 255, 255, 0.15); 
+        border-radius: 8px; 
+        margin-bottom: 20px;
+    ">
+        <table style='{table_style}'>
     """
-    Renders a dataframe as an HTML table with inline styles to bypass 
-    Streamlit's class-stripping security sanitizer.
-    """
-    table_style = "width: 100%; background-color: rgba(0, 0, 0, 0.35); color: #E0E0E0; border-collapse: collapse; margin-bottom: 20px; font-family: sans-serif;"
-    th_style = "background-color: rgba(0, 0, 0, 0.5); font-weight: 600; color: #FFFFFF; padding: 12px 15px; text-align: left; border: none; border-bottom: 2px solid rgba(255,255,255,0.1);"
-    td_style = "padding: 12px 15px; border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #E0E0E0;"
-    
-    # Outer wrapper for the border radius
-    html = f"<div style='border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15);'><table style='{table_style}'>"
-    
+
     # Headers
     html += "<thead><tr>"
     for col in df.columns:
         html += f"<th style='{th_style}'>{col}</th>"
     html += "</tr></thead><tbody>"
-    
+
     # Rows
     for _, row in df.iterrows():
-        html += "<tr style='background-color: transparent;'>"
+        html += "<tr>"
         for val in row:
             html += f"<td style='{td_style}'>{val}</td>"
         html += "</tr>"
-        
+
     html += "</tbody></table></div>"
-    
+
     st.markdown(html, unsafe_allow_html=True)
