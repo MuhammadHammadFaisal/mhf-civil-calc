@@ -2,24 +2,36 @@ name: Keep Streamlit App Awake
 
 on:
   schedule:
-    - cron: "*/25 * * * *"  # Every 25 min (safer than 30)
+    - cron: "*/20 * * * *"   # Every 20 minutes
   workflow_dispatch:
 
 jobs:
-  ping:
+  keepalive:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Ping Streamlit App
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Requests
+        run: pip install requests
+
+      - name: Simulate Browser Visit
         run: |
-          curl -L \
-          -X GET \
-          -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36" \
-          -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
-          -H "Accept-Language: en-US,en;q=0.5" \
-          -H "Connection: keep-alive" \
-          --retry 3 \
-          --retry-delay 5 \
-          --max-time 30 \
-          -o /dev/null \
-          -w "HTTP Status: %{http_code}\n" \
-          https://mhf-civil-calc.streamlit.app/
+          python <<EOF
+          import requests
+
+          url = "https://mhf-civil-calc.streamlit.app"
+
+          headers = {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+          }
+
+          try:
+              response = requests.get(url, headers=headers, timeout=30)
+              print("Status Code:", response.status_code)
+          except Exception as e:
+              print("Error:", e)
+          EOF
