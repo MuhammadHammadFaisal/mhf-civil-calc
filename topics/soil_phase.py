@@ -411,7 +411,7 @@ def app():
     # ==========================================
     # MODE B: SYMBOLIC / FORMULA FINDER
     # ==========================================
-    with tab1:
+    with tab2:
         st.caption("Select the variables you **KNOW** to find the formula for the variable you **WANT**.")
 
         col1, col2 = st.columns(2)
