@@ -84,27 +84,37 @@ def apply_theme(page_title="MHF Civil Calc"):
         color: #1a3a5a !important; 
     }
 
-    /* Glass Table for Results */
-    .glass-table {
-        width: 100%;
-        background-color: rgba(0, 0, 0, 0.35) !important; 
-        color: #E0E0E0;
-        border-collapse: collapse;
-        border-radius: 8px;
-        overflow: hidden;
-        margin-bottom: 20px;
+/* =========================================
+       BULLETPROOF GLASS TABLES
+       ========================================= */
+    .glass-table-wrapper table {
+        width: 100% !important;
+        background-color: rgba(0, 0, 0, 0.35) !important;
+        color: #E0E0E0 !important;
+        border-collapse: collapse !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        margin-bottom: 20px !important;
+        border: none !important;
     }
-    .glass-table th, .glass-table td {
-        padding: 12px 15px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
-        text-align: left;
+    .glass-table-wrapper th {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        font-weight: 600 !important;
+        color: #FFFFFF !important;
+        padding: 12px 15px !important;
+        border: none !important;
     }
-    .glass-table th {
-        background-color: rgba(0, 0, 0, 0.5) !important; 
-        font-weight: 600;
-        color: #FFFFFF;
+    .glass-table-wrapper td {
+        padding: 12px 15px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-top: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        color: #E0E0E0 !important;
     }
-    </style>
+    .glass-table-wrapper tbody tr:hover td {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+    }
     """, unsafe_allow_html=True)
 
 def render_page_header(title):
@@ -148,9 +158,6 @@ def write_text(text_type, content):
     """
     st.markdown(html, unsafe_allow_html=True)
 
-# =========================================================
-# BULLETPROOF GLASS BOX
-# =========================================================
 # =========================================================
 # BULLETPROOF GLASS BOX
 # =========================================================
