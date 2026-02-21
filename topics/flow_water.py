@@ -478,7 +478,7 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
     # TAB 3: MULTI-LAYER SEEPAGE (EXAM QUESTIONS)
     # =================================================================
     with tab3:
-        st.caption("Calculate flow rate and stresses in stratified soils with artesian conditions (Ref: METU CE469).")
+        
         
         col_setup, col_viz = st.columns([2, 1.2])
         
