@@ -1,8 +1,8 @@
-name: Keep Streamlit Awake (Selenium)
+name: Keep Streamlit Awake (Precise Button)
 
 on:
   schedule:
-    - cron: "*/20 * * * *"   # Every 20 minutes
+    - cron: "*/20 * * * *"   # Runs every 20 minutes
   workflow_dispatch:
 
 jobs:
@@ -10,19 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-browser chromium-chromedriver
-          pip install selenium
+          pip install selenium webdriver-manager
 
       - name: Run Selenium Script
         run: |
@@ -33,6 +31,7 @@ jobs:
           from selenium.webdriver.chrome.options import Options
           from selenium.webdriver.support.ui import WebDriverWait
           from selenium.webdriver.support import expected_conditions as EC
+          from webdriver_manager.chrome import ChromeDriverManager
           import time
 
           url = "https://mhf-civil-calc.streamlit.app"
@@ -43,28 +42,41 @@ jobs:
           options.add_argument("--disable-dev-shm-usage")
           options.add_argument("--disable-gpu")
 
-          driver = webdriver.Chrome(options=options)
+          print("Launching headless Chrome...")
+          driver = webdriver.Chrome(
+              service=Service(ChromeDriverManager().install()),
+              options=options
+          )
 
           try:
+              print("Opening URL...")
               driver.get(url)
-              wait = WebDriverWait(driver, 20)
 
-              # Try to find wake button
+              wait = WebDriverWait(driver, 40)
+
               try:
+                  print("Looking for wake-up button...")
                   wake_button = wait.until(
-                      EC.element_to_be_clickable((By.TAG_NAME, "button"))
+                      EC.element_to_be_clickable(
+                          (By.XPATH, "//button[normalize-space()='Yes, get this app back up!']")
+                      )
                   )
+
                   print("Wake button found. Clicking...")
                   wake_button.click()
-                  time.sleep(15)
-              except:
-                  print("Wake button not found — app likely already awake.")
 
-              print("Final page title:", driver.title)
+                  # Give Streamlit time to restart
+                  time.sleep(25)
+
+              except:
+                  print("Wake button not found. App likely already awake.")
+
+              print("Final Page Title:", driver.title)
 
           except Exception as e:
-              print("Error:", e)
+              print("Error occurred:", e)
 
           finally:
               driver.quit()
+              print("Browser closed.")
           EOF
