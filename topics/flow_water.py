@@ -2,6 +2,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
+from theme import write_text, glass_box, glass_table
 
 # ============================================================
 # HELPER FUNCTIONS
@@ -98,8 +99,8 @@ def calculate_pore_pressure(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, s
 # ============================================================
 
 def app():
-    # --- SANITIZATION CHECK ---
-    # This prevents the AttributeError by resetting corrupted data
+    write_text("section_header", "Flow of Water Analysis")
+    st.markdown("---")
     if "results" not in st.session_state or not isinstance(st.session_state.results, dict):
         st.session_state.results = None
     
@@ -114,7 +115,7 @@ def app():
         col_setup, col_plot = st.columns([1, 1.2])
         
         with col_setup:
-            st.markdown("### 1. Problem Setup")
+            write_text("subheader", "1. Problem Setup")
             val_z = st.number_input("Soil Specimen Height (z) [m]", 0.1, step=0.5, value=4.0)
             val_y = st.number_input("Water Height above Soil (y) [m]", 0.0, step=0.5, value=2.0)
             val_x = st.number_input("Piezometer Head at Bottom (x) [m]", 0.0, step=0.5, value=7.5)
@@ -294,68 +295,31 @@ def app():
             st.divider()
             st.success(f"**Flow Condition:** {results['flow_type']} (Gradient i = {results['i']:.3f})")
 
-            res_c1, res_c2, res_c3 = st.columns(3)
-            res_c1.metric("Total Stress (σ)", f"{results['sigma_total']:.2f} kPa")
-            res_c2.metric("Pore Pressure (u)", f"{results['u_val']:.2f} kPa")
-            res_c3.metric("Effective Stress (σ')", f"{results['sigma_prime_1']:.2f} kPa")
+            result_summary = f"""
+### Analysis Results: {res['flow_type']}
+**Hydraulic Gradient (i):** {res['i']:.3f}
+
+**Total Stress ($\sigma$):** {res['sigma_total']:.2f} kPa
+**Pore Pressure ($u$):** {res['u_val']:.2f} kPa
+**Effective Stress ($\sigma'$):** {res['sigma_prime_1']:.2f} kPa
+"""
+            glass_box(result_summary)
             
             # --- DETAILED DERIVATION ---
-            with st.expander("View Detailed Step-by-Step Derivation (2 Methods)", expanded=True):
-                # Use snapshots
-                z_s = results.get('val_z_snap', val_z)
-                a_s = results.get('val_A_snap', val_A)
-                y_s = results.get('val_y_snap', val_y)
-                g_sat_s = results.get('gamma_sat_snap', gamma_sat)
-                
-                st.markdown("#### Method 1: Definition (σ' = σ − u)")
-                st.latex(rf"\text{{Depth}} = {z_s} - {a_s} = {results['depth_A_soil']:.2f} \text{{ m}}")
-                
-                st.markdown("**Step 1: Total Stress**")
-                st.latex(rf"\sigma = ({gamma_w} \cdot {y_s}) + ({g_sat_s} \cdot {results['depth_A_soil']:.2f}) = {results['sigma_total']:.2f} \text{{ kPa}}")
-                
-                st.markdown("**Step 2: Pore Pressure**")
-                st.latex(rf"u = ({results['H_A']:.2f} - {a_s:.2f}) \cdot {gamma_w} = {results['u_val']:.2f} \text{{ kPa}}")
-                
-                st.markdown("**Step 3: Effective Stress**")
-                st.latex(rf"\sigma' = {results['sigma_total']:.2f} - {results['u_val']:.2f} = {results['sigma_prime_1']:.2f} \text{{ kPa}}")
+           with st.expander("View Detailed Step-by-Step Derivation (2 Methods)", expanded=False):
+                # CHANGED: Standardized subheaders inside expander
+                write_text("subheader", "Method 1: Definition (σ' = σ − u)")
+                st.latex(rf"\sigma = ({gamma_w} \cdot {res['val_y_snap']}) + ({res['gamma_sat_snap']} \cdot {res['depth_A_soil']:.2f}) = {res['sigma_total']:.2f} \text{{ kPa}}")
+                st.latex(rf"u = ({res['H_A']:.2f} - {res['val_A_snap']:.2f}) \cdot {gamma_w} = {res['u_val']:.2f} \text{{ kPa}}")
+                st.latex(rf"\sigma' = {res['sigma_total']:.2f} - {res['u_val']:.2f} = \mathbf{{{res['sigma_prime_1']:.2f} \text{{ kPa}}}}")
                 
                 st.markdown("---")
+                write_text("subheader", "Method 2: Seepage Force Approach")
+                st.latex(rf"j = i \times \gamma_w = {res['i']:.3f} \times {gamma_w:.2f} = {res['j_seepage']:.2f} \text{{ kN/m}}^3")
+                st.latex(rf"\gamma'_{{eff}} = \gamma' \pm j = {res['gamma_sub']:.2f} \pm {res['j_seepage']:.2f} = {res['gamma_effective']:.2f} \text{{ kN/m}}^3")
+                st.latex(rf"\sigma' = z \times \gamma'_{{eff}} = {res['depth_A_soil']:.2f} \times {res['gamma_effective']:.2f} = \mathbf{{{res['sigma_prime_2']:.2f} \text{{ kPa}}}}")
                 
-                # --- NEW DETAILED SECTION FOR SEEPAGE FORCE ---
-                st.markdown("#### Method 2: Seepage Force Approach")
-                st.caption("We adjust the submerged weight of the soil by the drag force (j) of the water.")
-
-                # A. Calculate Gradient
-                st.markdown("**Step A: Calculate Hydraulic Gradient ($i$)**")
-                st.latex(rf"i = \frac{{\Delta H}}{{L}} = \frac{{|{results['H_top']:.2f} - {results['H_bot']:.2f}|}}{{{z_s:.2f}}} = {results['i']:.3f}")
-
-                # 1. Submerged Weight
-                st.markdown("**Step B: Calculate Submerged Unit Weight ($\gamma'$)**")
-                st.latex(rf"\gamma' = \gamma_{{sat}} - \gamma_w = {g_sat_s:.2f} - {gamma_w:.2f} = {results['gamma_sub']:.2f} \text{{ kN/m}}^3")
-                
-                # 2. Seepage Force per unit volume
-                st.markdown("**Step C: Calculate Seepage Force ($j$)**")
-                st.latex(rf"j = i \times \gamma_w = {results['i']:.3f} \times {gamma_w:.2f} = {results['j_seepage']:.2f} \text{{ kN/m}}^3")
-                
-                # 3. Combine
-                st.markdown(f"**Step D: Determine Effective Unit Weight ($\gamma'_{{eff}}$)**")
-                if results['flow_type'] == "Upward":
-                    sign_latex = "-"
-                    text_logic = r"\text{Upward flow reduces weight (} \gamma' - j \text{)}"
-                elif results['flow_type'] == "Downward":
-                    sign_latex = "+"
-                    text_logic = r"\text{Downward flow increases weight (} \gamma' + j \text{)}"
-                else:
-                    sign_latex = "+"
-                    text_logic = r"\text{No flow}"
-
-                st.latex(text_logic)
-                st.latex(rf"\gamma'_{{eff}} = \gamma' {sign_latex} j = {results['gamma_sub']:.2f} {sign_latex} {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \text{{ kN/m}}^3")
-                
-                # 4. Final
-                st.markdown("**Step E: Calculate Effective Stress ($\sigma'$)**")
-                st.latex(rf"\sigma' = z \times \gamma'_{{eff}} = {results['depth_A_soil']:.2f} \times {results['gamma_effective']:.2f} = \mathbf{{{results['sigma_prime_2']:.2f} \text{{ kPa}}}}")
-
+               
     # =================================================================
     # TAB 2: PERMEABILITY
     # =================================================================
@@ -364,7 +328,7 @@ def app():
         col_input_2, col_plot_2 = st.columns([1, 1.2])
 
         with col_input_2:
-            st.markdown("### 1. Test Configuration")
+            write_text("subheader", "1. Test Configuration")
             test_type = st.radio("Select Method", ["Constant Head", "Falling Head"], horizontal=True)
             st.markdown("---")
 
