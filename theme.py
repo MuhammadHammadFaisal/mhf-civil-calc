@@ -182,16 +182,10 @@ def glass_box(content):
 # BULLETPROOF GLASS TABLE (SCROLL FIXED)
 # =========================================================
 def glass_table(df):
-    """
-    Renders a dataframe as an HTML table with inline styles and 
-    forced horizontal scrolling for narrow layouts.
-    """
-    # Force table to not shrink and use whitespace nowrap to trigger scrollbar
     table_style = "width: 100%; min-width: 600px; background-color: rgba(0, 0, 0, 0.35); color: #E0E0E0; border-collapse: collapse; font-family: sans-serif;"
     th_style = "background-color: rgba(0, 0, 0, 0.5); font-weight: 600; color: #FFFFFF; padding: 12px 15px; text-align: left; border-bottom: 2px solid rgba(255,255,255,0.1); white-space: nowrap;"
     td_style = "padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #E0E0E0; white-space: nowrap;"
-    
-    # SINGLE WRAPPER: Handles border, radius, and scroll at once
+
     html = f"""
     <div style="
         overflow-x: auto; 
@@ -203,24 +197,20 @@ def glass_table(df):
     ">
         <table style='{table_style}'>
     """
-    
+
     # Headers
     html += "<thead><tr>"
     for col in df.columns:
         html += f"<th style='{th_style}'>{col}</th>"
     html += "</tr></thead><tbody>"
-    
+
     # Rows
     for _, row in df.iterrows():
-        html += "<tr style='background-color: transparent;'>"
+        html += "<tr>"
         for val in row:
             html += f"<td style='{td_style}'>{val}</td>"
         html += "</tr>"
-        
+
     html += "</tbody></table></div>"
-    
-    st.markdown(html, unsafe_allow_html=True)
-        
-    html += "</tbody></table></div></div>"
-    
+
     st.markdown(html, unsafe_allow_html=True)
