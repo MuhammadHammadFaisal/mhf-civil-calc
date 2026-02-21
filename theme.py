@@ -1,4 +1,3 @@
-# theme.py
 import streamlit as st
 from PIL import Image
 import os
@@ -19,11 +18,17 @@ def load_icon():
         return "🛠️"
 
 def apply_theme(page_title="MHF Civil Calc"):
+    # Must be the very first Streamlit command called on the page
     st.set_page_config(page_title=page_title, layout="wide", page_icon=load_icon())
 
     st.markdown("""
     <style>
-    /* Blueprint Background */
+    /* 1. Hide Default Streamlit Branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+
+    /* 2. Blueprint Background */
     [data-testid="stAppViewContainer"] {
         background-color: #031126;
         background-image: 
@@ -42,7 +47,7 @@ def apply_theme(page_title="MHF Civil Calc"):
         background-attachment: local;
     }
 
-    /* Sidebar and Global Text */
+    /* 3. Sidebar and Global Text */
     [data-testid="stSidebar"] {
         background-color: #031126;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -51,7 +56,7 @@ def apply_theme(page_title="MHF Civil Calc"):
         color: #E2E8F0 !important;
     }
 
-    /* Glassy Cards and Links */
+    /* 4. Glassy Cards and Links */
     [data-testid="stPageLink-NavLink"] {
         background-color: rgba(255,255,255,0.85) !important;
         border: 1px solid #dee2e6 !important;
@@ -72,7 +77,7 @@ def apply_theme(page_title="MHF Civil Calc"):
         display: none !important;
     }
     
-    /* Buttons */
+    /* 5. Buttons */
     [data-testid="stLinkButton"] > a {
         background-color: rgba(255, 255, 255, 0.9) !important;
         border: 1px solid #dee2e6 !important;
@@ -84,7 +89,7 @@ def apply_theme(page_title="MHF Civil Calc"):
         color: #1a3a5a !important; 
     }
 
-/* =========================================
+    /* =========================================
        BULLETPROOF GLASS TABLES
        ========================================= */
     .glass-table-wrapper table {
@@ -115,6 +120,7 @@ def apply_theme(page_title="MHF Civil Calc"):
     .glass-table-wrapper tbody tr:hover td {
         background-color: rgba(255, 255, 255, 0.08) !important;
     }
+    </style>
     """, unsafe_allow_html=True)
 
 def render_page_header(title):
@@ -165,6 +171,9 @@ def glass_box(content):
     """
     Uses inline styling to guarantee Streamlit renders the dark glassy background.
     Flattened to strictly prevent Markdown from treating indented HTML as code blocks.
+    
+    WARNING: Do NOT place Streamlit widgets (st.button, st.text_input, etc.) inside this box. 
+    It is strictly for text, warnings, or raw HTML/Markdown logs.
     """
     html = f"""<div style="background-color: rgba(0, 0, 0, 0.35); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); margin-bottom: 15px;">\n\n{content}\n\n</div>"""
     st.markdown(html, unsafe_allow_html=True)
