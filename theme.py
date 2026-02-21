@@ -147,7 +147,7 @@ def render_page_header(title):
 
 TEXT_STYLES = {
     "page_title": {"size": "42px", "weight": "800", "color": "#FFFFFF", "margin": "0px 0px 20px 0px"},
-    "section_header": {"size": "24px", "weight": "700", "color": "#aad4ff", "margin": "25px 0px 15px 0px"},
+    "section_header": {"size": "24px", "weight": "700", "color": "#FFFFFF", "margin": "25px 0px 15px 0px"},
     "subheader": {"size": "20px", "weight": "600", "color": "#E2E8F0", "margin": "15px 0px 10px 0px"},
     "body": {"size": "16px", "weight": "400", "color": "#CBD5E1", "margin": "5px 0px 10px 0px"},
     "caption": {"size": "14px", "weight": "400", "color": "#94A3B8", "margin": "0px 0px 15px 0px", "font-style": "italic"},
