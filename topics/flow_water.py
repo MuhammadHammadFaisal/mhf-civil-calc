@@ -629,7 +629,7 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
             
             h_target = h_surface - (v_seepage * sum_h_k_above)
             z_elev = depth_tracker - target_depth
-            u_target = (h_target - z_elev) * gamma_w_val
+            u_target = (h_target - z_elev) * gamma_w
             sigma_eff = sigma_total - u_target
 
             # --- PHASE 2: DISPLAY RESULTS ---
@@ -666,7 +666,7 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
                     f"**Total Stress ($\\sigma$):** {sigma_total:.2f} kPa (including {surcharge} kPa surcharge)",
                     f"**Total Head at Calculation Depth ($h_{{target}}$):** {h_target:.4f} m",
                     f"**Elevation Head ($z_{{elev}}$ relative to datum):** {z_elev:.2f} m",
-                    f"**Pore Pressure ($u$):** $({h_target:.4f} - {z_elev:.2f}) \\cdot {gamma_w_val} = {u_target:.2f}$ kPa",
+                    f"**Pore Pressure ($u$):** $({h_target:.4f} - {z_elev:.2f}) \\cdot {gamma_w} = {u_target:.2f}$ kPa",
                     f"**Effective Stress ($\\sigma'$):** ${sigma_total:.2f} - {u_target:.2f} = \\mathbf{{{sigma_eff:.2f} \\, kPa}}$"
                 ]
                 glass_box("\n\n".join(stress_log))
