@@ -554,15 +554,26 @@ def app():
                 ax.legend()
 
             write_text("subheader", " Results Comparison")
-            c1, c2, c3 = st.columns(3)
+            c_init, c_long, c_short = st.columns(3)
 
-            for col, df, title in zip([c1, c2, c3],
+            for col, df, title in zip([c_init, c_long, c_short],
                                       [df_init, df_long, df_short],
                                       ["Initial", "Long Term", "Short Term"]):
                 with col:
                     st.subheader(title)
-                    # Use styling to highlight rows
-                    glass_table(df)
+                    
+                    # 1. Create a copy specifically for the table display
+                    df_display = df.copy()
+                    
+                    # 2. Force strict 2-decimal string formatting on the numeric columns
+                    cols_to_format = ["Depth (z)", "Total Stress (σ)", "Pore Pressure (u)", "Eff. Stress (σ')"]
+                    for c in cols_to_format:
+                        df_display[c] = df_display[c].apply(lambda x: f"{x:.2f}")
+                    
+                    # 3. Render the perfectly formatted strings
+                    glass_table(df_display)
+                    
+                    # 4. Plot using the original numeric 'df' so the chart doesn't break
                     fig, ax = plt.subplots(figsize=(5, 6))
                     plot_results(df, title, ax)
                     st.pyplot(fig)
