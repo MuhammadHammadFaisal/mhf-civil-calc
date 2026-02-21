@@ -303,7 +303,9 @@ def app():
 **Hydraulic Gradient (i):** {results['i']:.3f}
 
 **Total Stress ($\sigma$):** {results['sigma_total']:.2f} kPa
+
 **Pore Pressure ($u$):** {results['u_val']:.2f} kPa
+
 **Effective Stress ($\sigma'$):** {results['sigma_prime_1']:.2f} kPa
 """
             glass_box(summary_text)
@@ -318,7 +320,7 @@ def app():
 
                 # --- METHOD 1 ---
                 # Use double backslashes (\\) so Streamlit renders the Greek symbols correctly
-                write_text("subheader", "Method 1: Stress Definition ($\\sigma'$ = $\\sigma$ - u)")
+                write_text("subheader", "Method 1: Stress Definition (Effective Stress = Total - Pore)")
                 
                 m1_text = f"""
 **Step 1: Calculate Depth of Point A below Soil Surface**
