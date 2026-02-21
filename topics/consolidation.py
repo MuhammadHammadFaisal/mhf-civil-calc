@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 import pandas as pd
-from theme import write_text, glass_box
+from theme import write_text, glass_box, glass_table
 # ================================================================
 # FOURIER SOLUTION FUNCTIONS
 # ================================================================
@@ -41,7 +41,7 @@ def app():
     tab_settlement, tab_time = st.tabs(["Settlement Calculation", "Time Rate Analysis"])
 
 # ================================================================
-    # GLOBAL INPUTS & STRATIGRAPHY
+    # GLOBAL INPUTS & STRATIGRAPHY (UPDATED DEFAULTS)
     # ================================================================
     with tab_settlement:
         # Main split: Inputs take up roughly 70% of the screen, Diagram takes 30%
@@ -53,12 +53,12 @@ def app():
             g_col1, g_col2 = st.columns(2)
             
             with g_col1:
-                water_depth = st.number_input("Water Table Depth [m]", 2.0)
-                gamma_w = st.radio("γw [kN/m³]", [9.81, 10.0], horizontal=True)
+                water_depth = st.number_input("Water Table Depth [m]", value=2.0)
+                gamma_w = st.radio("γw [kN/m³]", [9.81, 10.0], index=1, horizontal=True)
                 
             with g_col2:
-                surcharge_q = st.number_input("Surface Surcharge Δσ [kPa]", 50.0)
-                n_layers = st.number_input("Number of Layers", 1, 50, 3)
+                surcharge_q = st.number_input("Surface Surcharge Δσ [kPa]", value=100.0)
+                n_layers = st.number_input("Number of Layers", 1, 50, value=2)
 
             st.markdown("---")
             write_text("section_header", "Stratigraphy")
@@ -69,17 +69,30 @@ def app():
             layers = []
             current_depth = 0.0
 
+            # --- DEFINE DEFAULT VALUES BASED ON YOUR EXAM NOTES ---
+            def_h = [6.0, 6.0]
+            def_gamma = [20.0, 20.0]
+            def_e0 = [0.80, 0.60]
+            def_cc = [0.15, 0.10]
+            def_cr = [0.05, 0.03]
+            def_ocr = [1.0, 3.5]   # Layer 1 uses exact sp, Layer 2 uses OCR
+            def_sp = [80.0, 0.0]   # Layer 1 sp = 80 kPa
+            # -------------------------------------------------------
+
             for i in range(int(n_layers)):
                 # Alternate placing layers in the left and right columns
                 target_col = s_col1 if i % 2 == 0 else s_col2
                 
+                # Safely fetch defaults (fallback to standard values if user adds >2 layers)
+                h_val = def_h[i] if i < len(def_h) else 4.0
+                g_val = def_gamma[i] if i < len(def_gamma) else 19.0
+                
                 with target_col:
                     with st.expander(f"Layer {i+1} Definition", expanded=True):
-                        # Adjusted internal columns so they don't get squished
                         c1, c2 = st.columns(2)
-                        h = c1.number_input(f"Thickness [m]", 0.1, 100.0, 4.0, key=f"h{i}")
-                        gamma = c2.number_input(f"γ [kN/m³]", 0.0, 30.0, 19.0, key=f"g{i}")
-                        soil = st.selectbox("Soil Type", ["Clay","Sand"], key=f"t{i}")
+                        h = c1.number_input(f"Thickness [m]", 0.1, 100.0, h_val, key=f"h{i}")
+                        gamma = c2.number_input(f"γ [kN/m³]", 0.0, 30.0, g_val, key=f"g{i}")
+                        soil = st.selectbox("Soil Type", ["Clay","Sand"], index=0, key=f"t{i}")
 
                         mid = current_depth + h/2
                         method = "None"
@@ -90,17 +103,25 @@ def app():
                             method = st.radio(
                                 f"Method (L{i+1})",
                                 ["Method A (Cc/Cr)", "Method B (mv)", "Method C (Δe)"],
+                                index=0, 
                                 key=f"m{i}",
                             )
 
-                            # Stacked the parameters slightly differently to fit the half-width card
                             if method == "Method A (Cc/Cr)":
                                 cp1, cp2 = st.columns(2)
-                                e0 = cp1.number_input("e0", 0.0, 5.0, 0.9, key=f"e{i}")
-                                Cc = cp2.number_input("Cc", 0.0, 5.0, 0.3, key=f"cc{i}")
-                                Cr = cp1.number_input("Cr", 0.0, 5.0, 0.05, key=f"cr{i}")
-                                ocr = cp2.number_input("OCR", 1.0, 10.0, 1.0, key=f"ocr{i}")
-                                sp = st.number_input("Precon. Pressure σ'p [kPa] (Opt.)", 0.0, 1000.0, 0.0, key=f"sp{i}")
+                                
+                                # Fetch parameter defaults
+                                e0_val = def_e0[i] if i < len(def_e0) else 0.9
+                                cc_val = def_cc[i] if i < len(def_cc) else 0.3
+                                cr_val = def_cr[i] if i < len(def_cr) else 0.05
+                                ocr_val = def_ocr[i] if i < len(def_ocr) else 1.0
+                                sp_val = def_sp[i] if i < len(def_sp) else 0.0
+
+                                e0 = cp1.number_input("e0", 0.0, 5.0, e0_val, key=f"e{i}")
+                                Cc = cp2.number_input("Cc", 0.0, 5.0, cc_val, key=f"cc{i}")
+                                Cr = cp1.number_input("Cr", 0.0, 5.0, cr_val, key=f"cr{i}")
+                                ocr = cp2.number_input("OCR", 1.0, 10.0, ocr_val, key=f"ocr{i}")
+                                sp = st.number_input("Precon. Pressure σ'p [kPa] (Opt.)", 0.0, 1000.0, sp_val, key=f"sp{i}")
                                 params = {"e0":e0,"Cc":Cc,"Cr":Cr,"sp":sp,"OCR":ocr}
 
                             if method == "Method B (mv)":
@@ -109,9 +130,9 @@ def app():
 
                             if method == "Method C (Δe)":
                                 cp1, cp2 = st.columns(2)
-                                e0 = cp1.number_input("Initial e0", 0.0, 5.0, 0.9, key=f"e0c{i}")
+                                e0_c = cp1.number_input("Initial e0", 0.0, 5.0, 0.9, key=f"e0c{i}")
                                 ef = cp2.number_input("Final ef", 0.0, 5.0, 0.8, key=f"ef{i}")
-                                params = {"e0":e0,"ef":ef}
+                                params = {"e0":e0_c,"ef":ef}
 
                         layers.append({
                             "id":i+1, "type":soil, "h":h, "gamma":gamma, 
@@ -120,7 +141,6 @@ def app():
                         })
                         
                         current_depth += h
-
         # ================================================================
         # DYNAMIC PROFILE DIAGRAM
         # ================================================================
@@ -305,17 +325,14 @@ def app():
                 # 1. Total Settlement Header
                 st.markdown(f"## Total Settlement: :red[{total_settlement*1000:.2f} mm]")
                 
-                # 2. Clean Summary Table using Pure HTML to force transparency
+                # 2. Clean Summary Table (Using our custom inline component)
                 df_results = pd.DataFrame(
                     results_data, 
                     columns=["Layer", "σ'₀ (kPa)", "σ'₁ (kPa)", "Settlement (mm)", "Method"]
                 )
-
-                # Convert the dataframe to HTML, hiding the index and setting border to 0
-                table_html = df_results.to_html(index=False, classes="glass-table", border=0)
-
-                # Render the table itself separately so Streamlit doesn't format it as a code block
-                st.markdown(table_html, unsafe_allow_html=True)
+                
+                # Render the bulletproof glass table
+                glass_table(df_results)
                 
                 # 3. Detailed Steps
                 write_text("subheader", "Detailed Calculation Log")
@@ -325,8 +342,7 @@ def app():
                     if step == "---":
                         continue
                     else:
-                        glass_box(step)  
-
+                        glass_box(step)
 
 
 
