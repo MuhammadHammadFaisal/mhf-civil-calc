@@ -562,11 +562,20 @@ def app():
                 with col:
                     st.subheader(title)
                     # Use styling to highlight rows
-                    st.dataframe(df.style.format({"Depth (z)": "{:.2f}", "Total Stress (σ)": "{:.2f}", "Pore Pressure (u)": "{:.2f}", "Eff. Stress (σ')": "{:.2f}"}))
+                    glass_table(df)
                     fig, ax = plt.subplots(figsize=(5, 6))
                     plot_results(df, title, ax)
                     st.pyplot(fig)
-
+# --- Paste this right after the "Results Comparison" loop in Tab 1 ---
+                with st.expander("Show Calculation Logs", expanded=False):
+                    write_text("subheader", "Initial State Logs")
+                    glass_box("\n\n".join(log_init))
+                    
+                    write_text("subheader", "Long Term State Logs")
+                    glass_box("\n\n".join(log_long))
+                    
+                    write_text("subheader", "Short Term State Logs")
+                    glass_box("\n\n".join(log_short))
     # =====================================================
     # TAB 2 — HEAVE CHECK
     # =====================================================
@@ -700,12 +709,11 @@ def app():
 
                 with c_res_r:
                     with st.expander("Show Detailed Math", expanded=True):
-                        # Combine the steps into one formatted markdown string
                         math_content = f"""**1. Downward Resistance (Weight of Clay Plug)**
 $$\sigma_v = H_{{plug}} \\times \gamma_{{clay}} = {rem_clay:.2f} \\times {g_clay} = \mathbf{{{sigma_val:.2f} \, kPa}}$$
 
 **2. Upward Uplift Pressure (Artesian)**
-$$u = (H_{{clay}} + h_{{art}}) \\times \gamma_w = ({h_clay} + {h_art}) \\times 9.81 = \mathbf{{{u_val:.2f} \, kPa}}$$
+$$u = (H_{{clay}} + h_{{art_heave}}) \\times \gamma_w = ({h_clay} + {h_art_heave}) \\times {GAMMA_W} = \mathbf{{{u_val:.2f} \, kPa}}$$
 
 **3. Factor of Safety**
 $$FS = \\frac{{\sigma_v}}{{u}} = \\frac{{{sigma_val:.2f}}}{{{u_val:.2f}}} = \mathbf{{{fs:.3f}}}$$
