@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
+from theme import write_text, glass_box, glass_table
 
 # =========================================================
 # APP CONFIG
@@ -33,7 +34,7 @@ def app():
         col_input, col_viz = st.columns([1.1, 1])
 
         with col_input:
-            st.markdown("### A. Global Parameters")
+            write_text("subheader", " A. Global Parameters")
             c1, c2, c3 = st.columns(3)
             with c1:
                 water_depth = st.number_input("Water Table Depth (m)", value=3.0, step=0.5)
@@ -43,7 +44,7 @@ def app():
                 surcharge = st.number_input("Surcharge q (kPa)", value=50.0, step=5.0)
                 gamma_w = 9.81
 
-            st.markdown("### B. Stratigraphy")
+            write_text("subheader", " B. Stratigraphy")
             num_layers = st.number_input("Number of Layers", 1, 5, 2)
             layers = []
             colors = {"Sand": "#E6D690", "Clay": "#B0A494"}
@@ -89,7 +90,7 @@ def app():
         # 2. VISUALIZER
         # -------------------------------------------------
         with col_viz:
-            st.markdown("### Soil Profile Preview")
+            write_text("subheader", " Soil Profile Preview")
             fig, ax = plt.subplots(figsize=(6, 5))
             
             current_depth = 0
@@ -245,7 +246,7 @@ def app():
                 ax.grid(True, linestyle="--", alpha=0.6)
                 ax.legend()
 
-            st.markdown("### Results Comparison")
+            write_text("subheader", " Results Comparison")
             c_init, c_long, c_short = st.columns(3)
 
             with c_init:
@@ -318,7 +319,7 @@ def app():
         # INPUTS
         # -------------------------------------------------
         with col_input:
-            st.markdown("### A. Global Parameters")
+            write_text("subheader", " A. Global Parameters")
             c1, c2, c3 = st.columns(3)
             with c1:
                 water_depth = st.number_input("Water Table Depth (m)", value=3.0, step=0.5)
@@ -327,7 +328,7 @@ def app():
             with c3:
                 surcharge = st.number_input("Surcharge q (kPa)", value=50.0, step=5.0)
 
-            st.markdown("### B. Soil Properties ")
+            write_text("subheader", " B. Soil Properties ")
             num_layers = st.number_input("Number of Layers", 1, 5, 2)
             layers = []
             colors = {"Sand": "#E6D690", "Clay": "#B0A494"}
@@ -379,7 +380,7 @@ def app():
         # SOIL PROFILE VISUALIZER
         # -------------------------------------------------
         with col_viz:
-            st.markdown("### Soil Profile Preview")
+            write_text("subheader", " Soil Profile Preview")
             fig, ax = plt.subplots(figsize=(6, 5))
 
             current_depth = 0
@@ -552,7 +553,7 @@ def app():
                 ax.grid(True)
                 ax.legend()
 
-            st.markdown("### Results Comparison")
+            write_text("subheader", " Results Comparison")
             c1, c2, c3 = st.columns(3)
 
             for col, df, title in zip([c1, c2, c3],
@@ -576,7 +577,7 @@ def app():
         col_h_input, col_h_viz = st.columns([1, 2])
 
         with col_h_input:
-            st.markdown("#### Soil Parameters")
+            write_text("subheader", "# Soil Parameters")
             h_clay = st.number_input("Total Clay Thickness (m)", value=8.0, step=0.5)
             d_exc = st.number_input("Excavation Depth (m)", value=5.0, step=0.5)
             g_clay = st.number_input("Clay Sat. Unit Weight (kN/m³)", value=19.0, step=0.1)
@@ -589,7 +590,7 @@ def app():
             calc_trigger = st.button("Calculate Factor of Safety", type="primary")
 
         with col_h_viz:
-            st.markdown("#### Geotechnical Profile & Failure Analysis")
+            write_text("subheader", "# Geotechnical Profile & Failure Analysis")
             
             # Create Plot
             fig_h, (ax_geo, ax_stress) = plt.subplots(1, 2, figsize=(10, 5), sharey=True, gridspec_kw={'width_ratios': [1.6, 1]})
@@ -698,15 +699,16 @@ def app():
                         st.balloons()
 
                 with c_res_r:
-                    with st.expander("Show Detailed Math", expanded=True):
-                        st.markdown("**1. Downward Resistance (Weight of Clay Plug)**")
-                        st.latex(rf"\sigma_v = H_{{plug}} \times \gamma_{{clay}} = {rem_clay:.2f} \times {g_clay} = \mathbf{{{sigma_val:.2f} \, kPa}}")
-                        
-                        st.markdown("**2. Upward Uplift Pressure (Artesian)**")
-                        st.latex(rf"u = (H_{{clay}} + h_{{art}}) \times \gamma_w = ({h_clay} + {h_art}) \times 9.81 = \mathbf{{{u_val:.2f} \, kPa}}")
-                        
-                        st.markdown("**3. Factor of Safety**")
-                        st.latex(rf"FS = \frac{{\sigma_v}}{{u}} = \frac{{{sigma_val:.2f}}}{{{u_val:.2f}}} = \mathbf{{{fs:.3f}}}")
+                    # Combine the steps into one formatted markdown string
+                    math_content = f"""**1. Downward Resistance (Weight of Clay Plug)**
+$$\sigma_v = H_{{plug}} \\times \gamma_{{clay}} = {rem_clay:.2f} \\times {g_clay} = \mathbf{{{sigma_val:.2f} \, kPa}}$$
 
+**2. Upward Uplift Pressure (Artesian)**
+$$u = (H_{{clay}} + h_{{art}}) \\times \gamma_w = ({h_clay} + {h_art}) \\times 9.81 = \mathbf{{{u_val:.2f} \, kPa}}$$
+
+**3. Factor of Safety**
+$$FS = \\frac{{\sigma_v}}{{u}} = \\frac{{{sigma_val:.2f}}}{{{u_val:.2f}}} = \mathbf{{{fs:.3f}}}$$
+"""
+                    glass_box(math_content)
 if __name__ == "__main__":
     app()
