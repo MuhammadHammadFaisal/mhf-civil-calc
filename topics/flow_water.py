@@ -290,18 +290,17 @@ def app():
 
         # ------------------------- RESULTS (FULL WIDTH) -------------------------
         if st.session_state.results:
-            results = st.session_state.results
-            
+            results = st.session_state.results  # Ensure this matches
             st.divider()
-            st.success(f"**Flow Condition:** {results['flow_type']} (Gradient i = {results['i']:.3f})")
-
+            
+            # Use 'results' instead of 'res'
             result_summary = f"""
-### Analysis Results: {res['flow_type']}
-**Hydraulic Gradient (i):** {res['i']:.3f}
+### Analysis Results: {results['flow_type']}
+**Hydraulic Gradient (i):** {results['i']:.3f}
 
-**Total Stress ($\sigma$):** {res['sigma_total']:.2f} kPa
-**Pore Pressure ($u$):** {res['u_val']:.2f} kPa
-**Effective Stress ($\sigma'$):** {res['sigma_prime_1']:.2f} kPa
+**Total Stress ($\sigma$):** {results['sigma_total']:.2f} kPa
+**Pore Pressure ($u$):** {results['u_val']:.2f} kPa
+**Effective Stress ($\sigma'$):** {results['sigma_prime_1']:.2f} kPa
 """
             glass_box(result_summary)
             
