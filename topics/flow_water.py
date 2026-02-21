@@ -306,18 +306,17 @@ def app():
             
             # --- DETAILED DERIVATION ---
             with st.expander("View Detailed Step-by-Step Derivation (2 Methods)", expanded=False):
-                # CHANGED: Standardized subheaders inside expander
+                # FIXED: Changed 'res' to 'results' throughout
                 write_text("subheader", "Method 1: Definition (σ' = σ − u)")
-                st.latex(rf"\sigma = ({gamma_w} \cdot {res['val_y_snap']}) + ({res['gamma_sat_snap']} \cdot {res['depth_A_soil']:.2f}) = {res['sigma_total']:.2f} \text{{ kPa}}")
-                st.latex(rf"u = ({res['H_A']:.2f} - {res['val_A_snap']:.2f}) \cdot {gamma_w} = {res['u_val']:.2f} \text{{ kPa}}")
-                st.latex(rf"\sigma' = {res['sigma_total']:.2f} - {res['u_val']:.2f} = \mathbf{{{res['sigma_prime_1']:.2f} \text{{ kPa}}}}")
+                st.latex(rf"\sigma = ({gamma_w} \cdot {results['val_y_snap']}) + ({results['gamma_sat_snap']} \cdot {results['depth_A_soil']:.2f}) = {results['sigma_total']:.2f} \text{{ kPa}}")
+                st.latex(rf"u = ({results['H_A']:.2f} - {results['val_A_snap']:.2f}) \cdot {gamma_w} = {results['u_val']:.2f} \text{{ kPa}}")
+                st.latex(rf"\sigma' = {results['sigma_total']:.2f} - {results['u_val']:.2f} = \mathbf{{{results['sigma_prime_1']:.2f} \text{{ kPa}}}}")
                 
                 st.markdown("---")
                 write_text("subheader", "Method 2: Seepage Force Approach")
-                st.latex(rf"j = i \times \gamma_w = {res['i']:.3f} \times {gamma_w:.2f} = {res['j_seepage']:.2f} \text{{ kN/m}}^3")
-                st.latex(rf"\gamma'_{{eff}} = \gamma' \pm j = {res['gamma_sub']:.2f} \pm {res['j_seepage']:.2f} = {res['gamma_effective']:.2f} \text{{ kN/m}}^3")
-                st.latex(rf"\sigma' = z \times \gamma'_{{eff}} = {res['depth_A_soil']:.2f} \times {res['gamma_effective']:.2f} = \mathbf{{{res['sigma_prime_2']:.2f} \text{{ kPa}}}}")
-                
+                st.latex(rf"j = i \times \gamma_w = {results['i']:.3f} \times {gamma_w:.2f} = {results['j_seepage']:.2f} \text{{ kN/m}}^3")
+                st.latex(rf"\gamma'_{{eff}} = \gamma' \pm j = {results['gamma_sub']:.2f} \pm {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \text{{ kN/m}}^3")
+                st.latex(rf"\sigma' = z \times \gamma'_{{eff}} = {results['depth_A_soil']:.2f} \times {results['gamma_effective']:.2f} = \mathbf{{{results['sigma_prime_2']:.2f} \text{{ kPa}}}}")
                
     # =================================================================
     # TAB 2: PERMEABILITY
