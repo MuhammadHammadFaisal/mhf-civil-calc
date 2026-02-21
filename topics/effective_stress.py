@@ -296,28 +296,33 @@ def app():
 
             write_text("subheader", " Results Comparison")
             cols = st.columns(3)
-            for col, df, title in zip(cols, [df_i, df_l, df_s], ["Initial", "Long Term", "Short Term"]):
+            
+            for col, df, title in zip(
+                    cols,
+                    [df_init, df_long, df_short],
+                    ["Initial", "Long Term", "Short Term"]
+            ):
                 with col:
                     st.subheader(title)
-                    
-                    # 1. Create a display copy for string formatting
+            
                     df_display = df.copy()
-                    
-                    # 2. Format specific columns to strict 2 decimal places
-                    # Note: These column names must match your calculate_profile function keys
-                    cols_to_format = ["Depth (z)", "Total (σ)", "Pore (u)", "Eff (σ')"]
+            
+                    cols_to_format = [
+                        "Depth (z)",
+                        "Total Stress (σ)",
+                        "Pore Pressure (u)",
+                        "Eff. Stress (σ')"
+                    ]
+            
                     for c in cols_to_format:
                         if c in df_display.columns:
                             df_display[c] = df_display[c].apply(lambda x: f"{float(x):.2f}")
-                    
-                    # 3. Call your custom glass table function ONCE
+            
                     glass_table(df_display)
-                    
-                    # Plot using the original numeric 'df'
+            
                     fig, ax = plt.subplots(figsize=(5, 6))
                     plot_results(df, title, ax)
                     st.pyplot(fig)
-
             # --- INDENTED CORRECTLY: Outside the loop so it only prints once ---
             with st.expander("Show Calculation Logs", expanded=False):
                 write_text("subheader", "Initial State Logs")
