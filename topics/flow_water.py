@@ -2,27 +2,8 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
+from theme import write_text, glass_box, glass_table
 
-# ============================================================
-# MAINTENANCE BANNER
-# ============================================================
-def show_maintenance_banner():
-    st.markdown("""
-    <div style="background: linear-gradient(90deg, #ff6b6b 0%, #ffa500 100%); 
-                padding: 15px; 
-                border-radius: 10px; 
-                border: 3px solid #cc0000;
-                margin-bottom: 20px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h2 style="color: white; margin: 0; text-align: center;">
-             UNDER MAINTENANCE 
-        </h2>
-        <p style="color: white; margin: 10px 0 0 0; text-align: center; font-size: 16px;">
-            Flow net calculations are currently being calibrated and improved.<br>
-            Results may not be accurate. Please use with caution.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
 
 # ============================================================
 # HELPER FUNCTIONS
@@ -218,10 +199,16 @@ def app():
                 u_val = h_p_A * gamma_w
                 sigma_prime = sigma_total - u_val
                 
-                st.success(f"**Flow Condition:** {flow_type}\n\n*{effect_msg}*")
-                st.metric("Total Stress (σ)", f"{sigma_total:.2f} kPa")
-                st.metric("Pore Pressure (u)", f"{u_val:.2f} kPa")
-                st.metric("Effective Stress (σ')", f"{sigma_prime:.2f} kPa")
+# === GLASS BOX REPLACEMENT ===
+                res_content = f"""
+**Flow Condition:** {flow_type}
+*{effect_msg}*
+
+**Total Stress ($\sigma$):** {sigma_total:.2f} kPa
+**Pore Pressure ($u$):** {u_val:.2f} kPa
+**Effective Stress ($\sigma'$):** {sigma_prime:.2f} kPa
+"""
+                glass_box(res_content)
                     
                 with st.expander("View Step-by-Step Derivation"):
                     st.latex(rf"H_{{top}} = {H_top:.2f} m, \quad H_{{bot}} = {H_bot:.2f} m")
