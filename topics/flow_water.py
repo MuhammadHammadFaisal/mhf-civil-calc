@@ -306,7 +306,7 @@ def app():
             glass_box(result_summary)
             
             # --- DETAILED DERIVATION ---
-           with st.expander("View Detailed Step-by-Step Derivation (2 Methods)", expanded=False):
+            with st.expander("View Detailed Step-by-Step Derivation (2 Methods)", expanded=False):
                 # CHANGED: Standardized subheaders inside expander
                 write_text("subheader", "Method 1: Definition (σ' = σ − u)")
                 st.latex(rf"\sigma = ({gamma_w} \cdot {res['val_y_snap']}) + ({res['gamma_sat_snap']} \cdot {res['depth_A_soil']:.2f}) = {res['sigma_total']:.2f} \text{{ kPa}}")
