@@ -183,42 +183,36 @@ def glass_box(content):
 # =========================================================
 
 def glass_table(df):
-    html_table = df.to_html(index=False, escape=False)
-    
-    custom_html = f"""
-    <div style="
-        background: rgba(15, 20, 30, 0.6); /* Restores the darker glass background */
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 8px;
-        padding: 10px;
-        overflow-x: auto; /* Keeps the horizontal scroll active */
-        width: 100%;
-    ">
-        <style>
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                color: white;
-                font-family: sans-serif;
-                font-size: 14px;
-            }}
-            th, td {{
-                white-space: nowrap; /* Prevents text from squishing */
-                padding: 12px 15px;
-                text-align: left;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Subtle horizontal lines */
-            }}
-            th {{
-                font-weight: 600;
-            }}
-            /* Removes the border from the very last row to keep it clean */
-            tr:last-child td {{
-                border-bottom: none;
-            }}
-        </style>
-        {html_table}
-    </div>
     """
-    st.markdown(custom_html, unsafe_allow_html=True)
+    Renders a dataframe as an HTML table with inline styles and 
+    horizontal scrolling to prevent column clipping.
+    """
+    # Force the table to take its full width so the scrollbar works properly
+    table_style = "width: 100%; min-width: max-content; background-color: rgba(0, 0, 0, 0.35); color: #E0E0E0; border-collapse: collapse; margin-bottom: 0px; font-family: sans-serif;"
+    th_style = "background-color: rgba(0, 0, 0, 0.5); font-weight: 600; color: #FFFFFF; padding: 12px 15px; text-align: left; border: none; border-bottom: 2px solid rgba(255,255,255,0.1); white-space: nowrap;"
+    td_style = "padding: 12px 15px; border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #E0E0E0; white-space: nowrap;"
+    
+    # Outer wrapper: Added overflow-x: auto for the scrollbar
+    # Inner wrapper: border-radius and hidden overflow to keep the corners clean
+    html = """
+    <div style='overflow-x: auto; width: 100%; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); margin-bottom: 20px;'>
+        <div style='overflow: hidden;'>
+            <table style='{table_style}'>
+    """.replace("{table_style}", table_style)
+    
+    # Headers
+    html += "<thead><tr>"
+    for col in df.columns:
+        html += f"<th style='{th_style}'>{col}</th>"
+    html += "</tr></thead><tbody>"
+    
+    # Rows
+    for _, row in df.iterrows():
+        html += "<tr style='background-color: transparent;'>"
+        for val in row:
+            html += f"<td style='{td_style}'>{val}</td>"
+        html += "</tr>"
+        
+    html += "</tbody></table></div></div>"
+    
+    st.markdown(html, unsafe_allow_html=True)
