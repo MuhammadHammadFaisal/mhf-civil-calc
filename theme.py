@@ -179,26 +179,30 @@ def glass_box(content):
     st.markdown(html, unsafe_allow_html=True)
 
 # =========================================================
-# BULLETPROOF GLASS TABLE
+# BULLETPROOF GLASS TABLE (SCROLL FIXED)
 # =========================================================
-
 def glass_table(df):
     """
     Renders a dataframe as an HTML table with inline styles and 
-    horizontal scrolling to prevent column clipping.
+    forced horizontal scrolling for narrow layouts.
     """
-    # Force the table to take its full width so the scrollbar works properly
-    table_style = "width: 100%; min-width: max-content; background-color: rgba(0, 0, 0, 0.35); color: #E0E0E0; border-collapse: collapse; margin-bottom: 0px; font-family: sans-serif;"
-    th_style = "background-color: rgba(0, 0, 0, 0.5); font-weight: 600; color: #FFFFFF; padding: 12px 15px; text-align: left; border: none; border-bottom: 2px solid rgba(255,255,255,0.1); white-space: nowrap;"
-    td_style = "padding: 12px 15px; border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #E0E0E0; white-space: nowrap;"
+    # Force table to not shrink and use whitespace nowrap to trigger scrollbar
+    table_style = "width: 100%; min-width: 600px; background-color: rgba(0, 0, 0, 0.35); color: #E0E0E0; border-collapse: collapse; font-family: sans-serif;"
+    th_style = "background-color: rgba(0, 0, 0, 0.5); font-weight: 600; color: #FFFFFF; padding: 12px 15px; text-align: left; border-bottom: 2px solid rgba(255,255,255,0.1); white-space: nowrap;"
+    td_style = "padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #E0E0E0; white-space: nowrap;"
     
-    # Outer wrapper: Added overflow-x: auto for the scrollbar
-    # Inner wrapper: border-radius and hidden overflow to keep the corners clean
-    html = """
-    <div style='overflow-x: auto; width: 100%; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); margin-bottom: 20px;'>
-        <div style='overflow: hidden;'>
-            <table style='{table_style}'>
-    """.replace("{table_style}", table_style)
+    # SINGLE WRAPPER: Handles border, radius, and scroll at once
+    html = f"""
+    <div style="
+        overflow-x: auto; 
+        display: block; 
+        width: 100%; 
+        border: 1px solid rgba(255, 255, 255, 0.15); 
+        border-radius: 8px; 
+        margin-bottom: 20px;
+    ">
+        <table style='{table_style}'>
+    """
     
     # Headers
     html += "<thead><tr>"
@@ -212,6 +216,10 @@ def glass_table(df):
         for val in row:
             html += f"<td style='{td_style}'>{val}</td>"
         html += "</tr>"
+        
+    html += "</tbody></table></div>"
+    
+    st.markdown(html, unsafe_allow_html=True)
         
     html += "</tbody></table></div></div>"
     
