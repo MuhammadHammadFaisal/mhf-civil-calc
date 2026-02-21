@@ -566,16 +566,16 @@ def app():
                     fig, ax = plt.subplots(figsize=(5, 6))
                     plot_results(df, title, ax)
                     st.pyplot(fig)
-# --- Paste this right after the "Results Comparison" loop in Tab 1 ---
-                with st.expander("Show Calculation Logs", expanded=False):
-                    write_text("subheader", "Initial State Logs")
-                    glass_box("\n\n".join(log_init))
-                    
-                    write_text("subheader", "Long Term State Logs")
-                    glass_box("\n\n".join(log_long))
-                    
-                    write_text("subheader", "Short Term State Logs")
-                    glass_box("\n\n".join(log_short))
+# This is OUTSIDE the for-loop, so it only prints once!
+            with st.expander("Show Calculation Logs", expanded=False):
+                write_text("subheader", "Initial State Logs")
+                glass_box("\n\n".join(log_init))
+                
+                write_text("subheader", "Long Term State Logs")
+                glass_box("\n\n".join(log_long))
+                
+                write_text("subheader", "Short Term State Logs")
+                glass_box("\n\n".join(log_short))
     # =====================================================
     # TAB 2 — HEAVE CHECK
     # =====================================================
