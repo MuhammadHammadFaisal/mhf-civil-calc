@@ -71,7 +71,7 @@ def app():
             
             depth_tracker = 0.0
 
-            # --- DEFAULT VALUES FROM EXAM NOTES ---
+# --- DEFAULT VALUES FROM EXAM NOTES ---
             def_types = [1, 2]         # 1 = "Clay", 2 = "Gravel"
             def_h = [6.0, 4.0]         # 6m Clay, 4m Gravel
             def_gsat = [21.0, 21.0]    # Saturated unit weights
@@ -92,6 +92,7 @@ def app():
                     gsat_val = def_gsat[i] if i < len(def_gsat) else 20.0
                     gdry_val = def_gdry[i] if i < len(def_gdry) else 17.0
 
+                    # CRITICAL FIX: Make sure the options list includes Gravel and index=t_idx is set!
                     soil_type = cols[0].selectbox("Type", ["Sand", "Clay", "Gravel", "Rock"], index=t_idx, key=f"t{i}")
                     thickness = cols[1].number_input("Height (m)", 0.1, 20.0, value=h_val, step=0.5, key=f"h{i}")
                     
