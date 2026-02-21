@@ -599,60 +599,6 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
 **Effective Vertical Stress ($\sigma'$):** {sigma_eff:.2f} kPa
 """
                 glass_box(res_sum)
-# --- RESTORED CALCULATION LOG ---
-                with st.expander("Detailed Calculation Log", expanded=False):
-                    write_text("subheader", "Phase 1: Flow Rate and Head Distribution")
-                    
-                    # Log the Head Loss across each layer
-                    head_log = []
-                    current_h = h_surface
-                    head_log.append(f"**Top Boundary Condition:** Total Head ($h_{{top}}$) = {h_surface:.2f} m")
-                    
-                    for i, L in enumerate(layers):
-                        delta_h_layer = v_seepage * (L['H'] / L['k'])
-                        current_h -= delta_h_layer
-                        head_log.append(f"Layer {L['id']} ({L['type']}): $\Delta h = v \cdot (H/k) = {v_seepage:.4e} \cdot ({L['H']}/{L['k']}) = {delta_h_layer:.4f}$ m")
-                        head_log.append(f"→ Head at bottom of Layer {L['id']} = {current_h:.4f} m")
-                    
-                    glass_box("\n\n".join(head_log))
-
-                    write_text("subheader", f"Phase 2: Stress at Target Depth (z = {target_depth:.2f}m)")
-                    
-                    # Logic breakdown for the target depth stress
-                    stress_log = [
-                        f"**1. Total Vertical Stress ($\sigma$):**",
-                        f"Surcharge ($q$) = {surcharge:.2f} kPa"
-                    ]
-                    
-                    running_sigma = surcharge
-                    for L in layers:
-                        if target_depth > L['top']:
-                            thickness_to_use = min(L['H'], target_depth - L['top'])
-                            # Identify if dry or sat weight was used
-                            if L['bot'] <= water_depth:
-                                running_sigma += thickness_to_use * L['g_dry']
-                                stress_log.append(f"Layer {L['id']}: {thickness_to_use:.2f}m $\cdot$ $\gamma_{{dry}}$({L['g_dry']}) = {thickness_to_use * L['g_dry']:.2f} kPa")
-                            elif L['top'] >= water_depth:
-                                running_sigma += thickness_to_use * L['g_sat']
-                                stress_log.append(f"Layer {L['id']}: {thickness_to_use:.2f}m $\cdot$ $\gamma_{{sat}}$({L['g_sat']}) = {thickness_to_use * L['g_sat']:.2f} kPa")
-                            else:
-                                dry_part = water_depth - L['top']
-                                sat_part = thickness_to_use - dry_part
-                                val = (dry_part * L['g_dry']) + (sat_part * L['g_sat'])
-                                running_sigma += val
-                                stress_log.append(f"Layer {L['id']} (Split): {dry_part:.2f}m dry + {sat_part:.2f}m sat = {val:.2f} kPa")
-                    
-                    stress_log.append(f"**Total $\sigma$ = {running_sigma:.2f} kPa**")
-                    
-                    stress_log.append(f"\n**2. Pore Water Pressure ($u$):**")
-                    stress_log.append(f"Total Head at Target ($h_{{target}}$) = {h_target:.4f} m")
-                    stress_log.append(f"Elevation Head ($z_{{elev}}$ relative to base) = {z_elev:.2f} m")
-                    stress_log.append(f"$u = (h_{{target}} - z_{{elev}}) \cdot \gamma_w = ({h_target:.4f} - {z_elev:.2f}) \cdot {gamma_w} = \mathbf{{{u_target:.2f} \, kPa}}$")
-                    
-                    stress_log.append(f"\n**3. Effective Stress ($\sigma'$):**")
-                    stress_log.append(f"$\sigma' = \sigma - u = {sigma_total:.2f} - {u_target:.2f} = \mathbf{{{sigma_eff:.2f} \, kPa}}$")
-                    
-                    glass_box("\n\n".join(stress_log))
         with col_viz:
             write_text("subheader", "Soil Profile Preview")
             
@@ -693,5 +639,59 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
             
             # Ensure the plot fits the Streamlit container perfectly
             st.pyplot(fig3, use_container_width=True)
+        # --- RESTORED CALCULATION LOG ---
+        with st.expander("Detailed Calculation Log", expanded=False):
+            write_text("subheader", "Phase 1: Flow Rate and Head Distribution")
+            
+            # Log the Head Loss across each layer
+            head_log = []
+            current_h = h_surface
+            head_log.append(f"**Top Boundary Condition:** Total Head ($h_{{top}}$) = {h_surface:.2f} m")
+            
+            for i, L in enumerate(layers):
+                delta_h_layer = v_seepage * (L['H'] / L['k'])
+                current_h -= delta_h_layer
+                head_log.append(f"Layer {L['id']} ({L['type']}): $\Delta h = v \cdot (H/k) = {v_seepage:.4e} \cdot ({L['H']}/{L['k']}) = {delta_h_layer:.4f}$ m")
+                head_log.append(f"→ Head at bottom of Layer {L['id']} = {current_h:.4f} m")
+            
+            glass_box("\n\n".join(head_log))
+
+            write_text("subheader", f"Phase 2: Stress at Target Depth (z = {target_depth:.2f}m)")
+            
+            # Logic breakdown for the target depth stress
+            stress_log = [
+                f"**1. Total Vertical Stress ($\sigma$):**",
+                f"Surcharge ($q$) = {surcharge:.2f} kPa"
+            ]
+            
+            running_sigma = surcharge
+            for L in layers:
+                if target_depth > L['top']:
+                    thickness_to_use = min(L['H'], target_depth - L['top'])
+                    # Identify if dry or sat weight was used
+                    if L['bot'] <= water_depth:
+                        running_sigma += thickness_to_use * L['g_dry']
+                        stress_log.append(f"Layer {L['id']}: {thickness_to_use:.2f}m $\cdot$ $\gamma_{{dry}}$({L['g_dry']}) = {thickness_to_use * L['g_dry']:.2f} kPa")
+                    elif L['top'] >= water_depth:
+                        running_sigma += thickness_to_use * L['g_sat']
+                        stress_log.append(f"Layer {L['id']}: {thickness_to_use:.2f}m $\cdot$ $\gamma_{{sat}}$({L['g_sat']}) = {thickness_to_use * L['g_sat']:.2f} kPa")
+                    else:
+                        dry_part = water_depth - L['top']
+                        sat_part = thickness_to_use - dry_part
+                        val = (dry_part * L['g_dry']) + (sat_part * L['g_sat'])
+                        running_sigma += val
+                        stress_log.append(f"Layer {L['id']} (Split): {dry_part:.2f}m dry + {sat_part:.2f}m sat = {val:.2f} kPa")
+            
+            stress_log.append(f"**Total $\sigma$ = {running_sigma:.2f} kPa**")
+            
+            stress_log.append(f"\n**2. Pore Water Pressure ($u$):**")
+            stress_log.append(f"Total Head at Target ($h_{{target}}$) = {h_target:.4f} m")
+            stress_log.append(f"Elevation Head ($z_{{elev}}$ relative to base) = {z_elev:.2f} m")
+            stress_log.append(f"$u = (h_{{target}} - z_{{elev}}) \cdot \gamma_w = ({h_target:.4f} - {z_elev:.2f}) \cdot {gamma_w} = \mathbf{{{u_target:.2f} \, kPa}}$")
+            
+            stress_log.append(f"\n**3. Effective Stress ($\sigma'$):**")
+            stress_log.append(f"$\sigma' = \sigma - u = {sigma_total:.2f} - {u_target:.2f} = \mathbf{{{sigma_eff:.2f} \, kPa}}$")
+            
+            glass_box("\n\n".join(stress_log))    
 if __name__ == "__main__":
     app()
