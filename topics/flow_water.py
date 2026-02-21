@@ -654,8 +654,8 @@ if solve_clicked:
                     f"**Elevation Head ($z_{{elev}}$):** {z_elev:.2f} m",
                     f"**Total Head ($h_{{target}}$):** {h_target:.4f} m",
                     f"**Pore Pressure ($u$):** $(h_{{target}} - z_{{elev}}) \\cdot \\gamma_w = ({h_target:.4f} - {z_elev:.2f}) \\cdot {gamma_w} = {u_target:.2f}$ kPa",
-                    f"**Effective Stress ($\\sigma'$):** $\\sigma - u = {sigma_total:.2f} - {u_target:.2f} = \\mathbf{{{sigma_eff:.2f} \\, kPa}}$"
-                ]
+                    f"**Effective Stress ($\\sigma'$):** $\\sigma - u = {sigma_total:.2f} - {u_target:.2f} = \\mathbf{{{sigma_eff:.2f} \\, kPa}}$"]
+                
                 glass_box("\n\n".join(stress_log))
             
 if __name__ == "__main__":
