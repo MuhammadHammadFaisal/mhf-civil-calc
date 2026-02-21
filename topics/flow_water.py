@@ -99,7 +99,7 @@ def calculate_pore_pressure(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, s
 # ============================================================
 
 def app():
-    write_text("section_header", "Flow of Water Analysis")    
+
     tab1, tab2, tab3 = st.tabs(["1D Seepage", "Permeability", "Multi-Layer Seepage"])
     
     # =================================================================
