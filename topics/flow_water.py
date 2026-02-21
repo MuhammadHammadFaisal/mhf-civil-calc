@@ -478,41 +478,10 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
     # TAB 3: MULTI-LAYER SEEPAGE (EXAM QUESTIONS)
     # =================================================================
     with tab3:
-        st.info("Solve vertical seepage and stresses in stratified soils (Ref: METU CE469 Exam).")
         
         col_setup, col_viz = st.columns([2, 1.2])
-        # --- RESTORED DIAGRAM COLUMN ---
-        with col_viz:
-            write_text("subheader", "Soil Profile Preview")
-            fig3, ax3 = plt.subplots(figsize=(5, 8))
-            
-            # Using your established color palette
-            colors = {"Sand": "#E6D690", "Clay": "#B0A494", "Gravel": "#A89F91", "Silt": "#D2B48C"}
-            
-            for i, L in enumerate(layers):
-                # Draw the soil layer
-                rect = patches.Rectangle((0, L['top']), 4, L['H'], 
-                                         facecolor=L['color'], edgecolor='black', alpha=0.9)
-                ax3.add_patch(rect)
-                
-                # Label the layer
-                ax3.text(2, L['top'] + L['H']/2, f"{L['type']}\nL{L['id']}", 
-                         ha='center', fontweight='bold', fontsize=10)
-
-            # Draw Water Table line
-            ax3.axhline(water_depth, color='blue', linestyle='-.', linewidth=2, label="WT")
-            ax3.text(4.2, water_depth, "WT ▽", color='blue', fontweight='bold', fontsize=9)
-
-            # Draw the Calculation Point
-            ax3.axhline(target_depth, color='red', linestyle='--', linewidth=2.5)
-            ax3.text(4.2, target_depth, "CALC POINT", color='red', fontweight='bold', fontsize=9)
-            
-            # Set plot limits and clean up
-            ax3.set_ylim(depth_tracker + 0.5, -0.5)
-            ax3.set_xlim(-0.5, 6)
-            ax3.axis('off')
-            st.pyplot(fig3)
-            
+        
+        
         with col_setup:
             write_text("subheader", "1. Global Parameters")
             c_g1, c_g2, c_g3 = st.columns(3)
@@ -630,5 +599,36 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
 **Effective Vertical Stress ($\sigma'$):** {sigma_eff:.2f} kPa
 """
                 glass_box(res_sum)
+        # --- RESTORED DIAGRAM COLUMN ---
+        with col_viz:
+            write_text("subheader", "Soil Profile Preview")
+            fig3, ax3 = plt.subplots(figsize=(5, 8))
+            
+            # Using your established color palette
+            colors = {"Sand": "#E6D690", "Clay": "#B0A494", "Gravel": "#A89F91", "Silt": "#D2B48C"}
+            
+            for i, L in enumerate(layers):
+                # Draw the soil layer
+                rect = patches.Rectangle((0, L['top']), 4, L['H'], 
+                                         facecolor=L['color'], edgecolor='black', alpha=0.9)
+                ax3.add_patch(rect)
+                
+                # Label the layer
+                ax3.text(2, L['top'] + L['H']/2, f"{L['type']}\nL{L['id']}", 
+                         ha='center', fontweight='bold', fontsize=10)
+
+            # Draw Water Table line
+            ax3.axhline(water_depth, color='blue', linestyle='-.', linewidth=2, label="WT")
+            ax3.text(4.2, water_depth, "WT ▽", color='blue', fontweight='bold', fontsize=9)
+
+            # Draw the Calculation Point
+            ax3.axhline(target_depth, color='red', linestyle='--', linewidth=2.5)
+            ax3.text(4.2, target_depth, "CALC POINT", color='red', fontweight='bold', fontsize=9)
+            
+            # Set plot limits and clean up
+            ax3.set_ylim(depth_tracker + 0.5, -0.5)
+            ax3.set_xlim(-0.5, 6)
+            ax3.axis('off')
+            st.pyplot(fig3)
 if __name__ == "__main__":
     app()
