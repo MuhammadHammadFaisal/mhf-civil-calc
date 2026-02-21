@@ -124,7 +124,7 @@ def app():
             with c2:
                 val_y = st.number_input("Water Height above Soil (y) [m]", 0.0, step=0.5, value=2.0)
                 val_x = st.number_input("Piezometer Head at Bottom (x) [m]", 0.0, step=0.5, value=7.5)
-                gamma_w = 10.0
+                gamma_w = st.radio("γw [kN/m³]", [9.81, 10.0], index=1, horizontal=True)
           
             
             st.markdown("---")
