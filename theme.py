@@ -182,30 +182,27 @@ def glass_box(content):
 # BULLETPROOF GLASS TABLE
 # =========================================================
 def glass_table(df):
+    # Convert dataframe to HTML without the index
+    html_table = df.to_html(index=False, escape=False)
+    
+    # Wrap it in a scrollable glassmorphism container
+    custom_html = f"""
+    <div style="
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        overflow-x: auto; /* THIS ADDS THE HORIZONTAL SCROLLBAR */
+        width: 100%;
+    ">
+        <style>
+            table {{ width: 100%; border-collapse: collapse; }}
+            /* Prevent text from stacking on top of itself */
+            th, td {{ white-space: nowrap; padding: 8px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }}
+        </style>
+        {html_table}
+    </div>
     """
-    Renders a dataframe as an HTML table with inline styles to bypass 
-    Streamlit's class-stripping security sanitizer.
-    """
-    table_style = "width: 100%; background-color: rgba(0, 0, 0, 0.35); color: #E0E0E0; border-collapse: collapse; margin-bottom: 20px; font-family: sans-serif;"
-    th_style = "background-color: rgba(0, 0, 0, 0.5); font-weight: 600; color: #FFFFFF; padding: 12px 15px; text-align: left; border: none; border-bottom: 2px solid rgba(255,255,255,0.1);"
-    td_style = "padding: 12px 15px; border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #E0E0E0;"
-    
-    # Outer wrapper for the border radius
-    html = f"<div style='border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15);'><table style='{table_style}'>"
-    
-    # Headers
-    html += "<thead><tr>"
-    for col in df.columns:
-        html += f"<th style='{th_style}'>{col}</th>"
-    html += "</tr></thead><tbody>"
-    
-    # Rows
-    for _, row in df.iterrows():
-        html += "<tr style='background-color: transparent;'>"
-        for val in row:
-            html += f"<td style='{td_style}'>{val}</td>"
-        html += "</tr>"
-        
-    html += "</tbody></table></div>"
-    
-    st.markdown(html, unsafe_allow_html=True)
+    st.markdown(custom_html, unsafe_allow_html=True)
