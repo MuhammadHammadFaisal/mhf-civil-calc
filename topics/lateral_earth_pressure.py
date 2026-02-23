@@ -311,10 +311,14 @@ def app():
                 
                     # ---- SAFE CALCULATION FIX ----
 
-                    if Pa is None or Pa == 0:
-                        h_from_base = 0
-                    else:
-                        h_from_base = Mo / Pa
+                    Pa = np.trapezoid(p_array, y_array)
+                    
+                    moment_about_top = np.trapezoid(p_array * y_array, y_array)
+                    
+                    y_bar = moment_about_top / Pa if Pa != 0 else 0
+                    h_from_base = wall_height - y_bar
+                    
+                    Mo = Pa * h_from_base
                     
                     st.markdown("---")
                     
