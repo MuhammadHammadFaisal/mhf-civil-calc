@@ -58,7 +58,7 @@ def render_layers_input(prefix, label, default_layers):
             current_z += h
     return layers
 
-def calculate_stress(z_local, layers, wt_depth, surcharge, mode="Active"):
+def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active"):
     """Calculates lateral stress at a specific depth (Rankine) with Extrapolation Fix."""
     
     # 1. Safety Check
@@ -90,7 +90,7 @@ def calculate_stress(z_local, layers, wt_depth, surcharge, mode="Active"):
         sig_v += extra_depth * layers[-1]['gamma']
 
     # 4. Pore Water Pressure
-    u = (z_local - wt_depth) * GAMMA_W if z_local > wt_depth else 0.0
+    u = (z_local - wt_depth) * gamma_w if z_local > wt_depth else 0.0
     sig_v_eff = sig_v - u
     
     # 5. Lateral Earth Pressure Coefficient (K) & Stress
@@ -233,11 +233,11 @@ def app():
                 
                 # Active (Right) Calculation
                 y_steps = np.linspace(0, wall_height, 100)
-                p_right = [calculate_stress(y, right_layers, right_wt, right_q, "Active")[0] for y in y_steps]
+                p_right = [calculate_stress(y, right_layers, right_wt, right_q, gamma_w, "Active")[0] for y in y_steps]
                 
                 # Passive (Left) Calculation
                 y_steps_l = np.linspace(0, wall_height - excavation_depth, 100)
-                p_left = [calculate_stress(y, left_layers, left_wt, 0, "Passive")[0] for y in y_steps_l]
+                p_left = [calculate_stress(y, left_layers, left_wt, 0, gamma_w, "Passive")[0] for y in y_steps_l]
                 
                 # Plot Active
                 ax_s.plot(p_right, y_steps, 'r-', label="Active (Right Side)")
@@ -266,7 +266,7 @@ def app():
                 row = {"Depth (m)": float(z)}
                 
                 # Right Side
-                r_sig, r_u, r_K, r_L = calculate_stress(float(z), right_layers, right_wt, right_q, "Active")
+                r_sig, r_u, r_K, r_L = calculate_stress(float(z), right_layers, right_wt, right_q, gamma_w, "Active")
                 row["[R] Layer"] = r_L
                 row["[R] Stress"] = r_sig
                 row["[R] Ka"] = r_K
