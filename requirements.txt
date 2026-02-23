@@ -3,4 +3,5 @@ pandas
 numpy
 matplotlib
 scipy
+numpy>=2.0.0
 
