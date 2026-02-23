@@ -28,9 +28,9 @@ def app():
     
     if "1. Calculate" in calc_mode:
         with col_g1:
-            c_val = st.number_input("Cohesion (c) [kPa]", value=10.0, step=1.0)
+            c_val = st.number_input("Cohesion (c) [kPa]", value=1.0, step=1.0)
         with col_g2:
-            phi_val = st.number_input("Friction Angle (φ) [deg]", value=30.0, step=1.0)
+            phi_val = st.number_input("Friction Angle (φ) [deg]", value=28.0, step=1.0)
     
         global_params = {"c": c_val, "phi": phi_val}
     
@@ -58,12 +58,12 @@ def app():
                 c1, c2 = st.columns(2)
                 
                 # Inputs are generic "Minor" and "Major" stresses
-                sig3 = c1.number_input(f"$\sigma_3$ (Confining) [kPa]", value=50.0 + (i*50), key=f"s3_{i}")
+                sig3 = c1.number_input(f"$\sigma_3$ (Confining) [kPa]", value=100.0 + (i*50), key=f"s3_{i}")
                 
                 if "1. Calculate" in calc_mode:
                     # In this mode, we calculate the max strength based on sig3
                     # But we also let the user enter a sig1 if they want to check a specific Mohr circle against the limit
-                    sig1 = c2.number_input(f"$\sigma_1$ (Applied) [kPa]", value=120.0, key=f"s1_{i}", help="Enter the axial stress applied to the soil.")
+                    sig1 = c2.number_input(f"$\sigma_1$ (Applied) [kPa]", value=300.0, key=f"s1_{i}", help="Enter the axial stress applied to the soil.")
                 else:
                     # In back analysis, these are failure stresses from the lab
                     sig1 = c2.number_input(f"$\sigma_{{1f}}$ (Failure) [kPa]", value=150.0 + (i*150), key=f"s1f_{i}")
