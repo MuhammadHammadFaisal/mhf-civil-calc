@@ -309,16 +309,29 @@ def app():
                 
                     write_text("section_header", "Resultant Forces")
                 
-                    col1, col2 = st.columns(2)
-                    col1.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
-                    col2.metric("Resultant Location from Base (m)", f"{h_from_base:.2f}")
-                
-                    write_text("subheader", "Stability Check")
-                
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric("Overturning Moment Mo (kNm/m)", f"{Mo:.2f}")
-                    col2.metric("Resisting Moment Mr (kNm/m)", f"{Mr:.2f}")
-                    col3.metric("FS against Overturning", f"{FS_ot:.2f}")
+                    # ---- SAFE CALCULATION FIX ----
+
+                    if Pa is None or Pa == 0:
+                        h_from_base = 0
+                    else:
+                        h_from_base = Mo / Pa
+                    
+                    st.markdown("---")
+                    
+                    with st.container(border=True):
+                    
+                        write_text("section_header", "Resultant Forces")
+                    
+                        col1, col2 = st.columns(2)
+                        col1.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
+                        col2.metric("Resultant Location from Base (m)", f"{h_from_base:.2f}")
+                    
+                        write_text("subheader", "Stability Check")
+                    
+                        col1, col2, col3 = st.columns(3)
+                        col1.metric("Overturning Moment Mo (kNm/m)", f"{Mo:.2f}")
+                        col2.metric("Resisting Moment Mr (kNm/m)", f"{Mr:.2f}")
+                        col3.metric("FS against Overturning", f"{FS_ot:.2f}")
                 # =========================================
                 # PASSIVE FORCE (Pp)
                 # =========================================
