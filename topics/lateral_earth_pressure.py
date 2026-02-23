@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
+from theme import write_text, glass_box, glass_table
 # =========================================================
 # APP CONFIG
 # =========================================================
@@ -25,7 +25,7 @@ def tension_crack_depth(layer):
     
 def render_layers_input(prefix, label, default_layers):
     """Renders the input fields for soil layers dynamically."""
-    st.markdown(f"**{label}**")
+    write_text("subheader", label)
     num = st.number_input(f"No. of Layers ({prefix})", 1, 5, len(default_layers), key=f"{prefix}_num")
     layers = []
     current_z = 0.0
@@ -145,7 +145,7 @@ def app():
         col_input, col_viz = st.columns([2, 1], gap="medium")
 
         with col_input:
-            st.subheader("1. Wall Geometry")
+            write_text("subheader", "1. Wall Geometry")
             c1, c2= st.columns(2)
             with c1:
                 wall_height = st.number_input("Total Wall Height (m)", 1.0, 30.0, 9.0, step=0.5)
@@ -153,11 +153,11 @@ def app():
             with c2:
                 excavation_depth = st.number_input("Excavation Depth (Left) (m)", 0.0, wall_height, 4.5, step=0.5)
 
-            st.subheader("2. Soil Properties")
+            write_text("subheader", "2. Soil Properties")
             c1, c2= st.columns(2)
             with c1:
-                with st.container(border=True):
-                    st.caption(" Left Side (Passive / Excavated)")
+                with glass_box("Content here"):
+                    write_text("caption"," Left Side (Passive / Excavated)")
                     left_q = st.number_input("Surcharge q (kPa)", 0.0, 100.0, 50.0)
                     left_wt = st.number_input("Left WT Depth (m)", 0.0, 20.0, 1.5)
                     def_left = [
@@ -169,8 +169,8 @@ def app():
             st.write("")
             
             with c2:
-                with st.container(border=True):
-                    st.caption(" Right Side (Active / Backfill)")
+                with glass_box("Content here"):
+                    write_text("caption"," Right Side (Active / Backfill)")
                     right_q = st.number_input("Surcharge q (kPa)", min_value=0.0, value=10.0, step=5.0)
                     right_wt = st.number_input("Right WT Depth (m)", 0.0, 20.0, 6.0)    
                     def_right = [
@@ -183,7 +183,7 @@ def app():
             calc_trigger = st.button("Calculate Pressure Profile", type="primary", use_container_width=True)
 
         with col_viz:
-            st.subheader("Soil Profile Preview")
+            write_text("subheader", "Soil Profile Preview")
             fig_profile, ax_p = plt.subplots(figsize=(8, 6))
             wall_width = 1.0
             
@@ -255,7 +255,7 @@ def app():
             # --- RESULT GRAPH ---
             if calc_trigger:
                 st.markdown("---")
-                st.subheader("Pressure Graph")
+                write_text("subheader", "Pressure Graph")
             
                 fig_stress, ax_s = plt.subplots(figsize=(8, 6))
                 
@@ -303,22 +303,22 @@ def app():
             
                 Pa = np.trapezoid(p_array, y_array)
             
-                st.markdown("### Resultant Forces")
-                st.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
-                # =========================================
-                # LOCATION OF RESULTANT (CENTER OF PRESSURE)
-                # =========================================
+                st.markdown("---")
+
+                with glass_box("Content here"):
                 
-                # Moment about top of wall
-                moment_top = np.trapezoid(p_array * y_array, y_array)
+                    write_text("section_header", "Resultant Forces")
                 
-                # Depth from top
-                y_bar = moment_top / Pa if Pa != 0 else 0
+                    col1, col2 = st.columns(2)
+                    col1.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
+                    col2.metric("Resultant Location from Base (m)", f"{h_from_base:.2f}")
                 
-                # Distance from base
-                h_from_base = wall_height - y_bar
+                    write_text("subheader", "Stability Check")
                 
-                st.metric("Resultant Location from Base (m)", f"{h_from_base:.2f}")
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Overturning Moment Mo (kNm/m)", f"{Mo:.2f}")
+                    col2.metric("Resisting Moment Mr (kNm/m)", f"{Mr:.2f}")
+                    col3.metric("FS against Overturning", f"{FS_ot:.2f}")
                 # =========================================
                 # PASSIVE FORCE (Pp)
                 # =========================================
@@ -355,7 +355,7 @@ def app():
 # --- DATA TABLE & DETAILED LOGS ---
         if calc_trigger:
             st.markdown("---")
-            st.subheader("Stress Calculation Table")
+            write_text("subheader", "Stress Calculation Table")
             table_data = []
             
             # Lists to store the step-by-step math strings
@@ -426,39 +426,31 @@ def app():
                 "[R] Eff Stress": "{:.2f}", "[R] u (Water)": "{:.2f}", "[R] Ka": "{:.3f}", 
                 "[L] Eff Stress": "{:.2f}", "[L] u (Water)": "{:.2f}", "[L] Kp": "{:.3f}"
             }))
-            
+            df_formatted = df.copy()
+            glass_table(df_formatted)
             # Print the Detailed Calculation Logs
-            with st.expander("📝 Show Detailed Step-by-Step Calculations", expanded=False):
-                col_log_r, col_log_l = st.columns(2)
-                
-                with col_log_r:
-                    st.markdown("### Right Side (Active Earth Pressure)")
-                    for log in right_logs:
-                        st.markdown(log)
-                        st.markdown("---")
-                        
-                with col_log_l:
-                    st.markdown("### Left Side (Passive Earth Pressure)")
-                    for log in left_logs:
-                        st.markdown(log)
-                        st.markdown("---")
+            with st.expander("Show Detailed Step-by-Step Calculations"):
+                for log in right_logs:
+                    glass_box(log)
+                for log in left_logs:
+                    glass_box(log)
 
     # ---------------------------------------------------------
     # TAB 2: COULOMB (Wedge Theory)
     # ---------------------------------------------------------
     with tab_coulomb:
-        st.header("Coulomb's Wedge Theory")
+        write_text("section_header", "Coulomb's Wedge Theory")
         
         col_c_in, col_c_viz = st.columns([0.4, 0.6], gap="medium")
 
         with col_c_in:
-            st.subheader("1. Wall & Geometry")
+            write_text("subheader", "1. Wall & Geometry")
             H_c = st.number_input("Wall Height (H) [m]", 1.0, 20.0, 6.0)
             alpha = st.number_input("Wall Batter (α) [deg]", 0.0, 30.0, 10.0, help="Angle from vertical")
             beta_c = st.number_input("Backfill Slope (β) [deg]", 0.0, 30.0, 15.0)
             
             st.markdown("---")
-            st.subheader("2. Soil & Interface")
+            write_text("subheader", "2. Soil & Interface")
             c_soil_type = st.selectbox("Soil Type", ["Sand", "Custom"], key="c_soil_type")
             if c_soil_type == "Sand": d_phi, d_delta, d_gam = 32.0, 20.0, 18.0
             else: d_phi, d_delta, d_gam = 30.0, 15.0, 19.0
@@ -471,7 +463,7 @@ def app():
             c_calc_btn = st.button("Calculate Wedge Forces", type="primary", use_container_width=True)
 
         with col_c_viz:
-            st.subheader("Failure Wedge Diagram (FBD)")
+            write_text("subheader", "Failure Wedge Diagram (FBD)")
             
             # Constants & Geometry
             phi_r, del_r = np.radians(phi_c), np.radians(delta)
