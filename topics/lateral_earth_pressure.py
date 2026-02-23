@@ -20,7 +20,6 @@ def tension_crack_depth(layer):
     if layer['c'] == 0:
         return 0.0
     
-    # FIXED: using gamma_dry instead of gamma
     z_t = (2 * layer['c']) / (layer['gamma_dry'] * np.sqrt(Ka))
     return z_t
     
@@ -126,7 +125,7 @@ def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active
         K = (1 + np.sin(phi_r)) / (1 - np.sin(phi_r))
         sig_lat_eff = (sig_v_eff * K) + (2 * c_val * np.sqrt(K))
         
-    if sig_lat_eff < 0: sig_lat_eff = 0
+    
     sig_lat_tot = sig_lat_eff + u
     
     return sig_lat_eff, sig_lat_tot, u, K, active_layer['id']
@@ -259,19 +258,28 @@ def app():
                 st.subheader("Pressure Graph")
             
                 fig_stress, ax_s = plt.subplots(figsize=(8, 6))
-            
+                
                 y_steps = np.linspace(0, wall_height, 100)
-                p_right = [calculate_stress(y, right_layers, right_wt, right_q, gamma_w, "Active")[0] for y in y_steps]
-            
+                p_right_raw = [calculate_stress(y, right_layers, right_wt, right_q, gamma_w, "Active")[0] for y in y_steps]
+                # Cap right side at 0 for filling and calculation
+                p_right_calc = [max(0, p) for p in p_right_raw]
+                
                 y_steps_l = np.linspace(0, wall_height - excavation_depth, 100)
-                p_left = [calculate_stress(y, left_layers, left_wt, left_q, gamma_w, "Passive")[0] for y in y_steps_l]
-            
-                ax_s.plot(p_right, y_steps, 'r-')
-                ax_s.fill_betweenx(y_steps, 0, p_right, alpha=0.1)
-            
-                ax_s.plot(p_left, y_steps_l + excavation_depth, 'g-')
-                ax_s.fill_betweenx(y_steps_l + excavation_depth, 0, p_left, alpha=0.1)
-            
+                p_left_raw = [calculate_stress(y, left_layers, left_wt, left_q, gamma_w, "Passive")[0] for y in y_steps_l]
+                # Cap left side at 0 for filling and calculation
+                p_left_calc = [max(0, p) for p in p_left_raw]
+                
+                # Plot the raw lines (showing tension if any)
+                ax_s.plot(p_right_raw, y_steps, 'r-')
+                ax_s.plot(p_left_raw, y_steps_l + excavation_depth, 'g-')
+                
+                # Fill only the positive areas
+                ax_s.fill_betweenx(y_steps, 0, p_right_calc, alpha=0.1, color='red')
+                ax_s.fill_betweenx(y_steps_l + excavation_depth, 0, p_left_calc, alpha=0.1, color='green')
+                
+                # Draw a vertical line at 0 for reference
+                ax_s.axvline(0, color='black', linewidth=1, linestyle='--')
+                
                 ax_s.invert_yaxis()
                 st.pyplot(fig_stress)
             
@@ -291,7 +299,7 @@ def app():
                 # RESULTANT ACTIVE FORCE
                 # =============================
                 y_array = np.array(y_steps)
-                p_array = np.array(p_right)
+                p_array = np.array(p_right_calc)
             
                 Pa = np.trapezoid(p_array, y_array)
             
@@ -316,7 +324,7 @@ def app():
                 # =========================================
                 
                 y_array_l = np.array(y_steps_l)
-                p_array_l = np.array(p_left)
+                p_array_l = np.array(p_left_calc)
                 
                 Pp = np.trapezoid(p_array_l, y_array_l)
                 moment_top_p = np.trapezoid(p_array_l * y_array_l, y_array_l)
