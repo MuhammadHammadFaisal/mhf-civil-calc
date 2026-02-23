@@ -259,9 +259,10 @@ def app():
                 glass_table(df_summary)
     
                 write_text("subheader", "Step-by-Step Calculation")
-    
-                for line in res['log']:
-                    glass_box(line)
+                
+                full_solution = "<br><br>".join(res['log'])
+                
+                glass_box(full_solution)
     # -------------------------------------------------------------
     # MODE 2: BACK ANALYSIS
     # -------------------------------------------------------------
