@@ -290,9 +290,10 @@ def app():
                         st.metric("Friction Angle (φ)", f"{res['phi']:.2f} °")
         
                     write_text("subheader", "Derivation Steps")
-        
-                    for line in res['log']:
-                        glass_box(line)
+
+                    full_solution = "<br><br>".join(res['log'])
+                    
+                    glass_box(full_solution)
         
                     glass_box(
                         r"Final governing equation: "
