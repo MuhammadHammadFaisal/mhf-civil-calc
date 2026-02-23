@@ -156,7 +156,7 @@ def app():
             write_text("subheader", "2. Soil Properties")
             c1, c2= st.columns(2)
             with c1:
-                with glass_box("Content here"):
+                with st.container(border=True):
                     write_text("caption"," Left Side (Passive / Excavated)")
                     left_q = st.number_input("Surcharge q (kPa)", 0.0, 100.0, 50.0)
                     left_wt = st.number_input("Left WT Depth (m)", 0.0, 20.0, 1.5)
@@ -169,7 +169,7 @@ def app():
             st.write("")
             
             with c2:
-                with glass_box("Content here"):
+                with st.container(border=True):
                     write_text("caption"," Right Side (Active / Backfill)")
                     right_q = st.number_input("Surcharge q (kPa)", min_value=0.0, value=10.0, step=5.0)
                     right_wt = st.number_input("Right WT Depth (m)", 0.0, 20.0, 6.0)    
@@ -305,7 +305,7 @@ def app():
             
                 st.markdown("---")
 
-                with glass_box("Content here"):
+                with st.container(border=True):
                 
                     write_text("section_header", "Resultant Forces")
                 
