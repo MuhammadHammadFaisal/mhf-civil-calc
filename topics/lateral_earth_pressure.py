@@ -128,7 +128,7 @@ def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active
     
     sig_lat_tot = sig_lat_eff + u
     
-    return sig_lat_eff, sig_lat_tot, u, K, active_layer['id']
+    return sig_lat_eff, sig_lat_tot, u, K, active_layer['id'], sig_v
     
 # =========================================================
 # MAIN APP
@@ -352,12 +352,15 @@ def app():
                 col2.metric("Resisting Moment Mr (kNm/m)", f"{Mr:.2f}")
                 col3.metric("FS against Overturning", f"{FS_ot:.2f}")
 
-        # --- DATA TABLE ---
-        # --- DATA TABLE ---
+# --- DATA TABLE & DETAILED LOGS ---
         if calc_trigger:
             st.markdown("---")
             st.subheader("Stress Calculation Table")
             table_data = []
+            
+            # Lists to store the step-by-step math strings
+            right_logs = []
+            left_logs = []
             
             # Create a list of depths to check (Integers + just below layer boundaries to show jumps)
             depths_to_check = [float(z) for z in range(0, int(wall_height) + 1)]
@@ -369,21 +372,45 @@ def app():
             for z in depths_to_check:
                 row = {"Depth (m)": round(z, 2)}
                 
-                # Right Side
-                r_sig_eff, r_sig_tot, r_u, r_K, r_L = calculate_stress(z, right_layers, right_wt, right_q, gamma_w, "Active")
+                # --- RIGHT SIDE (ACTIVE) ---
+                r_sig_eff, r_sig_tot, r_u, r_K, r_L, r_sig_v = calculate_stress(z, right_layers, right_wt, right_q, gamma_w, "Active")
                 row["[R] Layer"] = r_L
-                row["[R] Eff Stress"] = r_sig_eff
+                row["[R] Eff Stress"] = max(0, r_sig_eff) # Cap at 0 for table display
                 row["[R] u (Water)"] = r_u
                 row["[R] Ka"] = r_K
                 
-                # Left Side
+                # Build Right Side Math Log
+                r_c = [layer['c'] for layer in right_layers if layer['id'] == r_L][0] if r_L != "None" else 0
+                r_sig_v_eff = r_sig_v - r_u
+                
+                r_log = f"**@ Depth $z = {z:.2f}$ m** (Layer {r_L})\n"
+                r_log += f"- Total Vertical: $\\sigma_v = {r_sig_v:.2f}$ kPa\n"
+                r_log += f"- Pore Pressure: $u = {r_u:.2f}$ kPa\n"
+                r_log += f"- Eff Vertical: $\\sigma_v' = \\sigma_v - u = {r_sig_v_eff:.2f}$ kPa\n"
+                r_log += f"- Eff Horizontal: $\\sigma_h' = (\\sigma_v' \\times K_a) - 2c'\\sqrt{{K_a}}$\n"
+                r_log += f"- $\\sigma_h' = ({r_sig_v_eff:.2f} \\times {r_K:.3f}) - 2({r_c})\\sqrt{{{r_K:.3f}}} = \\mathbf{{{r_sig_eff:.2f} \\text{{ kPa}}}}$\n"
+                right_logs.append(r_log)
+                
+                # --- LEFT SIDE (PASSIVE) ---
                 local_z_left = z - excavation_depth
                 if local_z_left >= 0:
-                    l_sig_eff, l_sig_tot, l_u, l_K, l_L = calculate_stress(local_z_left, left_layers, left_wt, left_q, gamma_w, "Passive")
+                    l_sig_eff, l_sig_tot, l_u, l_K, l_L, l_sig_v = calculate_stress(local_z_left, left_layers, left_wt, left_q, gamma_w, "Passive")
                     row["[L] Layer"] = l_L
                     row["[L] Eff Stress"] = l_sig_eff
                     row["[L] u (Water)"] = l_u
                     row["[L] Kp"] = l_K
+                    
+                    # Build Left Side Math Log
+                    l_c = [layer['c'] for layer in left_layers if layer['id'] == l_L][0] if l_L != "None" else 0
+                    l_sig_v_eff = l_sig_v - l_u
+                    
+                    l_log = f"**@ Depth $z = {z:.2f}$ m** (Local $z_{{exc}} = {local_z_left:.2f}$ m, Layer {l_L})\n"
+                    l_log += f"- Total Vertical: $\\sigma_v = {l_sig_v:.2f}$ kPa\n"
+                    l_log += f"- Pore Pressure: $u = {l_u:.2f}$ kPa\n"
+                    l_log += f"- Eff Vertical: $\\sigma_v' = \\sigma_v - u = {l_sig_v_eff:.2f}$ kPa\n"
+                    l_log += f"- Eff Horizontal: $\\sigma_h' = (\\sigma_v' \\times K_p) + 2c'\\sqrt{{K_p}}$\n"
+                    l_log += f"- $\\sigma_h' = ({l_sig_v_eff:.2f} \\times {l_K:.3f}) + 2({l_c})\\sqrt{{{l_K:.3f}}} = \\mathbf{{{l_sig_eff:.2f} \\text{{ kPa}}}}$\n"
+                    left_logs.append(l_log)
                 else:
                     row["[L] Layer"] = "-"
                     row["[L] Eff Stress"] = 0.0
@@ -392,12 +419,29 @@ def app():
                     
                 table_data.append(row)
             
+            # Print the Dataframe Table
             df = pd.DataFrame(table_data)
             st.dataframe(df.style.format({
                 "Depth (m)": "{:.2f}", 
                 "[R] Eff Stress": "{:.2f}", "[R] u (Water)": "{:.2f}", "[R] Ka": "{:.3f}", 
                 "[L] Eff Stress": "{:.2f}", "[L] u (Water)": "{:.2f}", "[L] Kp": "{:.3f}"
             }))
+            
+            # Print the Detailed Calculation Logs
+            with st.expander("📝 Show Detailed Step-by-Step Calculations", expanded=False):
+                col_log_r, col_log_l = st.columns(2)
+                
+                with col_log_r:
+                    st.markdown("### Right Side (Active Earth Pressure)")
+                    for log in right_logs:
+                        st.markdown(log)
+                        st.markdown("---")
+                        
+                with col_log_l:
+                    st.markdown("### Left Side (Passive Earth Pressure)")
+                    for log in left_logs:
+                        st.markdown(log)
+                        st.markdown("---")
 
     # ---------------------------------------------------------
     # TAB 2: COULOMB (Wedge Theory)
