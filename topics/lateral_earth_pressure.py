@@ -279,6 +279,56 @@ def app():
             
                 st.markdown("### Resultant Forces")
                 st.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
+                # =========================================
+                # LOCATION OF RESULTANT (CENTER OF PRESSURE)
+                # =========================================
+                
+                # Moment about top of wall
+                moment_top = np.trapz(p_array * y_array, y_array)
+                
+                # Depth from top
+                y_bar = moment_top / Pa if Pa != 0 else 0
+                
+                # Distance from base
+                h_from_base = wall_height - y_bar
+                
+                st.metric("Resultant Location from Base (m)", f"{h_from_base:.2f}")
+                # =========================================
+                # PASSIVE FORCE (Pp)
+                # =========================================
+                
+                y_array_l = np.array(global_depth_l)
+                p_array_l = np.array(p_left)
+                
+                Pp = np.trapz(p_array_l, y_array_l)
+                
+                # Moment about top
+                moment_top_p = np.trapz(p_array_l * y_array_l, y_array_l)
+                
+                # Depth from top
+                y_bar_p = moment_top_p / Pp if Pp != 0 else 0
+                
+                # Distance from base
+                h_p = wall_height - y_bar_p
+                
+                
+                # =========================================
+                # OVERTURNING & STABILITY
+                # =========================================
+                
+                Mo = Pa * h_from_base
+                Mr = Pp * h_p
+                
+                FS_ot = Mr / Mo if Mo != 0 else 0
+                
+                st.markdown("### Stability Check")
+                
+                col1, col2, col3 = st.columns(3)
+                
+                col1.metric("Overturning Moment Mo (kNm/m)", f"{Mo:.2f}")
+                col2.metric("Resisting Moment Mr (kNm/m)", f"{Mr:.2f}")
+                col3.metric("FS against Overturning", f"{FS_ot:.2f}")
+
         # --- DATA TABLE ---
         if calc_trigger:
             st.markdown("---")
