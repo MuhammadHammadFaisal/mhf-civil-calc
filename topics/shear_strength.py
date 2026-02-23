@@ -229,36 +229,39 @@ def app():
     # -------------------------------------------------------------
     if "1. Calculate" in calc_mode:
         if st.button("Calculate Strength", type="primary"):
-
+    
             st.markdown("---")
-        
+    
             t = test_data[0]
             res = calculate_strength_at_state(t, global_params)
-        
+    
             with st.container(border=True):
-        
+    
                 write_text("subheader", "Strength Results")
-        
+    
                 st.metric("Maximum Sustainable σ₁", 
                           f"{res['sig1_failure']:.2f} kPa")
-        
+    
                 if res['status'] == "SAFE":
                     st.success("Current State: STABLE")
                 else:
                     st.error("Current State: FAILURE")
-        
+    
+                write_text("subheader", "Summary")
+    
+                df_summary = pd.DataFrame([
+                    ["σ3 (kPa)", t['sig3']],
+                    ["Applied σ1 (kPa)", t['sig1']],
+                    ["Max σ1 (kPa)", res['sig1_failure']],
+                    ["Status", res['status']]
+                ], columns=["Parameter", "Value"])
+    
+                glass_table(df_summary)
+    
                 write_text("subheader", "Step-by-Step Calculation")
-        
+    
                 for line in res['log']:
                     glass_box(line)
-        df_summary = pd.DataFrame([
-            ["σ3 (kPa)", t['sig3']],
-            ["Applied σ1 (kPa)", t['sig1']],
-            ["Max σ1 (kPa)", res['sig1_failure']],
-            ["Status", res['status']]
-        ], columns=["Parameter", "Value"])
-        
-        glass_table(df_summary)
     # -------------------------------------------------------------
     # MODE 2: BACK ANALYSIS
     # -------------------------------------------------------------
