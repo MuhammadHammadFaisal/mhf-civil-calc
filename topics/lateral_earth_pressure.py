@@ -304,7 +304,12 @@ def app():
             Pa = np.trapezoid(p_array, y_array)
         
    
-            with st.container(border=True):
+            glass_box_start = """
+<div class="glass-card">
+"""
+glass_box_end = "</div>"
+
+st.markdown(glass_box_start, unsafe_allow_html=True)
             
                 write_text("section_header", "Resultant Forces")
             
@@ -379,6 +384,7 @@ def app():
                     col1.metric("Overturning Moment Mo (kNm/m)", f"{Mo:.2f}")
                     col2.metric("Resisting Moment Mr (kNm/m)", f"{Mr:.2f}")
                     col3.metric("FS against Overturning", f"{FS_ot:.2f}")
+                    st.markdown(glass_box_end, unsafe_allow_html=True)
 
 
 # --- DATA TABLE & DETAILED LOGS ---
