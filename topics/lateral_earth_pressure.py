@@ -303,8 +303,7 @@ def app():
             
                 Pa = np.trapezoid(p_array, y_array)
             
-                st.markdown("---")
-
+       
                 with st.container(border=True):
                 
                     write_text("section_header", "Resultant Forces")
@@ -365,7 +364,6 @@ def app():
                     # DISPLAY RESULTS
                     # =========================================
                     
-                    st.markdown("---")
                     
                     with st.container(border=True):
                     
