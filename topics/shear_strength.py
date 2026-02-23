@@ -10,17 +10,13 @@ def app():
     # =================================================================
     # 1. HEADER & MODE
     # =================================================================
-
-    write_text("section_header", "Mohr-Coulomb Shear Strength Analysis")
-    
     calc_mode = st.radio(
         "Calculation Goal:",
         ["1. Calculate Shear Strength (Forward)", 
          "2. Find Parameters from Lab Data (Back Analysis)"],
         horizontal=True
     )
-    
-    st.markdown("---")
+
     # =================================================================
     # 2. GLOBAL PARAMETERS (Generic)
     # =================================================================
