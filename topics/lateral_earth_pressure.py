@@ -8,7 +8,6 @@ import matplotlib.patches as patches
 # APP CONFIG
 # =========================================================
 st.set_page_config(page_title="Retaining Wall Analysis", layout="wide")
-GAMMA_W = 9.81
 
 # =========================================================
 # HELPER FUNCTIONS
@@ -129,6 +128,7 @@ def app():
             c1, c2= st.columns(2)
             with c1:
                 wall_height = st.number_input("Total Wall Height (m)", 1.0, 30.0, 9.0, step=0.5)
+                gamma_w = st.radio("γw [kN/m³]", [9.81, 10.0], index=1, horizontal=True)
             with c2:
                 excavation_depth = st.number_input("Excavation Depth (Left) (m)", 0.0, wall_height, 4.5, step=0.5)
 
