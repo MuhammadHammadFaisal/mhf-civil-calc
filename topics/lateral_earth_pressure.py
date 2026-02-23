@@ -275,7 +275,7 @@ def app():
                 y_array = np.array(y_steps)
                 p_array = np.array(p_right)
             
-                Pa = np.trapz(p_array, y_array)
+                Pa = np.trapezoid(p_array, y_array)
             
                 st.markdown("### Resultant Forces")
                 st.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
@@ -284,7 +284,7 @@ def app():
                 # =========================================
                 
                 # Moment about top of wall
-                moment_top = np.trapz(p_array * y_array, y_array)
+                moment_top = np.trapezoid(p_array * y_array, y_array)
                 
                 # Depth from top
                 y_bar = moment_top / Pa if Pa != 0 else 0
@@ -300,10 +300,10 @@ def app():
                 y_array_l = np.array(global_depth_l)
                 p_array_l = np.array(p_left)
                 
-                Pp = np.trapz(p_array_l, y_array_l)
+                Pp = np.trapezoid(p_array_l, y_array_l)
                 
                 # Moment about top
-                moment_top_p = np.trapz(p_array_l * y_array_l, y_array_l)
+                moment_top_p = np.trapezoid(p_array_l * y_array_l, y_array_l)
                 
                 # Depth from top
                 y_bar_p = moment_top_p / Pp if Pp != 0 else 0
