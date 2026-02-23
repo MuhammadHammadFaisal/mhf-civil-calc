@@ -452,13 +452,19 @@ def app():
             
             # Print the Dataframe Table
             df = pd.DataFrame(table_data)
-            st.dataframe(df.style.format({
-                "Depth (m)": "{:.2f}", 
-                "[R] Eff Stress": "{:.2f}", "[R] u (Water)": "{:.2f}", "[R] Ka": "{:.3f}", 
-                "[L] Eff Stress": "{:.2f}", "[L] u (Water)": "{:.2f}", "[L] Kp": "{:.3f}"
-            }))
-            df_formatted = df.copy()
-            glass_table(df_formatted)
+            
+            # ---- Round BEFORE displaying ----
+            df = df.round({
+                "Depth (m)": 2,
+                "[R] Eff Stress": 2,
+                "[R] u (Water)": 2,
+                "[R] Ka": 3,
+                "[L] Eff Stress": 2,
+                "[L] u (Water)": 2,
+                "[L] Kp": 3
+            })
+            
+            glass_table(df)
             # Print the Detailed Calculation Logs
             with st.expander("Show Detailed Step-by-Step Calculations"):
                 for log in right_logs:
