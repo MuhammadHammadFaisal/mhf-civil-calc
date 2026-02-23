@@ -274,7 +274,7 @@ def app():
                 # Left Side
                 local_z_left = z - excavation_depth
                 if local_z_left >= 0:
-                    l_sig, l_u, l_K, l_L = calculate_stress(local_z_left, left_layers, left_wt, 0, "Passive")
+                    l_sig, l_u, l_K, l_L = calculate_stress(local_z_left, left_layers, left_wt, 0, gamma_w, "Passive")
                     row["[L] Layer"] = l_L
                     row["[L] Stress"] = l_sig
                     row["[L] Kp"] = l_K
