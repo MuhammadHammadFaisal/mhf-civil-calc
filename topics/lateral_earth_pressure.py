@@ -296,28 +296,20 @@ def app():
                     st.success("No tension crack")
         
             # =============================
+# =============================
             # RESULTANT ACTIVE FORCE
             # =============================
             y_array = np.array(y_steps)
             p_array = np.array(p_right_calc)
         
-            Pa = np.trapezoid(p_array, y_array)
-        
-   
+            # (Note: Using np.trapz to ensure it works on all NumPy versions)
+            Pa = np.trapz(p_array, y_array)
+            moment_about_top = np.trapz(p_array * y_array, y_array)
             
+            y_bar = moment_about_top / Pa if Pa != 0 else 0
+            h_from_base = wall_height - y_bar
             
-                # ---- SAFE CALCULATION FIX ----
-
-                Pa = np.trapezoid(p_array, y_array)
-                
-                moment_about_top = np.trapezoid(p_array * y_array, y_array)
-                
-                y_bar = moment_about_top / Pa if Pa != 0 else 0
-                h_from_base = wall_height - y_bar
-                
-                Mo = Pa * h_from_base
-                
-                st.markdown("---")
+            Mo = Pa * h_from_base
                 
                 # =========================================
                 # RESULTANT ACTIVE FORCE (Pa)
