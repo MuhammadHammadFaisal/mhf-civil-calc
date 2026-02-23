@@ -132,14 +132,13 @@ def app():
             with c2:
                 excavation_depth = st.number_input("Excavation Depth (Left) (m)", 0.0, wall_height, 4.5, step=0.5)
 
-            st.markdown("---")
             st.subheader("2. Soil Properties")
             c1, c2= st.columns(2)
             with c1:
                 with st.container(border=True):
                     st.caption(" Left Side (Passive / Excavated)")
+                    left_q = st.number_input("Surcharge q (kPa)", 0.0, 100.0, 50.0)
                     left_wt = st.number_input("Left WT Depth (m)", 0.0, 20.0, 1.5)
-                    # Ensure default is deep enough, but user can change
                     def_left = [{'H': 1.5, 'g': 18.0, 'p': 38.0, 'c': 0.0}, {'H': 3.0, 'g': 20.0, 'p': 28.0, 'c': 10.0}]
                     left_layers = render_layers_input("L", "Passive Layers", def_left)
                 
