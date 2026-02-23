@@ -134,22 +134,24 @@ def app():
 
             st.markdown("---")
             st.subheader("2. Soil Properties")
-            
-            with st.container(border=True):
-                st.caption(" Left Side (Passive / Excavated)")
-                left_wt = st.number_input("Left WT Depth (m)", 0.0, 20.0, 1.5)
-                # Ensure default is deep enough, but user can change
-                def_left = [{'H': 1.5, 'g': 18.0, 'p': 38.0, 'c': 0.0}, {'H': 3.0, 'g': 20.0, 'p': 28.0, 'c': 10.0}]
-                left_layers = render_layers_input("L", "Passive Layers", def_left)
-            
+            c1, c2= st.columns(2)
+            with c1:
+                with st.container(border=True):
+                    st.caption(" Left Side (Passive / Excavated)")
+                    left_wt = st.number_input("Left WT Depth (m)", 0.0, 20.0, 1.5)
+                    # Ensure default is deep enough, but user can change
+                    def_left = [{'H': 1.5, 'g': 18.0, 'p': 38.0, 'c': 0.0}, {'H': 3.0, 'g': 20.0, 'p': 28.0, 'c': 10.0}]
+                    left_layers = render_layers_input("L", "Passive Layers", def_left)
+                
             st.write("")
             
-            with st.container(border=True):
-                st.caption(" Right Side (Active / Backfill)")
-                right_q = st.number_input("Surcharge q (kPa)", 0.0, 100.0, 50.0)
-                right_wt = st.number_input("Right WT Depth (m)", 0.0, 20.0, 6.0)
-                def_right = [{'H': 6.0, 'g': 18.0, 'p': 38.0, 'c': 0.0}, {'H': 3.0, 'g': 20.0, 'p': 28.0, 'c': 10.0}]
-                right_layers = render_layers_input("R", "Active Layers", def_right)
+            with c2:
+                with st.container(border=True):
+                    st.caption(" Right Side (Active / Backfill)")
+                    right_q = st.number_input("Surcharge q (kPa)", 0.0, 100.0, 50.0)
+                    right_wt = st.number_input("Right WT Depth (m)", 0.0, 20.0, 6.0)
+                    def_right = [{'H': 6.0, 'g': 18.0, 'p': 38.0, 'c': 0.0}, {'H': 3.0, 'g': 20.0, 'p': 28.0, 'c': 10.0}]
+                    right_layers = render_layers_input("R", "Active Layers", def_right)
             
             st.markdown("---")
             calc_trigger = st.button("Calculate Pressure Profile", type="primary", use_container_width=True)
