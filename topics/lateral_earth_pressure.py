@@ -147,7 +147,7 @@ def app():
             with c2:
                 with st.container(border=True):
                     st.caption(" Right Side (Active / Backfill)")
-                    right_q = st.number_input(     "Surcharge q (kPa)",     min_value=0.0,     value=10.0,     step=5.0 ), 100.0, 50.0)
+                    right_q = st.number_input("Surcharge q (kPa)", min_value=0.0, value=10.0, step=5.0)
                     right_wt = st.number_input("Right WT Depth (m)", 0.0, 20.0, 6.0)
                     def_right = [{'H': 6.0, 'g': 18.0, 'p': 38.0, 'c': 0.0}, {'H': 3.0, 'g': 20.0, 'p': 28.0, 'c': 10.0}]
                     right_layers = render_layers_input("R", "Active Layers", def_right)
