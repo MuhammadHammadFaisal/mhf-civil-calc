@@ -3,24 +3,28 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 import math
+import pandas as pd
+from theme import write_text, glass_box, glass_table
 
 def app():
     # =================================================================
     # 1. HEADER & MODE
     # =================================================================
 
+    write_text("section_header", "Mohr-Coulomb Shear Strength Analysis")
+    
     calc_mode = st.radio(
-        "**Calculation Goal:**",
-        ["1. Calculate Shear Strength (Forward)", "2. Find Parameters from Lab Data (Back Analysis)"],
+        "Calculation Goal:",
+        ["1. Calculate Shear Strength (Forward)", 
+         "2. Find Parameters from Lab Data (Back Analysis)"],
         horizontal=True
     )
+    
     st.markdown("---")
-
     # =================================================================
     # 2. GLOBAL PARAMETERS (Generic)
     # =================================================================
-    # We use generic 'c' and 'phi' variables so they work for BOTH
-    # Drained (c', phi') and Undrained (Cu, phi_u) problems.
+    write_text("section_header", "Material Parameters")
     
     global_params = {}
     
@@ -28,19 +32,14 @@ def app():
     
     if "1. Calculate" in calc_mode:
         with col_g1:
-            # Generic label: Works for c' (effective) or Cu (undrained)
-            c_val = st.number_input("Cohesion ($c$) [kPa]", value=10.0, step=1.0)
+            c_val = st.number_input("Cohesion (c) [kPa]", value=10.0, step=1.0)
         with col_g2:
-            # Generic label: Works for phi' (effective) or phi_u (undrained)
-            phi_val = st.number_input("Friction Angle ($\phi$) [deg]", value=30.0, step=1.0)
-        
+            phi_val = st.number_input("Friction Angle (φ) [deg]", value=30.0, step=1.0)
+    
         global_params = {"c": c_val, "phi": phi_val}
-        
+    
     else:
-        with col_g1:
-             st.info("Enter results from **2 Failure Tests** (e.g., Triaxial) to find $c$ and $\phi$.")
-        # No globals for Mode 2, they are calculated results.
-
+        st.info("Enter results from 2 failure tests to determine c and φ.")
     # =================================================================
     # 3. LAYOUT: INPUTS (Left) - VISUALIZATION (Right)
     # =================================================================
@@ -49,7 +48,7 @@ def app():
     test_data = []
     
     with col_input:
-        st.subheader("Stress State Data")
+        write_text("section_header", "Stress State Data")
         
         # Mode 1: User enters ONE state to check strength
         # Mode 2: User enters TWO states to find the line
@@ -173,7 +172,7 @@ def app():
 
     # --- VISUALIZER ---
     with col_viz:
-        st.subheader("Mohr Circle Diagram")
+        write_text("section_header", "Mohr Circle Diagram")
         fig, ax = plt.subplots(figsize=(6, 6))
         
         # Dynamic axis limits
@@ -234,51 +233,70 @@ def app():
     # -------------------------------------------------------------
     if "1. Calculate" in calc_mode:
         if st.button("Calculate Strength", type="primary"):
-            st.markdown("### Results")
-            
+
+            st.markdown("---")
+        
             t = test_data[0]
             res = calculate_strength_at_state(t, global_params)
-            
-            c_res, c_log = st.columns([1, 1.2])
-            
-            with c_res:
-                st.metric("Max Sustainable $\sigma_1$", f"{res['sig1_failure']:.2f} kPa")
-                
+        
+            with st.container(border=True):
+        
+                write_text("subheader", "Strength Results")
+        
+                st.metric("Maximum Sustainable σ₁", 
+                          f"{res['sig1_failure']:.2f} kPa")
+        
                 if res['status'] == "SAFE":
-                    st.success("Current State: **STABLE**")
-                    st.caption("Applied stress is less than strength.")
+                    st.success("Current State: STABLE")
                 else:
-                    st.error("Current State: **FAILURE**")
-                    st.caption("Applied stress exceeds soil strength.")
-
-            with c_log:
-                 with st.expander("Show Step-by-Step Calculation", expanded=True):
-                     for line in res['log']:
-                         st.write(line)
-
+                    st.error("Current State: FAILURE")
+        
+                write_text("subheader", "Step-by-Step Calculation")
+        
+                for line in res['log']:
+                    glass_box(line)
+        df_summary = pd.DataFrame([
+            ["σ3 (kPa)", t['sig3']],
+            ["Applied σ1 (kPa)", t['sig1']],
+            ["Max σ1 (kPa)", res['sig1_failure']],
+            ["Status", res['status']]
+        ], columns=["Parameter", "Value"])
+        
+        glass_table(df_summary)
     # -------------------------------------------------------------
     # MODE 2: BACK ANALYSIS
     # -------------------------------------------------------------
     else:
         if st.button("Calculate Soil Parameters", type="primary"):
-            st.markdown("### Results")
-            
-            if len(test_data) < 2:
-                st.error("You need 2 tests to find the parameters.")
-            else:
-                res = solve_parameters(test_data)
-                
-                c_res, c_log = st.columns(2)
-                
-                with c_res:
-                    st.metric("Cohesion ($c$)", f"{res['c']:.2f} kPa")
-                    st.metric("Friction Angle ($\phi$)", f"{res['phi']:.2f} °")
-                
-                with c_log:
-                    with st.expander("Show Derivation"):
-                        for line in res['log']:
-                             st.write(line)
-                        st.latex(r"\text{Using } \sigma_1 = \sigma_3 \tan^2(45 + \phi/2) + 2c\tan(45 + \phi/2)")
 
+            st.markdown("---")
+        
+            if len(test_data) < 2:
+                st.error("You need 2 tests to determine parameters.")
+            else:
+        
+                res = solve_parameters(test_data)
+        
+                with st.container(border=True):
+        
+                    write_text("subheader", "Calculated Soil Parameters")
+        
+                    col_r1, col_r2 = st.columns(2)
+        
+                    with col_r1:
+                        st.metric("Cohesion (c)", f"{res['c']:.2f} kPa")
+        
+                    with col_r2:
+                        st.metric("Friction Angle (φ)", f"{res['phi']:.2f} °")
+        
+                    write_text("subheader", "Derivation Steps")
+        
+                    for line in res['log']:
+                        glass_box(line)
+        
+                    glass_box(
+                        r"Final governing equation: "
+                        r"$\sigma_1 = \sigma_3 \tan^2(45 + \phi/2) + 2c\tan(45 + \phi/2)$"
+                    )
 if __name__ == "__main__":
     app()
