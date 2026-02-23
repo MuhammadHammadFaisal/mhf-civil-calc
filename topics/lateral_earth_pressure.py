@@ -81,18 +81,27 @@ def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active
             active_layer = l
             break
             
-    # 3. Calculate Vertical Total Stress (sig_v)
-    sig_v = surcharge
-    total_defined_depth = layers[-1]['bottom']
+    # 3. Calculate Vertical Total Stress (Layer-by-layer integration)
     
-    # Iterate layers to sum up weight
+    sig_v = surcharge
+    current_depth = 0.0
+    
     for l in layers:
-        if z_local > l['bottom']:
-            # We are deeper than this layer, add full weight
-            sig_v += l['H'] * l['gamma']
-        elif z_local > l['top']:
-            # We are inside this layer, add partial weight
-            sig_v += (z_local - l['top']) * l['gamma']
+        layer_top = current_depth
+        layer_bottom = current_depth + l["H"]
+    
+        if z_local > layer_bottom:
+            thickness = l["H"]
+        else:
+            thickness = max(0, z_local - layer_top)
+    
+        if thickness > 0:
+            sig_v += thickness * l["gamma"]
+    
+        current_depth = layer_bottom
+    
+        if z_local <= layer_bottom:
+            break
             
     # --- FIX: Extrapolate if depth exceeds defined layers ---
     if z_local > total_defined_depth:
@@ -159,7 +168,19 @@ def app():
                     st.caption(" Right Side (Active / Backfill)")
                     right_q = st.number_input("Surcharge q (kPa)", min_value=0.0, value=10.0, step=5.0)
                     right_wt = st.number_input("Right WT Depth (m)", 0.0, 20.0, 6.0)
-                    def_right = [{'H': 6.0, 'g': 18.0, 'p': 38.0, 'c': 0.0}, {'H': 3.0, 'g': 20.0, 'p': 28.0, 'c': 10.0}]
+                    def_right = [{
+    'H': 6.0,
+    'gamma_bulk': 18.0,
+    'gamma_sat': 20.0,
+    'phi': 30,
+    'c': 0
+}, {
+    'H': 6.0,
+    'gamma_bulk': 18.0,
+    'gamma_sat': 20.0,
+    'phi': 30,
+    'c': 0
+}]
                     right_layers = render_layers_input("R", "Active Layers", def_right)
             
             st.markdown("---")
@@ -301,11 +322,12 @@ def app():
                 p_array_l = np.array(p_left)
                 
                 Pp = np.trapezoid(p_array_l, y_array_l)
-                
                 moment_top_p = np.trapezoid(p_array_l * y_array_l, y_array_l)
                 
                 y_bar_p = moment_top_p / Pp if Pp != 0 else 0
-                h_p = wall_height - y_bar_p
+                
+                passive_height = wall_height - excavation_depth
+                h_p = passive_height - y_bar_p
                 
                 
                 # =========================================
