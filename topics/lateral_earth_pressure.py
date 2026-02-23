@@ -128,7 +128,7 @@ def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active
     if sig_lat_eff < 0: sig_lat_eff = 0
     sig_lat_tot = sig_lat_eff + u
     
-    return sig_lat_tot, u, K, active_layer['id']
+    return sig_lat_eff, sig_lat_tot, u, K, active_layer['id']
     
 # =========================================================
 # MAIN APP
