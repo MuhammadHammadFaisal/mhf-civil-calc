@@ -344,40 +344,50 @@ def app():
                 col3.metric("FS against Overturning", f"{FS_ot:.2f}")
 
         # --- DATA TABLE ---
+        # --- DATA TABLE ---
         if calc_trigger:
             st.markdown("---")
             st.subheader("Stress Calculation Table")
             table_data = []
             
-            # Iterate depth integers
-            for z in range(0, int(wall_height) + 1):
-                row = {"Depth (m)": float(z)}
+            # Create a list of depths to check (Integers + just below layer boundaries to show jumps)
+            depths_to_check = [float(z) for z in range(0, int(wall_height) + 1)]
+            for l in right_layers:
+                if l['bottom'] < wall_height:
+                    depths_to_check.append(l['bottom'] + 0.001) # Check just inside the next layer
+            depths_to_check = sorted(list(set(depths_to_check)))
+
+            for z in depths_to_check:
+                row = {"Depth (m)": round(z, 2)}
                 
                 # Right Side
-                r_sig, r_u, r_K, r_L = calculate_stress(float(z), right_layers, right_wt, right_q, gamma_w, "Active")
+                r_sig_eff, r_sig_tot, r_u, r_K, r_L = calculate_stress(z, right_layers, right_wt, right_q, gamma_w, "Active")
                 row["[R] Layer"] = r_L
-                row["[R] Stress"] = r_sig
+                row["[R] Eff Stress"] = r_sig_eff
+                row["[R] u (Water)"] = r_u
                 row["[R] Ka"] = r_K
                 
                 # Left Side
                 local_z_left = z - excavation_depth
                 if local_z_left >= 0:
-                    l_sig, l_u, l_K, l_L = calculate_stress(local_z_left, left_layers, left_wt, left_q, gamma_w, "Passive")
+                    l_sig_eff, l_sig_tot, l_u, l_K, l_L = calculate_stress(local_z_left, left_layers, left_wt, left_q, gamma_w, "Passive")
                     row["[L] Layer"] = l_L
-                    row["[L] Stress"] = l_sig
+                    row["[L] Eff Stress"] = l_sig_eff
+                    row["[L] u (Water)"] = l_u
                     row["[L] Kp"] = l_K
                 else:
                     row["[L] Layer"] = "-"
-                    row["[L] Stress"] = 0.0
+                    row["[L] Eff Stress"] = 0.0
+                    row["[L] u (Water)"] = 0.0
                     row["[L] Kp"] = 0.0
                     
                 table_data.append(row)
             
             df = pd.DataFrame(table_data)
             st.dataframe(df.style.format({
-                "Depth (m)": "{:.1f}", 
-                "[R] Stress": "{:.2f}", "[R] Ka": "{:.3f}", 
-                "[L] Stress": "{:.2f}", "[L] Kp": "{:.3f}"
+                "Depth (m)": "{:.2f}", 
+                "[R] Eff Stress": "{:.2f}", "[R] u (Water)": "{:.2f}", "[R] Ka": "{:.3f}", 
+                "[L] Eff Stress": "{:.2f}", "[L] u (Water)": "{:.2f}", "[L] Kp": "{:.3f}"
             }))
 
     # ---------------------------------------------------------
