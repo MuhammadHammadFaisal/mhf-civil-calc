@@ -122,13 +122,16 @@ def app():
     # TAB 1: RANKINE (Standard)
     # ---------------------------------------------------------
     with tab_rankine:
-        col_input, col_viz = st.columns([0.4, 0.6], gap="medium")
+        col_input, col_viz = st.columns([2, 1], gap="medium")
 
         with col_input:
             st.subheader("1. Wall Geometry")
-            wall_height = st.number_input("Total Wall Height (m)", 1.0, 30.0, 9.0, step=0.5)
-            excavation_depth = st.number_input("Excavation Depth (Left) (m)", 0.0, wall_height, 4.5, step=0.5)
-            
+            c1, c2= st.columns(2)
+            with c1:
+                wall_height = st.number_input("Total Wall Height (m)", 1.0, 30.0, 9.0, step=0.5)
+            with c2:
+                excavation_depth = st.number_input("Excavation Depth (Left) (m)", 0.0, wall_height, 4.5, step=0.5)
+
             st.markdown("---")
             st.subheader("2. Soil Properties")
             
