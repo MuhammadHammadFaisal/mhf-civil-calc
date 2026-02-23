@@ -20,7 +20,8 @@ def tension_crack_depth(layer):
     if layer['c'] == 0:
         return 0.0
     
-    z_t = (2 * layer['c']) / (layer['gamma'] * np.sqrt(Ka))
+    # FIXED: using gamma_dry instead of gamma
+    z_t = (2 * layer['c']) / (layer['gamma_dry'] * np.sqrt(Ka))
     return z_t
     
 def render_layers_input(prefix, label, default_layers):
