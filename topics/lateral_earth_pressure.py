@@ -311,43 +311,43 @@ def app():
             
             Mo = Pa * h_from_base
                 
-                # =========================================
-                # RESULTANT ACTIVE FORCE (Pa)
-                # =========================================
-                
-                y_array = np.array(y_steps)
-                p_array = np.array(p_right_calc)
-                
-                Pa = np.trapezoid(p_array, y_array)
-                
-                moment_about_top = np.trapezoid(p_array * y_array, y_array)
-                
-                y_bar = moment_about_top / Pa if Pa != 0 else 0
-                h_from_base = wall_height - y_bar
-                
-                
-                # =========================================
-                # PASSIVE FORCE (Pp)
-                # =========================================
-                
-                y_array_l = np.array(y_steps_l)
-                p_array_l = np.array(p_left_calc)
-                
-                Pp = np.trapezoid(p_array_l, y_array_l)
-                moment_top_p = np.trapezoid(p_array_l * y_array_l, y_array_l)
-                
-                y_bar_p = moment_top_p / Pp if Pp != 0 else 0
-                passive_height = wall_height - excavation_depth
-                h_p = passive_height - y_bar_p
-                
-                
-                # =========================================
-                # OVERTURNING & STABILITY
-                # =========================================
-                
-                Mo = Pa * h_from_base
-                Mr = Pp * h_p
-                FS_ot = Mr / Mo if Mo != 0 else 0
+            # =========================================
+            # RESULTANT ACTIVE FORCE (Pa)
+            # =========================================
+            
+            y_array = np.array(y_steps)
+            p_array = np.array(p_right_calc)
+            
+            Pa = np.trapezoid(p_array, y_array)
+            
+            moment_about_top = np.trapezoid(p_array * y_array, y_array)
+            
+            y_bar = moment_about_top / Pa if Pa != 0 else 0
+            h_from_base = wall_height - y_bar
+            
+            
+            # =========================================
+            # PASSIVE FORCE (Pp)
+            # =========================================
+            
+            y_array_l = np.array(y_steps_l)
+            p_array_l = np.array(p_left_calc)
+            
+            Pp = np.trapezoid(p_array_l, y_array_l)
+            moment_top_p = np.trapezoid(p_array_l * y_array_l, y_array_l)
+            
+            y_bar_p = moment_top_p / Pp if Pp != 0 else 0
+            passive_height = wall_height - excavation_depth
+            h_p = passive_height - y_bar_p
+            
+            
+            # =========================================
+            # OVERTURNING & STABILITY
+            # =========================================
+            
+            Mo = Pa * h_from_base
+            Mr = Pp * h_p
+            FS_ot = Mr / Mo if Mo != 0 else 0
                 
                 
 # =========================================
