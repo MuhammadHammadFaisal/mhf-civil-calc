@@ -253,132 +253,132 @@ def app():
             st.pyplot(fig_profile)
 
             # --- RESULT GRAPH ---
-            if calc_trigger:
+        if calc_trigger:
+            st.markdown("---")
+            write_text("subheader", "Pressure Graph")
+        
+            fig_stress, ax_s = plt.subplots(figsize=(8, 6))
+            
+            y_steps = np.linspace(0, wall_height, 100)
+            p_right_raw = [calculate_stress(y, right_layers, right_wt, right_q, gamma_w, "Active")[0] for y in y_steps]
+            # Cap right side at 0 for filling and calculation
+            p_right_calc = [max(0, p) for p in p_right_raw]
+            
+            y_steps_l = np.linspace(0, wall_height - excavation_depth, 100)
+            p_left_raw = [calculate_stress(y, left_layers, left_wt, left_q, gamma_w, "Passive")[0] for y in y_steps_l]
+            # Cap left side at 0 for filling and calculation
+            p_left_calc = [max(0, p) for p in p_left_raw]
+            
+            # Plot the raw lines (showing tension if any)
+            ax_s.plot(p_right_raw, y_steps, 'r-')
+            ax_s.plot(p_left_raw, y_steps_l + excavation_depth, 'g-')
+            
+            # Fill only the positive areas
+            ax_s.fill_betweenx(y_steps, 0, p_right_calc, alpha=0.1, color='red')
+            ax_s.fill_betweenx(y_steps_l + excavation_depth, 0, p_left_calc, alpha=0.1, color='green')
+            
+            # Draw a vertical line at 0 for reference
+            ax_s.axvline(0, color='black', linewidth=1, linestyle='--')
+            
+            ax_s.invert_yaxis()
+            st.pyplot(fig_stress)
+        
+            # =============================
+            # TENSION CRACK
+            # =============================
+            if right_layers:
+                top_active_layer = right_layers[0]
+                zt = tension_crack_depth(top_active_layer)
+        
+                if zt > 0:
+                    st.warning(f"⚠️ Tension Crack Depth ≈ {zt:.2f} m")
+                else:
+                    st.success("No tension crack")
+        
+            # =============================
+            # RESULTANT ACTIVE FORCE
+            # =============================
+            y_array = np.array(y_steps)
+            p_array = np.array(p_right_calc)
+        
+            Pa = np.trapezoid(p_array, y_array)
+        
+   
+            with st.container(border=True):
+            
+                write_text("section_header", "Resultant Forces")
+            
+                # ---- SAFE CALCULATION FIX ----
+
+                Pa = np.trapezoid(p_array, y_array)
+                
+                moment_about_top = np.trapezoid(p_array * y_array, y_array)
+                
+                y_bar = moment_about_top / Pa if Pa != 0 else 0
+                h_from_base = wall_height - y_bar
+                
+                Mo = Pa * h_from_base
+                
                 st.markdown("---")
-                write_text("subheader", "Pressure Graph")
-            
-                fig_stress, ax_s = plt.subplots(figsize=(8, 6))
                 
-                y_steps = np.linspace(0, wall_height, 100)
-                p_right_raw = [calculate_stress(y, right_layers, right_wt, right_q, gamma_w, "Active")[0] for y in y_steps]
-                # Cap right side at 0 for filling and calculation
-                p_right_calc = [max(0, p) for p in p_right_raw]
+                # =========================================
+                # RESULTANT ACTIVE FORCE (Pa)
+                # =========================================
                 
-                y_steps_l = np.linspace(0, wall_height - excavation_depth, 100)
-                p_left_raw = [calculate_stress(y, left_layers, left_wt, left_q, gamma_w, "Passive")[0] for y in y_steps_l]
-                # Cap left side at 0 for filling and calculation
-                p_left_calc = [max(0, p) for p in p_left_raw]
-                
-                # Plot the raw lines (showing tension if any)
-                ax_s.plot(p_right_raw, y_steps, 'r-')
-                ax_s.plot(p_left_raw, y_steps_l + excavation_depth, 'g-')
-                
-                # Fill only the positive areas
-                ax_s.fill_betweenx(y_steps, 0, p_right_calc, alpha=0.1, color='red')
-                ax_s.fill_betweenx(y_steps_l + excavation_depth, 0, p_left_calc, alpha=0.1, color='green')
-                
-                # Draw a vertical line at 0 for reference
-                ax_s.axvline(0, color='black', linewidth=1, linestyle='--')
-                
-                ax_s.invert_yaxis()
-                st.pyplot(fig_stress)
-            
-                # =============================
-                # TENSION CRACK
-                # =============================
-                if right_layers:
-                    top_active_layer = right_layers[0]
-                    zt = tension_crack_depth(top_active_layer)
-            
-                    if zt > 0:
-                        st.warning(f"⚠️ Tension Crack Depth ≈ {zt:.2f} m")
-                    else:
-                        st.success("No tension crack")
-            
-                # =============================
-                # RESULTANT ACTIVE FORCE
-                # =============================
                 y_array = np.array(y_steps)
                 p_array = np.array(p_right_calc)
-            
+                
                 Pa = np.trapezoid(p_array, y_array)
-            
-       
+                
+                moment_about_top = np.trapezoid(p_array * y_array, y_array)
+                
+                y_bar = moment_about_top / Pa if Pa != 0 else 0
+                h_from_base = wall_height - y_bar
+                
+                
+                # =========================================
+                # PASSIVE FORCE (Pp)
+                # =========================================
+                
+                y_array_l = np.array(y_steps_l)
+                p_array_l = np.array(p_left_calc)
+                
+                Pp = np.trapezoid(p_array_l, y_array_l)
+                moment_top_p = np.trapezoid(p_array_l * y_array_l, y_array_l)
+                
+                y_bar_p = moment_top_p / Pp if Pp != 0 else 0
+                passive_height = wall_height - excavation_depth
+                h_p = passive_height - y_bar_p
+                
+                
+                # =========================================
+                # OVERTURNING & STABILITY
+                # =========================================
+                
+                Mo = Pa * h_from_base
+                Mr = Pp * h_p
+                FS_ot = Mr / Mo if Mo != 0 else 0
+                
+                
+                # =========================================
+                # DISPLAY RESULTS
+                # =========================================
+                
+                
                 with st.container(border=True):
                 
                     write_text("section_header", "Resultant Forces")
                 
-                    # ---- SAFE CALCULATION FIX ----
-
-                    Pa = np.trapezoid(p_array, y_array)
-                    
-                    moment_about_top = np.trapezoid(p_array * y_array, y_array)
-                    
-                    y_bar = moment_about_top / Pa if Pa != 0 else 0
-                    h_from_base = wall_height - y_bar
-                    
-                    Mo = Pa * h_from_base
-                    
-                    st.markdown("---")
-                    
-                    # =========================================
-                    # RESULTANT ACTIVE FORCE (Pa)
-                    # =========================================
-                    
-                    y_array = np.array(y_steps)
-                    p_array = np.array(p_right_calc)
-                    
-                    Pa = np.trapezoid(p_array, y_array)
-                    
-                    moment_about_top = np.trapezoid(p_array * y_array, y_array)
-                    
-                    y_bar = moment_about_top / Pa if Pa != 0 else 0
-                    h_from_base = wall_height - y_bar
-                    
-                    
-                    # =========================================
-                    # PASSIVE FORCE (Pp)
-                    # =========================================
-                    
-                    y_array_l = np.array(y_steps_l)
-                    p_array_l = np.array(p_left_calc)
-                    
-                    Pp = np.trapezoid(p_array_l, y_array_l)
-                    moment_top_p = np.trapezoid(p_array_l * y_array_l, y_array_l)
-                    
-                    y_bar_p = moment_top_p / Pp if Pp != 0 else 0
-                    passive_height = wall_height - excavation_depth
-                    h_p = passive_height - y_bar_p
-                    
-                    
-                    # =========================================
-                    # OVERTURNING & STABILITY
-                    # =========================================
-                    
-                    Mo = Pa * h_from_base
-                    Mr = Pp * h_p
-                    FS_ot = Mr / Mo if Mo != 0 else 0
-                    
-                    
-                    # =========================================
-                    # DISPLAY RESULTS
-                    # =========================================
-                    
-                    
-                    with st.container(border=True):
-                    
-                        write_text("section_header", "Resultant Forces")
-                    
-                        col1, col2 = st.columns(2)
-                        col1.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
-                        col2.metric("Resultant Location from Base (m)", f"{h_from_base:.2f}")
-                    
-                        write_text("subheader", "Stability Check")
-                    
-                        col1, col2, col3 = st.columns(3)
-                        col1.metric("Overturning Moment Mo (kNm/m)", f"{Mo:.2f}")
-                        col2.metric("Resisting Moment Mr (kNm/m)", f"{Mr:.2f}")
-                        col3.metric("FS against Overturning", f"{FS_ot:.2f}")
+                    col1, col2 = st.columns(2)
+                    col1.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
+                    col2.metric("Resultant Location from Base (m)", f"{h_from_base:.2f}")
+                
+                    write_text("subheader", "Stability Check")
+                
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Overturning Moment Mo (kNm/m)", f"{Mo:.2f}")
+                    col2.metric("Resisting Moment Mr (kNm/m)", f"{Mr:.2f}")
+                    col3.metric("FS against Overturning", f"{FS_ot:.2f}")
 
 
 # --- DATA TABLE & DETAILED LOGS ---
