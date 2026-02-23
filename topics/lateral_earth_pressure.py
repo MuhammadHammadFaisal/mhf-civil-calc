@@ -32,33 +32,31 @@ def render_layers_input(prefix, label, default_layers):
     
     for i in range(int(num)):
         with st.expander(f"Layer {i+1} ({prefix})", expanded=False):
-            # Get default values if available, else standard defaults
-            def_h = default_layers[i]['H'] if i < len(default_layers) else 3.0
-            def_g = default_layers[i]['g'] if i < len(default_layers) else 18.0
-            def_p = default_layers[i]['p'] if i < len(default_layers) else 30.0
-            def_c = default_layers[i]['c'] if i < len(default_layers) else 0.0
+            # Safely get defaults
+            def_h = default_layers[i].get('H', 3.0) if i < len(default_layers) else 3.0
+            def_gb = default_layers[i].get('g_bulk', 18.0) if i < len(default_layers) else 18.0
+            def_gs = default_layers[i].get('g_sat', 20.0) if i < len(default_layers) else 20.0
+            def_p = default_layers[i].get('p', 30.0) if i < len(default_layers) else 30.0
+            def_c = default_layers[i].get('c', 0.0) if i < len(default_layers) else 0.0
 
             type_key = f"{prefix}_type_{i}"
             soil_type = st.selectbox("Soil Type", ["Sand", "Clay", "Custom"], key=type_key)
             
-            # Auto-fill defaults based on selection
-            if soil_type == "Sand":
-                d_g, d_p, d_c = 18.0, 35.0, 0.0
-            elif soil_type == "Clay":
-                d_g, d_p, d_c = 20.0, 25.0, 20.0
-            else:
-                d_g, d_p, d_c = def_g, def_p, def_c
-
             h = st.number_input(f"H (m)", 0.1, 20.0, def_h, key=f"{prefix}_h_{i}")
+            
             c1, c2 = st.columns(2)
-            gamma = c1.number_input(f"γ (kN/m³)", 10.0, 25.0, d_g, key=f"{prefix}_g_{i}_{soil_type}")
-            phi = c2.number_input(f"ϕ' (deg)", 0.0, 45.0, d_p, key=f"{prefix}_p_{i}_{soil_type}")
-            c = st.number_input(f"c' (kPa)", 0.0, 100.0, d_c, key=f"{prefix}_c_{i}_{soil_type}")
+            gamma_bulk = c1.number_input(f"γ_bulk (kN/m³)", 10.0, 25.0, def_gb, key=f"{prefix}_gb_{i}", help="Dry/Bulk weight above WT")
+            gamma_sat = c2.number_input(f"γ_sat (kN/m³)", 10.0, 25.0, def_gs, key=f"{prefix}_gs_{i}", help="Saturated weight below WT")
+            
+            c3, c4 = st.columns(2)
+            phi = c3.number_input(f"ϕ' (deg)", 0.0, 45.0, def_p, key=f"{prefix}_p_{i}")
+            c = c4.number_input(f"c' (kPa)", 0.0, 100.0, def_c, key=f"{prefix}_c_{i}")
             
             layers.append({
                 "id": i+1, 
                 "H": h, 
-                "gamma": gamma, 
+                "gamma_bulk": gamma_bulk, 
+                "gamma_sat": gamma_sat, 
                 "phi": phi, 
                 "c": c, 
                 "top": current_z, 
@@ -67,53 +65,56 @@ def render_layers_input(prefix, label, default_layers):
             })
             current_z += h
     return layers
-
-def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active"):
-    """Calculates lateral stress at a specific depth (Rankine) with Extrapolation Fix."""
     
-    # 1. Safety Check
+def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active"):
+    """Calculates lateral stress dynamically splitting layers at the Water Table."""
     if not layers: return 0, 0, 0, "None"
     
-    # 2. Determine Active Layer Properties
-    active_layer = layers[-1] # Default to last layer (for extrapolation)
-    total_defined_depth = layers[-1]['bottom'] # Added this back
+    active_layer = layers[-1]
+    total_defined_depth = layers[-1]['bottom']
     
     for l in layers:
         if z_local <= l['bottom']: 
             active_layer = l
             break
             
-    # 3. Calculate Vertical Total Stress (Layer-by-layer integration)
+    # 3. Calculate Total Vertical Stress (Splitting at WT)
     sig_v = surcharge
-    current_depth = 0.0
     
     for l in layers:
-        layer_top = current_depth
-        layer_bottom = current_depth + l["H"]
-    
-        if z_local > layer_bottom:
-            thickness = l["H"]
-        else:
-            thickness = max(0, z_local - layer_top)
-    
-        if thickness > 0:
-            sig_v += thickness * l["gamma"]
-    
-        current_depth = layer_bottom
-    
-        if z_local <= layer_bottom:
+        layer_top = l['top']
+        layer_bottom = l['bottom']
+        
+        if z_local <= layer_top:
             break
             
-    # --- FIX: Extrapolate if depth exceeds defined layers ---
+        segment_bottom = min(z_local, layer_bottom)
+        
+        if wt_depth <= layer_top:
+            # Entirely below WT
+            sig_v += (segment_bottom - layer_top) * l['gamma_sat']
+        elif wt_depth >= segment_bottom:
+            # Entirely above WT
+            sig_v += (segment_bottom - layer_top) * l['gamma_bulk']
+        else:
+            # Water table splits this segment!
+            dry_thick = wt_depth - layer_top
+            sat_thick = segment_bottom - wt_depth
+            sig_v += (dry_thick * l['gamma_bulk']) + (sat_thick * l['gamma_sat'])
+            
+    # Extrapolate if depth exceeds defined layers
     if z_local > total_defined_depth:
         extra_depth = z_local - total_defined_depth
-        sig_v += extra_depth * layers[-1]['gamma']
+        if total_defined_depth >= wt_depth:
+            sig_v += extra_depth * layers[-1]['gamma_sat']
+        else:
+            sig_v += extra_depth * layers[-1]['gamma_bulk']
 
     # 4. Pore Water Pressure
     u = (z_local - wt_depth) * gamma_w if z_local > wt_depth else 0.0
     sig_v_eff = sig_v - u
     
-    # 5. Lateral Earth Pressure Coefficient (K) & Stress
+    # 5. Lateral Earth Pressure Coefficient
     phi_r = np.radians(active_layer['phi'])
     c_val = active_layer['c']
     
@@ -128,7 +129,7 @@ def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active
     sig_lat_tot = sig_lat_eff + u
     
     return sig_lat_tot, u, K, active_layer['id']
-
+    
 # =========================================================
 # MAIN APP
 # =========================================================
@@ -159,7 +160,10 @@ def app():
                     st.caption(" Left Side (Passive / Excavated)")
                     left_q = st.number_input("Surcharge q (kPa)", 0.0, 100.0, 50.0)
                     left_wt = st.number_input("Left WT Depth (m)", 0.0, 20.0, 1.5)
-                    def_left = [{'H': 1.5, 'g': 18.0, 'p': 38.0, 'c': 0.0}, {'H': 3.0, 'g': 20.0, 'p': 28.0, 'c': 10.0}]
+                    def_left = [
+                        {'H': 1.5, 'g_bulk': 18.0, 'g_sat': 18.0, 'p': 38.0, 'c': 0.0}, 
+                        {'H': 3.0, 'g_bulk': 20.0, 'g_sat': 20.0, 'p': 28.0, 'c': 10.0}
+                    ]
                     left_layers = render_layers_input("L", "Passive Layers", def_left)
                 
             st.write("")
@@ -168,20 +172,11 @@ def app():
                 with st.container(border=True):
                     st.caption(" Right Side (Active / Backfill)")
                     right_q = st.number_input("Surcharge q (kPa)", min_value=0.0, value=10.0, step=5.0)
-                    right_wt = st.number_input("Right WT Depth (m)", 0.0, 20.0, 6.0)
-                    def_right = [{
-    'H': 6.0,
-    'gamma_bulk': 18.0,
-    'gamma_sat': 20.0,
-    'phi': 30,
-    'c': 0
-}, {
-    'H': 6.0,
-    'gamma_bulk': 18.0,
-    'gamma_sat': 20.0,
-    'phi': 30,
-    'c': 0
-}]
+                    right_wt = st.number_input("Right WT Depth (m)", 0.0, 20.0, 6.0)    
+                    def_right = [
+                        {'H': 6.0, 'g_bulk': 18.0, 'g_sat': 18.0, 'p': 38.0, 'c': 0.0}, 
+                        {'H': 3.0, 'g_bulk': 20.0, 'g_sat': 20.0, 'p': 28.0, 'c': 10.0}
+                    ]
                     right_layers = render_layers_input("R", "Active Layers", def_right)
             
             st.markdown("---")
@@ -207,7 +202,7 @@ def app():
                 color = '#E6D690' if l['type'] == "Sand" else ('#B0A494' if l['type'] == "Clay" else '#C1B088')
                 rect = patches.Rectangle((wall_width/2, current_y - h), 6, h, facecolor=color, edgecolor='gray', alpha=0.6)
                 ax_p.add_patch(rect)
-                ax_p.text(wall_width/2 + 3, current_y - h/2, f"{l['type']}\n$\\gamma={l['gamma']}$", ha='center', va='center', fontsize=9)
+                ax_p.text(wall_width/2 + 3, current_y - h/2, f"{l['type']}\n$\\gamma_b={l['gamma_bulk']}$", ha='center', va='center', fontsize=9)
                 current_y -= h
             
             # [FIX] Right Side Extrapolation (Fill to bottom)
@@ -224,7 +219,7 @@ def app():
                 color = '#E6D690' if l['type'] == "Sand" else ('#B0A494' if l['type'] == "Clay" else '#C1B088')
                 rect = patches.Rectangle((-wall_width/2 - 6, current_y - h), 6, h, facecolor=color, edgecolor='gray', alpha=0.6)
                 ax_p.add_patch(rect)
-                ax_p.text(-wall_width/2 - 3, current_y - h/2, f"{l['type']}\n$\\gamma={l['gamma']}$", ha='center', va='center', fontsize=9)
+                ax_p.text(-wall_width/2 - 3, current_y - h/2, f"{l['type']}\n$\\gamma_b={l['gamma_bulk']}$", ha='center', va='center', fontsize=9)
                 current_y -= h
                 
             # [FIX] Left Side Extrapolation (Mandatory touch bottom)
