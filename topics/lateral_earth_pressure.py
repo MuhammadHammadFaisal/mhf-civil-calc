@@ -76,13 +76,14 @@ def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active
     
     # 2. Determine Active Layer Properties
     active_layer = layers[-1] # Default to last layer (for extrapolation)
+    total_defined_depth = layers[-1]['bottom'] # Added this back
+    
     for l in layers:
         if z_local <= l['bottom']: 
             active_layer = l
             break
             
     # 3. Calculate Vertical Total Stress (Layer-by-layer integration)
-    
     sig_v = surcharge
     current_depth = 0.0
     
