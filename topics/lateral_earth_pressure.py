@@ -297,18 +297,14 @@ def app():
                 # PASSIVE FORCE (Pp)
                 # =========================================
                 
-                y_array_l = np.array(global_depth_l)
+                y_array_l = np.array(y_steps_l)
                 p_array_l = np.array(p_left)
                 
                 Pp = np.trapezoid(p_array_l, y_array_l)
                 
-                # Moment about top
                 moment_top_p = np.trapezoid(p_array_l * y_array_l, y_array_l)
                 
-                # Depth from top
                 y_bar_p = moment_top_p / Pp if Pp != 0 else 0
-                
-                # Distance from base
                 h_p = wall_height - y_bar_p
                 
                 
