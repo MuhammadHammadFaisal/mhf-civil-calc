@@ -13,6 +13,16 @@ st.set_page_config(page_title="Retaining Wall Analysis", layout="wide")
 # HELPER FUNCTIONS
 # =========================================================
 
+def tension_crack_depth(layer):
+    phi_r = np.radians(layer['phi'])
+    Ka = (1 - np.sin(phi_r)) / (1 + np.sin(phi_r))
+    
+    if layer['c'] == 0:
+        return 0.0
+    
+    z_t = (2 * layer['c']) / (layer['gamma'] * np.sqrt(Ka))
+    return z_t
+    
 def render_layers_input(prefix, label, default_layers):
     """Renders the input fields for soil layers dynamically."""
     st.markdown(f"**{label}**")
@@ -229,32 +239,46 @@ def app():
             if calc_trigger:
                 st.markdown("---")
                 st.subheader("Pressure Graph")
+            
                 fig_stress, ax_s = plt.subplots(figsize=(8, 6))
-                
-                # Active (Right) Calculation
+            
                 y_steps = np.linspace(0, wall_height, 100)
                 p_right = [calculate_stress(y, right_layers, right_wt, right_q, gamma_w, "Active")[0] for y in y_steps]
-                
-                # Passive (Left) Calculation
+            
                 y_steps_l = np.linspace(0, wall_height - excavation_depth, 100)
-                p_left = [calculate_stress(y, left_layers, left_wt, 0, gamma_w, "Passive")[0] for y in y_steps_l]
-                
-                # Plot Active
-                ax_s.plot(p_right, y_steps, 'r-', label="Active (Right Side)")
-                ax_s.fill_betweenx(y_steps, 0, p_right, color='red', alpha=0.1)
-                
-                # Plot Passive (Adjust depth to global coordinates)
-                global_depth_l = y_steps_l + excavation_depth
-                ax_s.plot(p_left, global_depth_l, 'g-', label="Passive (Left Side)")
-                ax_s.fill_betweenx(global_depth_l, 0, p_left, color='green', alpha=0.1)
-                
+                p_left = [calculate_stress(y, left_layers, left_wt, left_q, gamma_w, "Passive")[0] for y in y_steps_l]
+            
+                ax_s.plot(p_right, y_steps, 'r-')
+                ax_s.fill_betweenx(y_steps, 0, p_right, alpha=0.1)
+            
+                ax_s.plot(p_left, y_steps_l + excavation_depth, 'g-')
+                ax_s.fill_betweenx(y_steps_l + excavation_depth, 0, p_left, alpha=0.1)
+            
                 ax_s.invert_yaxis()
-                ax_s.set_ylabel("Depth (m)")
-                ax_s.set_xlabel("Lateral Earth Pressure (kPa)")
-                ax_s.grid(True, linestyle='--')
-                ax_s.legend()
                 st.pyplot(fig_stress)
-
+            
+                # =============================
+                # TENSION CRACK
+                # =============================
+                if right_layers:
+                    top_active_layer = right_layers[0]
+                    zt = tension_crack_depth(top_active_layer)
+            
+                    if zt > 0:
+                        st.warning(f"⚠️ Tension Crack Depth ≈ {zt:.2f} m")
+                    else:
+                        st.success("No tension crack")
+            
+                # =============================
+                # RESULTANT ACTIVE FORCE
+                # =============================
+                y_array = np.array(y_steps)
+                p_array = np.array(p_right)
+            
+                Pa = np.trapz(p_array, y_array)
+            
+                st.markdown("### Resultant Forces")
+                st.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
         # --- DATA TABLE ---
         if calc_trigger:
             st.markdown("---")
@@ -274,7 +298,7 @@ def app():
                 # Left Side
                 local_z_left = z - excavation_depth
                 if local_z_left >= 0:
-                    l_sig, l_u, l_K, l_L = calculate_stress(local_z_left, left_layers, left_wt, 0, gamma_w, "Passive")
+                    l_sig, l_u, l_K, l_L = calculate_stress(local_z_left, left_layers, left_wt, left_q, gamma_w, "Passive")
                     row["[L] Layer"] = l_L
                     row["[L] Stress"] = l_sig
                     row["[L] Kp"] = l_K
