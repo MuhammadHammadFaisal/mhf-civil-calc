@@ -343,6 +343,7 @@ def app():
 * **FS against Overturning**: {FS_ot:.2f}
 
 </div>"""
+                glass_box(results_summary)
             with col_graph:
                 st.pyplot(fig_stress)
                 plt.close(fig_stress) 
