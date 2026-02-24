@@ -327,25 +327,99 @@ def app():
             Mr = Pp * h_p
             FS_ot = Mr / Mo if Mo != 0 else 0
             
-            # =========================================
-            # DISPLAY RESULTS
-            # =========================================
             st.markdown("---")
-            
-            glass_box("""
-            ### Resultant Forces
-            """)
-            
-            col1, col2 = st.columns(2)
-            col1.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
-            col2.metric("Resultant Location from Base (m)", f"{h_from_base:.2f}")
-            
-            st.markdown("### Stability Check")
-            
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Overturning Moment Mo (kNm/m)", f"{Mo:.2f}")
-            col2.metric("Resisting Moment Mr (kNm/m)", f"{Mr:.2f}")
-            col3.metric("FS against Overturning", f"{FS_ot:.2f}")
+# =========================================
+        # DISPLAY RESULTS
+        # =========================================
+
+        st.markdown("---")
+
+        write_text("section_header", "Resultant Forces")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.metric(
+                "Active Force Pa (kN/m)",
+                f"{Pa:.2f}"
+            )
+
+        with col2:
+            st.metric(
+                "Resultant Location from Base (m)",
+                f"{h_from_base:.2f}"
+            )
+
+        st.markdown("---")
+
+        write_text("section_header", "Stability Check")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric(
+                "Overturning Moment Mo (kNm/m)",
+                f"{Mo:.2f}"
+            )
+
+        with col2:
+            st.metric(
+                "Resisting Moment Mr (kNm/m)",
+                f"{Mr:.2f}"
+            )
+
+        with col3:
+            st.metric(
+                "FS against Overturning",
+                f"{FS_ot:.2f}"
+            )
+# ===============================
+# RESULTANT FORCES (Glass Box)
+# ===============================
+with st.container():
+    glass_box("Resultant Forces")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric(
+            "Active Force Pa (kN/m)",
+            f"{Pa:.2f}"
+        )
+
+    with col2:
+        st.metric(
+            "Resultant Location from Base (m)",
+            f"{h_from_base:.2f}"
+        )
+
+st.markdown("---")
+
+# ===============================
+# STABILITY CHECK (Glass Box)
+# ===============================
+with st.container():
+    glass_box("Stability Check")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric(
+            "Overturning Moment Mo (kNm/m)",
+            f"{Mo:.2f}"
+        )
+
+    with col2:
+        st.metric(
+            "Resisting Moment Mr (kNm/m)",
+            f"{Mr:.2f}"
+        )
+
+    with col3:
+        st.metric(
+            "FS against Overturning",
+            f"{FS_ot:.2f}"
+        )
 
 # --- DATA TABLE & DETAILED LOGS ---
         if calc_trigger:
