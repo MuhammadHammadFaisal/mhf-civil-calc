@@ -34,7 +34,7 @@ jobs:
           from webdriver_manager.chrome import ChromeDriverManager
           import time
 
-          url = "https://mhf-civil-calc-development.streamlit.app"
+          url = "https://mhf-civil-calc.streamlit.app"
 
           options = Options()
           options.add_argument("--headless=new")
