@@ -330,22 +330,19 @@ def app():
                 else:
                     st.success("No tension crack")
                 
-                glass_box("""
-                Resultant Forces
-                """)
-                
-                sub_col1, sub_col2 = st.columns(2)
-                sub_col1.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
-                sub_col2.metric("Loc. from Base (m)", f"{h_from_base:.2f}")
-                
-                st.markdown("### Stability Check")
-                
-                sub_col3, sub_col4 = st.columns(2)
-                sub_col3.metric("Overturning Mo (kNm/m)", f"{Mo:.2f}")
-                sub_col4.metric("Resisting Mr (kNm/m)", f"{Mr:.2f}")
-                
-                st.metric("FS against Overturning", f"{FS_ot:.2f}")
+                # Combine all results into a single formatted string, left-aligned to match your step-by-step logs
+                results_summary = f"""<div style='text-align: left;'>
 
+#### Resultant Forces
+* **Active Force $P_a$**: {Pa:.2f} kN/m
+* **Loc. from Base**: {h_from_base:.2f} m
+
+#### Stability Check
+* **Overturning Moment $M_o$**: {Mo:.2f} kNm/m
+* **Resisting Moment $M_r$**: {Mr:.2f} kNm/m
+* **FS against Overturning**: {FS_ot:.2f}
+
+</div>"""
             with col_graph:
                 st.pyplot(fig_stress)
                 plt.close(fig_stress) 
