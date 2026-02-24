@@ -301,8 +301,8 @@ def app():
             y_array = np.array(y_steps)
             p_array = np.array(p_right_calc)
         
-            Pa = np.trapz(p_array, y_array)
-            moment_about_top = np.trapz(p_array * y_array, y_array)
+            Pa = np.trapezoid(p_array, y_array)
+            moment_about_top = np.trapezoid(p_array * y_array, y_array)
             
             y_bar = moment_about_top / Pa if Pa != 0 else 0
             h_from_base = wall_height - y_bar
@@ -313,8 +313,8 @@ def app():
             y_array_l = np.array(y_steps_l)
             p_array_l = np.array(p_left_calc)
             
-            Pp = np.trapz(p_array_l, y_array_l)
-            moment_top_p = np.trapz(p_array_l * y_array_l, y_array_l)
+            Pp = np.trapezoid(p_array_l, y_array_l)
+            moment_top_p = np.trapezoid(p_array_l * y_array_l, y_array_l)
             
             y_bar_p = moment_top_p / Pp if Pp != 0 else 0
             passive_height = wall_height - excavation_depth
