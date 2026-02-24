@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from theme import write_text, glass_box, glass_table
+
 # =========================================================
 # APP CONFIG
 # =========================================================
@@ -68,7 +69,7 @@ def render_layers_input(prefix, label, default_layers):
     
 def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active"):
     """Calculates lateral stress dynamically splitting layers at the Water Table."""
-    if not layers: return 0, 0, 0, "None"
+    if not layers: return 0, 0, 0, "None", 0
     
     active_layer = layers[-1]
     total_defined_depth = layers[-1]['bottom']
@@ -125,7 +126,6 @@ def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active
         K = (1 + np.sin(phi_r)) / (1 - np.sin(phi_r))
         sig_lat_eff = (sig_v_eff * K) + (2 * c_val * np.sqrt(K))
         
-    
     sig_lat_tot = sig_lat_eff + u
     
     return sig_lat_eff, sig_lat_tot, u, K, active_layer['id'], sig_v
@@ -134,7 +134,6 @@ def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active
 # MAIN APP
 # =========================================================
 def app():
-
     
     tab_rankine, tab_coulomb = st.tabs(["1. Rankine's Theory (Wall Profile)", "2. Coulomb's Wedge Theory"])
 
@@ -207,7 +206,7 @@ def app():
             
             # [FIX] Right Side Extrapolation (Fill to bottom)
             if current_y > -2:
-                last_l = right_layers[-1] if right_layers else {'type': 'Sand', 'gamma': 18.0}
+                last_l = right_layers[-1] if right_layers else {'type': 'Sand', 'gamma_dry': 18.0}
                 color = '#E6D690' if last_l['type'] == "Sand" else ('#B0A494' if last_l['type'] == "Clay" else '#C1B088')
                 rect = patches.Rectangle((wall_width/2, -2), 6, current_y - (-2), facecolor=color, edgecolor='gray', alpha=0.4)
                 ax_p.add_patch(rect)
@@ -223,18 +222,13 @@ def app():
                 current_y -= h
                 
             # [FIX] Left Side Extrapolation (Mandatory touch bottom)
-            # If the user-defined layers don't reach y=0 (bottom of wall) or y=-2 (plot limit), fill it.
             if current_y > -2:
-                # Use last layer properties
-                last_l = left_layers[-1] if left_layers else {'type': 'Sand', 'gamma': 18.0}
+                last_l = left_layers[-1] if left_layers else {'type': 'Sand', 'gamma_dry': 18.0}
                 color = '#E6D690' if last_l['type'] == "Sand" else ('#B0A494' if last_l['type'] == "Clay" else '#C1B088')
                 
-                # Draw filling rectangle
                 rect = patches.Rectangle((-wall_width/2 - 6, -2), 6, current_y - (-2), facecolor=color, edgecolor='gray', alpha=0.6)
                 ax_p.add_patch(rect)
-                # Label it clearly
                 ax_p.text(-wall_width/2 - 3, (current_y + 0)/2, f"(Extrapolated)\n{last_l['type']}", ha='center', va='center', fontsize=8, style='italic', color='#333')
-
             
             # Surcharge Arrows
             if right_q > 0:
@@ -252,8 +246,8 @@ def app():
             ax_p.axis('off')
             st.pyplot(fig_profile)
 
-            # --- RESULT GRAPH ---
-       if calc_trigger:
+        # --- RESULT GRAPH ---
+        if calc_trigger:
             st.markdown("---")
             
             # =========================================
@@ -312,7 +306,7 @@ def app():
             # =========================================
             # 2. BUILD THE GRAPH (Don't display it yet)
             # =========================================
-            fig_stress, ax_s = plt.subplots(figsize=(6, 8)) # Made it a bit taller to fit nicely in a column
+            fig_stress, ax_s = plt.subplots(figsize=(6, 8)) 
             ax_s.plot(p_right_raw, y_steps, 'r-')
             ax_s.plot(p_left_raw, y_steps_l + excavation_depth, 'g-')
             
@@ -326,7 +320,7 @@ def app():
             # =========================================
             # 3. DISPLAY UI: LEFT (TEXT) & RIGHT (GRAPH)
             # =========================================
-            col_text, col_graph = st.columns([1.2, 1]) # Giving slightly more width to the text column
+            col_text, col_graph = st.columns([1.2, 1]) 
             
             with col_text:
                 write_text("subheader", "Analysis Results")
@@ -340,7 +334,6 @@ def app():
                 Resultant Forces
                 """)
                 
-                # Nested columns for clean metric layout inside the left column
                 sub_col1, sub_col2 = st.columns(2)
                 sub_col1.metric("Active Force Pa (kN/m)", f"{Pa:.2f}")
                 sub_col2.metric("Loc. from Base (m)", f"{h_from_base:.2f}")
@@ -355,22 +348,21 @@ def app():
 
             with col_graph:
                 st.pyplot(fig_stress)
-                plt.close(fig_stress) # Prevent memory leak
+                plt.close(fig_stress) 
+
         # --- DATA TABLE & DETAILED LOGS ---
         if calc_trigger:
             st.markdown("---")
             write_text("subheader", "Stress Calculation Table")
             table_data = []
             
-            # Lists to store the step-by-step math strings
             right_logs = []
             left_logs = []
             
-            # Create a list of depths to check (Integers + just below layer boundaries to show jumps)
             depths_to_check = [float(z) for z in range(0, int(wall_height) + 1)]
             for l in right_layers:
                 if l['bottom'] < wall_height:
-                    depths_to_check.append(l['bottom'] + 0.001) # Check just inside the next layer
+                    depths_to_check.append(l['bottom'] + 0.001) 
             depths_to_check = sorted(list(set(depths_to_check)))
 
             for z in depths_to_check:
@@ -379,11 +371,10 @@ def app():
                 # --- RIGHT SIDE (ACTIVE) ---
                 r_sig_eff, r_sig_tot, r_u, r_K, r_L, r_sig_v = calculate_stress(z, right_layers, right_wt, right_q, gamma_w, "Active")
                 row["[R] Layer"] = r_L
-                row["[R] Eff Stress"] = max(0, r_sig_eff) # Cap at 0 for table display
+                row["[R] Eff Stress"] = max(0, r_sig_eff) 
                 row["[R] u (Water)"] = r_u
                 row["[R] Ka"] = r_K
                 
-                # Build Right Side Math Log
                 r_c = [layer['c'] for layer in right_layers if layer['id'] == r_L][0] if r_L != "None" else 0
                 r_sig_v_eff = r_sig_v - r_u
                 
@@ -404,7 +395,6 @@ def app():
                     row["[L] u (Water)"] = l_u
                     row["[L] Kp"] = l_K
                     
-                    # Build Left Side Math Log
                     l_c = [layer['c'] for layer in left_layers if layer['id'] == l_L][0] if l_L != "None" else 0
                     l_sig_v_eff = l_sig_v - l_u
                     
@@ -423,10 +413,8 @@ def app():
                     
                 table_data.append(row)
             
-            # Print the Dataframe Table
             df = pd.DataFrame(table_data)
             
-            # ---- Round BEFORE displaying ----
             df = df.round({
                 "Depth (m)": 2,
                 "[R] Eff Stress": 2,
@@ -438,7 +426,7 @@ def app():
             })
             
             glass_table(df)
-            # Print the Detailed Calculation Logs
+            
             with st.expander("Show Detailed Step-by-Step Calculations"):
                 for log in right_logs:
                     glass_box(log)
@@ -486,7 +474,6 @@ def app():
             
             # Intersection C calculation for drawing
             if rho_rad > bet_r:
-                # Intersection of two lines: Ground (slope tan(beta)) and Failure Plane (slope tan(rho))
                 wedge_x = (H_c - top_x * np.tan(bet_r)) / (np.tan(rho_rad) - np.tan(bet_r))
                 wedge_y = wedge_x * np.tan(rho_rad)
             else:
@@ -496,11 +483,9 @@ def app():
             fig_w, ax_w = plt.subplots(figsize=(8, 8))
             
             # A. GEOMETRY
-            # Wall Polygon
             wall_poly = [[0, 0], [top_x, H_c], [top_x - 1.5, H_c], [-1.5, 0]]
             ax_w.add_patch(patches.Polygon(wall_poly, facecolor='lightgrey', edgecolor='black', hatch='//'))
             
-            # Wedge Polygon
             soil_poly = [[0, 0], [top_x, H_c], [wedge_x, wedge_y]]
             ax_w.add_patch(patches.Polygon(soil_poly, facecolor='#FFE0B2', alpha=0.5, edgecolor='none'))
             
