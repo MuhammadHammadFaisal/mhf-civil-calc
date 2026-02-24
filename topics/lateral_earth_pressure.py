@@ -334,8 +334,8 @@ def app():
                 results_summary = f"""<div style='text-align: left;'>
 
 #### Resultant Forces
-* **Active Force $P_a$**: {Pa:.2f} kN/m
-* **Loc. from Base**: {h_from_base:.2f} m
+* **Active Force $P_a$**: {Pa:.2f} kN/m (at {h_from_base:.2f} m from base)
+* **Passive Force $P_p$**: {Pp:.2f} kN/m (at {h_p:.2f} m from base)
 
 #### Stability Check
 * **Overturning Moment $M_o$**: {Mo:.2f} kNm/m
