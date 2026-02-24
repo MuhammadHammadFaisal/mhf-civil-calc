@@ -356,7 +356,7 @@ def app():
             with col_graph:
                 st.pyplot(fig_stress)
                 plt.close(fig_stress) # Prevent memory leak
-# --- DATA TABLE & DETAILED LOGS ---
+        # --- DATA TABLE & DETAILED LOGS ---
         if calc_trigger:
             st.markdown("---")
             write_text("subheader", "Stress Calculation Table")
