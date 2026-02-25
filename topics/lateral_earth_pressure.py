@@ -183,7 +183,7 @@ def app():
 
         with col_viz:
             write_text("subheader", "Soil Profile Preview")
-            fig_profile, ax_p = plt.subplots(figsize=(8, 6))
+            fig_profile, ax_p = plt.subplots(figsize=(15, 6))
             wall_width = 1.0
             
             # Draw Wall (Hatched)
