@@ -141,7 +141,7 @@ def app():
     # TAB 1: RANKINE (Standard)
     # ---------------------------------------------------------
     with tab_rankine:
-        col_input, col_viz = st.columns([2, 1])
+        col_input, col_viz = st.columns([1, 1])
 
         with col_input:
             write_text("subheader", "1. Wall Geometry")
