@@ -289,7 +289,8 @@ def app():
             st.pyplot(fig)
 
         # ------------------------- RESULTS (FULL WIDTH) -------------------------
-        if st.session_state.results:
+                # ------------------------- RESULTS (FULL WIDTH) -------------------------
+        if "results" in st.session_state and st.session_state.results:
             results = st.session_state.results  # FIXED: Unified variable name
             st.divider()
             
