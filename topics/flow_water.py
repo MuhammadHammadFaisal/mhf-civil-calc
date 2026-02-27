@@ -594,46 +594,84 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
             # Ensure the plot fits the Streamlit container perfectly
             st.pyplot(fig3, use_container_width=True)
 # === CRITICAL CHANGE: Indent the RESULTS block so it is inside the tab3 block ===
-        if solve_clicked:
+                if solve_clicked:
             # --- PHASE 1: MATHEMATICAL SOLVER ---
-            sum_h_k = sum(L['H'] / L['k'] for L in layers)
-            v_seepage = (h_surface - art_head) / sum_h_k
+            # 1. Establish Datum and Boundary Heads (Datum at z=0, downwards is positive depth)
+            h_top = h_surface
             
+            # Elevation head is negative depth. Total Head = Pressure Head + Elevation Head
+            z_elev_art = -art_depth
+            h_bot = (art_p / gamma_w) + z_elev_art 
+            
+            # 2. Total Hydraulic Resistance
+            sum_h_k = sum(L['H'] / L['k'] for L in layers)
+            
+            # 3. Flow Velocity (Positive v = Downward, Negative v = Upward)
+            delta_h_total = h_top - h_bot
+            v_seepage = delta_h_total / sum_h_k
+            
+            # Determine flow direction for clean UI display
+            if v_seepage > 1e-6:
+                flow_dir = "Downward ⬇️"
+            elif v_seepage < -1e-6:
+                flow_dir = "Upward ⬆️"
+            else:
+                flow_dir = "No Flow (Hydrostatic)"
+
+            # 4. Stress and Head at Target Depth
             sigma_total = surcharge
-            sum_h_k_above = 0
+            sum_h_k_above = 0.0
+            
             for L in layers:
-                if target_depth >= L['bot']:
-                    # Entire layer is above target point
-                    if L['bot'] <= water_depth:
-                        sigma_total += L['H'] * L['g_dry']
-                    elif L['top'] >= water_depth:
-                        sigma_total += L['H'] * L['g_sat']
-                    else:
-                        # Split by water table
-                        sigma_total += (water_depth - L['top']) * L['g_dry'] + (L['bot'] - water_depth) * L['g_sat']
-                    sum_h_k_above += L['H'] / L['k']
-                elif target_depth > L['top']:
-                    # Target point is inside this layer
+                # Determine how much of the current layer is above the target calculation point
+                if target_depth <= L['top']:
+                    thick_above = 0.0
+                elif target_depth >= L['bot']:
+                    thick_above = L['H']
+                else:
                     thick_above = target_depth - L['top']
-                    if target_depth <= water_depth:
+                
+                if thick_above > 0:
+                    # Calculate Total Stress Contribution for this slice
+                    z_top_slice = L['top']
+                    z_bot_slice = z_top_slice + thick_above
+                    
+                    if z_bot_slice <= water_depth:
+                        # Slice is entirely above the water table (Dry)
                         sigma_total += thick_above * L['g_dry']
-                    elif L['top'] >= water_depth:
+                    elif z_top_slice >= water_depth:
+                        # Slice is entirely below the water table (Saturated)
                         sigma_total += thick_above * L['g_sat']
                     else:
-                        sigma_total += (water_depth - L['top']) * L['g_dry'] + (target_depth - water_depth) * L['g_sat']
+                        # Water table intersects this slice; split into dry and sat parts
+                        dry_thick = water_depth - z_top_slice
+                        sat_thick = z_bot_slice - water_depth
+                        sigma_total += (dry_thick * L['g_dry']) + (sat_thick * L['g_sat'])
+                    
+                    # Accumulate hydraulic resistance down to the target point
                     sum_h_k_above += thick_above / L['k']
-                    break # Stop calculating once target is reached
             
-            h_target = h_surface - (v_seepage * sum_h_k_above)
-            z_elev = depth_tracker - target_depth
-            u_target = (h_target - z_elev) * gamma_w
+            # Calculate Total Head at target depth
+            # v_seepage carries the sign automatically, so head drops correctly in flow direction
+            h_target = h_top - (v_seepage * sum_h_k_above)
+            
+            # Calculate Pore Pressure
+            z_elev_target = -target_depth
+            # h = (u / gamma_w) + z_elev  =>  u = (h - z_elev) * gamma_w
+            u_target = (h_target - z_elev_target) * gamma_w
+            
+            # Calculate Effective Stress
             sigma_eff = sigma_total - u_target
 
             # --- PHASE 2: DISPLAY RESULTS ---
             st.divider()
+            
+            v_display = abs(v_seepage) # Display velocity as a positive magnitude
+            
             res_sum = f"""
-### Analysis Results (@ z = {target_depth}m)
-**Flow Velocity (v):** {v_seepage:.6f} m/day
+### Analysis Results (@ z = {target_depth:.2f}m)
+**Flow Direction:** {flow_dir}
+**Flow Velocity (|v|):** {v_display:.6f} m/day
 
 **Total Vertical Stress ($\sigma$):** {sigma_total:.2f} kPa
 **Pore Water Pressure ($u$):** {u_target:.2f} kPa
@@ -642,30 +680,35 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
             glass_box(res_sum)
             
             # --- PHASE 3: DETAILED CALCULATION LOG ---
-            # FIXED INDENTATION FOR LINE 639
             with st.expander("Detailed Calculation Log", expanded=False):
                 write_text("subheader", "1. Head Distribution & Flow Rate")
                 head_log = [
-                    f"**Total Head at Top Boundary:** {h_surface:.2f} m",
-                    f"**Total Head at Artesian Measurement:** {art_head:.2f} m",
-                    f"**Total Resistance ($\sum H/k$):** {sum_h_k:.4f} day"
+                    f"**Datum Setup:** $z=0$ at Top Surface. Elevation Head = $-z$.",
+                    f"**Total Head at Top Boundary ($h_{{top}}$):** {h_top:.2f} m",
+                    f"**Total Head at Base Aquifer ($h_{{bot}}$):** $({art_p:.2f} / {gamma_w}) + ({-art_depth:.2f}) = {h_bot:.2f}$ m",
+                    f"**Total Resistance ($\\sum H/k$):** {sum_h_k:.4f} day",
+                    f"**Total Head Difference ($\\Delta H$):** $|{h_top:.2f} - {h_bot:.2f}| = {abs(delta_h_total):.4f}$ m"
                 ]
-                curr_h = h_surface
+                
+                curr_h = h_top
                 for L in layers:
+                    # Head loss magnitude for the layer
                     dh = v_seepage * (L['H'] / L['k'])
                     curr_h -= dh
-                    head_log.append(f"Layer {L['id']} ({L['type']}): $\\Delta h = {dh:.4f}$m → Head at Bottom = {curr_h:.4f}m")
+                    head_log.append(f"**Layer {L['id']} ({L['type']}):** $\\Delta h = {abs(dh):.4f}$m → Head at Bottom ($z={L['bot']}$m) = {curr_h:.4f}m")
                 
                 glass_box("\n\n".join(head_log))
 
                 write_text("subheader", "2. Stress Derivation at Target")
                 stress_log = [
-                    f"**Total Stress ($\\sigma$):** {sigma_total:.2f} kPa (including {surcharge} kPa surcharge)",
-                    f"**Total Head at Calculation Depth ($h_{{target}}$):** {h_target:.4f} m",
-                    f"**Elevation Head ($z_{{elev}}$ relative to datum):** {z_elev:.2f} m",
-                    f"**Pore Pressure ($u$):** $({h_target:.4f} - {z_elev:.2f}) \\cdot {gamma_w} = {u_target:.2f}$ kPa",
+                    f"**Total Stress ($\\sigma$):** {sigma_total:.2f} kPa (Includes {surcharge} kPa Surcharge)",
+                    f"**Hydraulic Resistance to Target ($\\sum H/k$):** {sum_h_k_above:.4f} day",
+                    f"**Total Head at Target ($h_{{target}}$):** ${h_top:.2f} - ({v_seepage:.6f} \\times {sum_h_k_above:.4f}) = {h_target:.4f}$ m",
+                    f"**Elevation Head ($z_{{elev}}$):** {-target_depth:.2f} m",
+                    f"**Pore Pressure ($u$):** $(h_{{target}} - z_{{elev}}) \\cdot \\gamma_w = ({h_target:.4f} - ({-target_depth:.2f})) \\cdot {gamma_w} = \\mathbf{{{u_target:.2f} \\, kPa}}$",
                     f"**Effective Stress ($\\sigma'$):** ${sigma_total:.2f} - {u_target:.2f} = \\mathbf{{{sigma_eff:.2f} \\, kPa}}$"
                 ]
                 glass_box("\n\n".join(stress_log))
+
 if __name__ == "__main__":
     app()
