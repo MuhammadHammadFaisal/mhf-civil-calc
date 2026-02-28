@@ -58,15 +58,15 @@ def app():
                 c1, c2 = st.columns(2)
                 
                 # Inputs are generic "Minor" and "Major" stresses
-                sig3 = c1.number_input(f"$\sigma_3$ (Confining) [kPa]", value=100.0 + (i*50), key=f"s3_{i}")
+                sig3 = c1.number_input(f"$\\sigma_3$ (Confining) [kPa]", value=100.0 + (i*50), key=f"s3_{i}")
                 
                 if "1. Calculate" in calc_mode:
                     # In this mode, we calculate the max strength based on sig3
                     # But we also let the user enter a sig1 if they want to check a specific Mohr circle against the limit
-                    sig1 = c2.number_input(f"$\sigma_1$ (Applied) [kPa]", value=300.0, key=f"s1_{i}", help="Enter the axial stress applied to the soil.")
+                    sig1 = c2.number_input(f"$\\sigma_1$ (Applied) [kPa]", value=300.0, key=f"s1_{i}", help="Enter the axial stress applied to the soil.")
                 else:
                     # In back analysis, these are failure stresses from the lab
-                    sig1 = c2.number_input(f"$\sigma_{{1f}}$ (Failure) [kPa]", value=150.0 + (i*150), key=f"s1f_{i}")
+                    sig1 = c2.number_input(f"$\\sigma_{{1f}}$ (Failure) [kPa]", value=150.0 + (i*150), key=f"s1f_{i}")
 
                 # Calculate center and radius for visualization
                 center = (sig1 + sig3) / 2
@@ -113,12 +113,12 @@ def app():
         math_log = [
             f"**1. Input Parameters:**",
             f"$c = {c}$ kPa, $\phi = {phi}^\circ$",
-            f"Confining Stress $\sigma_3 = {s3}$ kPa",
+            f"Confining Stress $\\sigma_3 = {s3}$ kPa",
             f"**2. Calculation (Mohr-Coulomb):**",
-            f"The max axial stress $\sigma_1$ before failure is:",
-            f"$\sigma_{{1,max}} = \sigma_3 \\tan^2(45+\phi/2) + 2c\\tan(45+\phi/2)$",
-            f"$\sigma_{{1,max}} = {s3:.1f} ({tan_term:.2f})^2 + 2({c:.1f})({tan_term:.2f})$",
-            f"$\\mathbf{{\sigma_{{1,max}} = {sig1_failure:.2f} \\text{{ kPa}}}}$"
+            f"The max axial stress $\\sigma_1$ before failure is:",
+            f"$\\sigma_{{1,max}} = \\sigma_3 \\tan^2(45+\phi/2) + 2c\\tan(45+\phi/2)$",
+            f"$\\sigma_{{1,max}} = {s3:.1f} ({tan_term:.2f})^2 + 2({c:.1f})({tan_term:.2f})$",
+            f"$\\mathbf{{\\sigma_{{1,max}} = {sig1_failure:.2f} \\text{{ kPa}}}}$"
         ]
         
         return {
@@ -178,7 +178,7 @@ def app():
         ax.set_ylim(0, limit * 0.6) # Y axis (Shear) is usually smaller scale
         ax.set_aspect('equal')
         ax.grid(True, linestyle='--', alpha=0.5)
-        ax.set_xlabel("Normal Stress $\sigma$ (kPa)")
+        ax.set_xlabel("Normal Stress $\\sigma$ (kPa)")
         ax.set_ylabel("Shear Stress $\\tau$ (kPa)")
         
         # Draw Circles

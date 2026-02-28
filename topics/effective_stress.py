@@ -277,9 +277,9 @@ def app():
             df_short, log_short = calculate_profile("Short Term", surcharge)
 
             def plot_results(df, title, ax):
-                ax.plot(df["Total Stress (σ)"], df["Depth (z)"], 'b-o', label=r"Total $\sigma$")
+                ax.plot(df["Total Stress (σ)"], df["Depth (z)"], 'b-o', label=r"Total $\\sigma$")
                 ax.plot(df["Pore Pressure (u)"], df["Depth (z)"], 'r--x', label=r"Pore $u$")
-                ax.plot(df["Eff. Stress (σ')"], df["Depth (z)"], 'k-s', linewidth=2, label=r"Effective $\sigma'$")
+                ax.plot(df["Eff. Stress (σ')"], df["Depth (z)"], 'k-s', linewidth=2, label=r"Effective $\\sigma'$")
                 
                 cur_h = 0
                 for l in layers:
@@ -454,13 +454,13 @@ def app():
                 with c_res_r:
                     with st.expander("Show Detailed Math", expanded=True):
                         math_content = f"""**1. Downward Resistance (Weight of Clay Plug)**
-$$\sigma_v = H_{{plug}} \\times \gamma_{{clay}} = {rem_clay:.2f} \\times {g_clay} = \mathbf{{{sigma_val:.2f} \, kPa}}$$
+$$\\sigma_v = H_{{plug}} \\times \gamma_{{clay}} = {rem_clay:.2f} \\times {g_clay} = \mathbf{{{sigma_val:.2f} \, kPa}}$$
 
 **2. Upward Uplift Pressure (Artesian)**
 $$u = (H_{{clay}} + h_{{art}}) \\times \gamma_w = ({h_clay} + {h_art}) \\times {gamma_w} = \mathbf{{{u_val:.2f} \, kPa}}$$
 
 **3. Factor of Safety**
-$$FS = \\frac{{\sigma_v}}{{u}} = \\frac{{{sigma_val:.2f}}}{{{u_val:.2f}}} = \mathbf{{{fs:.3f}}}$$
+$$FS = \\frac{{\\sigma_v}}{{u}} = \\frac{{{sigma_val:.2f}}}{{{u_val:.2f}}} = \mathbf{{{fs:.3f}}}$$
 """
                         glass_box(math_content)
 

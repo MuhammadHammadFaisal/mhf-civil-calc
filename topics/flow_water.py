@@ -300,11 +300,11 @@ def app():
 ### Analysis Results: {results['flow_type']}
 **Hydraulic Gradient (i):** {results['i']:.3f}
 
-**Total Stress ($\sigma$):** {results['sigma_total']:.2f} kPa
+**Total Stress ($\\sigma$):** {results['sigma_total']:.2f} kPa
 
 **Pore Pressure ($u$):** {results['u_val']:.2f} kPa
 
-**Effective Stress ($\sigma'$):** {results['sigma_prime_1']:.2f} kPa
+**Effective Stress ($\\sigma'$):** {results['sigma_prime_1']:.2f} kPa
 """
             glass_box(summary_text)
             
@@ -364,8 +364,8 @@ $$j = i \\cdot \\gamma_w = {results['i']:.3f} \\cdot {gamma_w} = {results['j_see
 $${logic}$$
 $$\\gamma'_{{eff}} = \\gamma' {sign} j = {results['gamma_sub']:.2f} {sign} {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \, kN/m^3$$
 
-**Step E: Final Effective Stress ($\sigma'$)**
-$$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {results['gamma_effective']:.2f} = \\mathbf{{{results['sigma_prime_2']:.2f} \, kPa}}$$
+**Step E: Final Effective Stress ($\\sigma'$)**
+$$\\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {results['gamma_effective']:.2f} = \\mathbf{{{results['sigma_prime_2']:.2f} \, kPa}}$$
 """
                 glass_box(m2_text)
     # =================================================================
@@ -676,9 +676,9 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
 # **Flow Direction:** {flow_dir}
 # **Flow Velocity (|v|):** {v_display:.6f} m/day
 
-# **Total Vertical Stress ($\sigma$):** {sigma_total:.2f} kPa
+# **Total Vertical Stress ($\\sigma$):** {sigma_total:.2f} kPa
 # **Pore Water Pressure ($u$):** {u_target:.2f} kPa
-# **Effective Vertical Stress ($\sigma'$):** {sigma_eff:.2f} kPa
+# **Effective Vertical Stress ($\\sigma'$):** {sigma_eff:.2f} kPa
 # """
 #             glass_box(res_sum)
             

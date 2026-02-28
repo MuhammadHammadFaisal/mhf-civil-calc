@@ -207,8 +207,8 @@ def app():
                 details += rf"**Given:** Thickness $H = {H}m$, Initial Void Ratio $e_0 = {p.get('e0', 'N/A')}$\n\n"
                 details += rf"**Stress Analysis:**\n"
                 details += rf"- Initial Effective Stress $\sigma'_0 = {sigma0:.2f} \ kPa$\n"
-                details += rf"- Stress Increment $\Delta\sigma = {surcharge_q:.2f} \ kPa$\n"
-                details += rf"- Final Effective Stress $\sigma'_f = \sigma'_0 + \Delta\sigma = {sigma_f:.2f} \ kPa$\n\n"
+                details += rf"- Stress Increment $\\Delta\sigma = {surcharge_q:.2f} \ kPa$\n"
+                details += rf"- Final Effective Stress $\sigma'_f = \sigma'_0 + \\Delta\sigma = {sigma_f:.2f} \ kPa$\n\n"
 
                 calc_type = "Unknown"
 
@@ -285,7 +285,7 @@ def app():
                     calc_type = "Coefficient of Volume Compressibility ($m_v$)"
                     
                     details += rf"**Formula:**\n"
-                    details += r"$$S = m_v \cdot \Delta\sigma \cdot H$$"
+                    details += r"$$S = m_v \cdot \\Delta\sigma \cdot H$$"
                     
                     S = mv * surcharge_q * H
                     
@@ -298,7 +298,7 @@ def app():
                 if L["method"] == "Method C (Δe)":
                     ef = p["ef"]
                     e0 = p["e0"]
-                    calc_type = "Void Ratio Change ($\Delta e$)"
+                    calc_type = "Void Ratio Change ($\\Delta e$)"
                     
                     details += rf"**Formula:**\n"
                     details += r"$$S = \frac{e_0 - e_f}{1+e_0} \cdot H$$"
