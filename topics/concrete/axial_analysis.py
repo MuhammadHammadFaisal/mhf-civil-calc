@@ -255,7 +255,7 @@ def app():
             Nor1 = term_conc + term_steel
             
             st.latex(r"N_{or} = 0.85 f_{cd} (A_g - A_{st}) + A_{st} f_{yd}")
-            st.latex(fr"N_{{or}} = 0.85({fcd:.2f})({Ag:.0f} - {Ast:.0f}) + {Ast:.0f}({fyd:.2f}) = \mathbf{{{Nor1/1000:.0f} \text{{ kN}}}}")
+            st.latex(fr"N_{{or}} = 0.85({fcd:.2f})({Ag:.0f} - {Ast:.0f}) + {Ast:.0f}({fyd:.2f}) = \\mathbf{{{Nor1/1000:.0f} \text{{ kN}}}}")
             
             graph_N1 = Nor1 / 1000
             graph_N2 = 0
@@ -289,14 +289,14 @@ def app():
 
                 f_cc_char = 0.85 * fc + 2 * rho_s * fy
                 f_ccd = f_cc_char / 1.5
-                st.latex(fr"f_{{ccd}} = \frac{{0.85({fc}) + 2({rho_s:.4f})({fy})}}{{1.5}} = \mathbf{{{f_ccd:.2f} \text{{ MPa}}}}")
+                st.latex(fr"f_{{ccd}} = \frac{{0.85({fc}) + 2({rho_s:.4f})({fy})}}{{1.5}} = \\mathbf{{{f_ccd:.2f} \text{{ MPa}}}}")
                 
                 term_core = f_ccd * Ack
                 term_steel_2 = Ast * fyd
                 Nor2 = term_core + term_steel_2
                 
                 st.latex(r"N_{or2} = f_{ccd} A_{ck} + A_{st} f_{yd}")
-                st.latex(fr"N_{{or2}} = {f_ccd:.2f}({Ack:.0f}) + {Ast:.0f}({fyd:.2f}) = \mathbf{{{Nor2/1000:.0f} \text{{ kN}}}}")
+                st.latex(fr"N_{{or2}} = {f_ccd:.2f}({Ack:.0f}) + {Ast:.0f}({fyd:.2f}) = \\mathbf{{{Nor2/1000:.0f} \text{{ kN}}}}")
                 
                 graph_N2 = Nor2 / 1000
                 delta = graph_N2 - graph_N1

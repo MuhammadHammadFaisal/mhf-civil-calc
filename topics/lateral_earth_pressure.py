@@ -530,11 +530,11 @@ def app():
                     Pa = 0.5 * gamma_c * (H_c**2) * Ka_c
 
                     st.markdown(r"**1. Coulomb Coefficient ($K_a$):**")
-                    st.latex(r"K_a = \frac{\cos^2(\\phi - \alpha)}{\cos^2\alpha \cos(\alpha + \delta) \left[ 1 + \sqrt{\frac{\sin(\\phi + \delta) \sin(\\phi - \beta)}{\cos(\alpha + \delta) \cos(\alpha - \beta)}} \right]^2}")
+                    st.latex(r"K_a = \frac{\cos^2(\\phi - \alpha)}{\cos^2\alpha \cos(\alpha + \delta) \left[ 1 + \\sqrt{\frac{\sin(\\phi + \delta) \\sin(\\phi - \beta)}{\cos(\alpha + \delta) \cos(\alpha - \beta)}} \right]^2}")
                     st.write(f"Substituting values: **$K_a = {Ka_c:.4f}$**")
                     
                     st.markdown(r"**2. Total Active Force ($P_a$):**")
-                    st.latex(r"P_a = \frac{1}{2} \gamma H^2 K_a")
+                    st.latex(r"P_a = \frac{1}{2} \\gamma H^2 K_a")
                     st.success(f"**Result: $P_a = {Pa:.2f}$ kN/m**")
 
 if __name__ == "__main__":

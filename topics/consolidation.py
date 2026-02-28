@@ -208,7 +208,7 @@ def app():
                 details += rf"**Stress Analysis:**\n"
                 details += rf"- Initial Effective Stress $\sigma'_0 = {sigma0:.2f} \ kPa$\n"
                 details += rf"- Stress Increment $\\Delta\sigma = {surcharge_q:.2f} \ kPa$\n"
-                details += rf"- Final Effective Stress $\sigma'_f = \sigma'_0 + \\Delta\sigma = {sigma_f:.2f} \ kPa$\n\n"
+                details += rf"- Final Effective Stress $\sigma'_f = \\sigma'_0 + \\Delta\sigma = {sigma_f:.2f} \ kPa$\n\n"
 
                 calc_type = "Unknown"
 
@@ -234,7 +234,7 @@ def app():
                     # Case 1: Normally Consolidated
                     if sigma0 >= sp:
                         calc_type = "Normally Consolidated (NC)"
-                        details += rf"- Since $\sigma'_0 \ge \sigma'_p$ ({sigma0:.1f} $\ge$ {sp}), the soil is **Normally Consolidated**.\n"
+                        details += rf"- Since $\sigma'_0 \ge \\sigma'_p$ ({sigma0:.1f} $\ge$ {sp}), the soil is **Normally Consolidated**.\n"
                         details += rf"- We use the Compression Index ($C_c$) for the full range.\n\n"
                         details += r"$$S = \frac{C_c \cdot H}{1+e_0} \cdot \log_{10}\left(\frac{\sigma'_f}{\sigma'_0}\right)$$"
                         
@@ -247,7 +247,7 @@ def app():
                     # Case 2: Over Consolidated (Remains OC)
                     elif sigma_f <= sp:
                         calc_type = "Over Consolidated (OC)"
-                        details += rf"- Since $\sigma'_f \le \sigma'_p$ ({sigma_f:.1f} $\le$ {sp}), the soil remains **Over Consolidated**.\n"
+                        details += rf"- Since $\sigma'_f \le \\sigma'_p$ ({sigma_f:.1f} $\le$ {sp}), the soil remains **Over Consolidated**.\n"
                         details += rf"- We use the Recompression Index ($C_r$) only.\n\n"
                         details += r"$$S = \frac{C_r \cdot H}{1+e_0} \cdot \log_{10}\left(\frac{\sigma'_f}{\sigma'_0}\right)$$"
                         
@@ -260,7 +260,7 @@ def app():
                     # Case 3: Transition (OC -> NC)
                     else:
                         calc_type = "Transition (OC to NC)"
-                        details += rf"- Since $\sigma'_0 < \sigma'_p < \sigma'_f$ ({sigma0:.1f} < {sp} < {sigma_f:.1f}), the loading pushes the soil past the preconsolidation pressure.\n"
+                        details += rf"- Since $\sigma'_0 < \\sigma'_p < \\sigma'_f$ ({sigma0:.1f} < {sp} < {sigma_f:.1f}), the loading pushes the soil past the preconsolidation pressure.\n"
                         details += rf"- **Part 1 (Recompression):** From $\sigma'_0$ to $\sigma'_p$ using $C_r$.\n"
                         details += rf"- **Part 2 (Virgin Compression):** From $\sigma'_p$ to $\sigma'_f$ using $C_c$.\n\n"
                         

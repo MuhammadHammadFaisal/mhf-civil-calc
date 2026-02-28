@@ -305,7 +305,7 @@ def app():
             rho_min_floor = 0.12 * (fc / fy)
             final_rho_min = max(rho_min, rho_min_floor)
             
-            st.latex(r"\rho_{s,min} = \max \left( 0.45 \frac{f_{ck}}{f_{yk}} (\frac{A_c}{A_{ck}}-1) , \ 0.12 \frac{f_{ck}}{f_{yk}} \right)")
+            st.latex(r"\rho_{s,min} = \\max \left( 0.45 \frac{f_{ck}}{f_{yk}} (\frac{A_c}{A_{ck}}-1) , \ 0.12 \frac{f_{ck}}{f_{yk}} \right)")
             st.write(f"**Required Volumetric Ratio:** {final_rho_min:.4f}")
             
             # Max Spacing Rule (TS 500)

@@ -454,13 +454,13 @@ def app():
                 with c_res_r:
                     with st.expander("Show Detailed Math", expanded=True):
                         math_content = f"""**1. Downward Resistance (Weight of Clay Plug)**
-$$\\sigma_v = H_{{plug}} \\times \gamma_{{clay}} = {rem_clay:.2f} \\times {g_clay} = \mathbf{{{sigma_val:.2f} \, kPa}}$$
+$$\\sigma_v = H_{{plug}} \\times \\gamma_{{clay}} = {rem_clay:.2f} \\times {g_clay} = \\mathbf{{{sigma_val:.2f} \\, kPa}}$$
 
 **2. Upward Uplift Pressure (Artesian)**
-$$u = (H_{{clay}} + h_{{art}}) \\times \gamma_w = ({h_clay} + {h_art}) \\times {gamma_w} = \mathbf{{{u_val:.2f} \, kPa}}$$
+$$u = (H_{{clay}} + h_{{art}}) \\times \\gamma_w = ({h_clay} + {h_art}) \\times {gamma_w} = \\mathbf{{{u_val:.2f} \\, kPa}}$$
 
 **3. Factor of Safety**
-$$FS = \\frac{{\\sigma_v}}{{u}} = \\frac{{{sigma_val:.2f}}}{{{u_val:.2f}}} = \mathbf{{{fs:.3f}}}$$
+$$FS = \\frac{{\\sigma_v}}{{u}} = \\frac{{{sigma_val:.2f}}}{{{u_val:.2f}}} = \\mathbf{{{fs:.3f}}}$$
 """
                         glass_box(math_content)
 

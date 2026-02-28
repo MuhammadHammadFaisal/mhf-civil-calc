@@ -343,29 +343,29 @@ $$\\sigma' = \\sigma - u = {results['sigma_total']:.2f} - {results['u_val']:.2f}
 
                 # Logic for sign based on flow direction
                 if results['flow_type'] == "Upward":
-                    sign, logic = "-", r"\text{Upward flow reduces effective weight: } (\gamma' - j)"
+                    sign, logic = "-", r"\text{Upward flow reduces effective weight: } (\\gamma' - j)"
                 elif results['flow_type'] == "Downward":
-                    sign, logic = "+", r"\text{Downward flow increases effective weight: } (\gamma' + j)"
+                    sign, logic = "+", r"\text{Downward flow increases effective weight: } (\\gamma' + j)"
                 else:
-                    sign, logic = "+", r"\text{Hydrostatic condition: } (\gamma')"
+                    sign, logic = "+", r"\text{Hydrostatic condition: } (\\gamma')"
 
                 # Use DOUBLE BACKSLASHES (\\) for all LaTeX commands
                 m2_text = f"""
 **Step A: Hydraulic Gradient ($i$)**
 $$i = \\frac{{\\Delta H}}{{L}} = \\frac{{|{results['H_top']:.2f} - {results['H_bot']:.2f}|}}{{{z_s:.2f}}} = {results['i']:.3f}$$
 
-**Step B: Submerged Unit Weight ($\gamma'$)**
-$$\\gamma' = \\gamma_{{sat}} - \\gamma_w = {g_sat_s:.2f} - {gamma_w} = {results['gamma_sub']:.2f} \, kN/m^3$$
+**Step B: Submerged Unit Weight ($\\gamma'$)**
+$$\\gamma' = \\gamma_{{sat}} - \\gamma_w = {g_sat_s:.2f} - {gamma_w} = {results['gamma_sub']:.2f} \\, kN/m^3$$
 
 **Step C: Seepage Force per Unit Volume ($j$)**
-$$j = i \\cdot \\gamma_w = {results['i']:.3f} \\cdot {gamma_w} = {results['j_seepage']:.2f} \, kN/m^3$$
+$$j = i \\cdot \\gamma_w = {results['i']:.3f} \\cdot {gamma_w} = {results['j_seepage']:.2f} \\, kN/m^3$$
 
-**Step D: Effective Unit Weight ($\gamma'_{{eff}}$)**
+**Step D: Effective Unit Weight ($\\gamma'_{{eff}}$)**
 $${logic}$$
-$$\\gamma'_{{eff}} = \\gamma' {sign} j = {results['gamma_sub']:.2f} {sign} {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \, kN/m^3$$
+$$\\gamma'_{{eff}} = \\gamma' {sign} j = {results['gamma_sub']:.2f} {sign} {results['j_seepage']:.2f} = {results['gamma_effective']:.2f} \\, kN/m^3$$
 
 **Step E: Final Effective Stress ($\\sigma'$)**
-$$\\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {results['gamma_effective']:.2f} = \\mathbf{{{results['sigma_prime_2']:.2f} \, kPa}}$$
+$$\\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {results['gamma_effective']:.2f} = \\mathbf{{{results['sigma_prime_2']:.2f} \\, kPa}}$$
 """
                 glass_box(m2_text)
     # =================================================================
