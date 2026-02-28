@@ -112,7 +112,7 @@ def app():
         
         math_log = [
             f"**1. Input Parameters:**",
-            f"$c = {c}$ kPa, $\\phi = {phi}^\circ$",
+            f"$c = {c}$ kPa, $\\phi = {phi}^\\circ$",
             f"Confining Stress $\\sigma_3 = {s3}$ kPa",
             f"**2. Calculation (Mohr-Coulomb):**",
             f"The max axial stress $\\sigma_1$ before failure is:",
@@ -161,7 +161,7 @@ def app():
         c_val = b / (2 * math.sqrt(m))
         
         log.append(f"1. Slope $m = ({t2['sig1']}-{t1['sig1']}) / ({t2['sig3']}-{t1['sig3']}) = {m:.3f}$")
-        log.append(f"2. $\\phi = 2(\\tan^{{-1}}(\\sqrt{{m}}) - 45^\circ) = {phi_val:.2f}^\circ$")
+        log.append(f"2. $\\phi = 2(\\tan^{{-1}}(\\sqrt{{m}}) - 45^\\circ) = {phi_val:.2f}^\\circ$")
         log.append(f"3. $c = \\text{{Intercept}} / (2\\sqrt{{m}}) = {c_val:.2f}$ kPa")
         
         return {"c": c_val, "phi": phi_val, "log": log}
