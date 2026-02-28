@@ -3,5 +3,5 @@ pandas
 numpy
 matplotlib
 scipy
-
+streamlit>=1.40.0
 
