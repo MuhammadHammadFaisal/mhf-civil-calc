@@ -8,38 +8,40 @@ import math
 # =========================================================
 # HELPER FUNCTIONS
 # =========================================================
-def calculate_infinite_slope(beta, phi, c, gamma, gamma_sat, z, u, case):
+def calculate_infinite_slope_general(beta, phi, c, gamma_dry, gamma_sat, z, m):
+
+    gamma_w = 9.81
+    
     beta_r = math.radians(beta)
     phi_r = math.radians(phi)
     
-    if case == "Dry Cohesionless (Sand)":
-        if beta > 0:
-            fs = math.tan(phi_r) / math.tan(beta_r)
-            formula = r"FS = \frac{\tan \phi'}{\tan \beta}"
-        else:
-            return 999.0, "Stable (Flat)"
-            
-    elif case == "Seepage Parallel to Slope":
-        gamma_w = 9.81
-        gamma_prime = gamma_sat - gamma_w
-        if beta > 0:
-            fs = (gamma_prime / gamma_sat) * (math.tan(phi_r) / math.tan(beta_r))
-            formula = r"FS = \frac{\gamma'}{\gamma_{sat}} \frac{\tan \phi'}{\tan \beta}"
-        else:
-            return 999.0, "Stable"
-            
-    else: # Cohesive
-        sigma_n = gamma * z * (math.cos(beta_r)**2)
-        tau_mob = gamma * z * math.sin(beta_r) * math.cos(beta_r)
-        resisting = c + (sigma_n - u) * math.tan(phi_r)
-        
-        if tau_mob > 0.001:
-            fs = resisting / tau_mob
-            formula = r"FS = \frac{c' + (\gamma z \cos^2\beta - u)\tan\phi'}{\gamma z \sin\beta \cos\beta}"
-        else:
-            return 999.0, "Stable (Flat)"
-            
-    return fs, formula
+    # Total unit weight
+    gamma_total = ((1 - m) * gamma_dry) + (m * gamma_sat)
+    
+    # Weight per unit area
+    W = gamma_total * z
+    
+    # Normal stress
+    sigma = W * (math.cos(beta_r) ** 2)
+    
+    # Pore pressure
+    u = m * z * gamma_w * (math.cos(beta_r) ** 2)
+    
+    # Shear stress
+    tau = W * math.sin(beta_r) * math.cos(beta_r)
+    
+    # Effective normal stress
+    sigma_eff = sigma - u
+    
+    # Shear strength
+    shear_strength = c + sigma_eff * math.tan(phi_r)
+    
+    if abs(tau) < 1e-6:
+        return 999, sigma, u, tau, sigma_eff
+    
+    FS = shear_strength / tau
+    
+    return FS, sigma, u, tau, sigma_eff
 
 # =========================================================
 # MAIN APP
@@ -63,27 +65,17 @@ def app():
         
         with col_t1:
             st.subheader("Inputs")
-            soil_case = st.radio("Soil Condition:", 
-                               ["Dry Cohesionless (Sand)", "Seepage Parallel to Slope", "Cohesive Soil (c-ϕ)"],
-                               key="trans_case") 
+            beta = st.number_input("Slope Angle (β) [deg]", 0.0, 60.0, 25.0)
+            z = st.number_input("Depth Normal to Slope (z) [m]", 0.5, 20.0, 5.0)
             
-            beta = st.number_input("Slope Angle (β) [deg]", 0.0, 60.0, 25.0, key="trans_beta") 
-            z = st.number_input("Depth to Failure Plane (z) [m]", 0.5, 20.0, 5.0, key="trans_z")
+            st.markdown("### Soil Properties")
+            c_prime = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, 5.0)
+            phi_prime = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 45.0, 30.0)
             
-            c_prime, phi_prime, gamma, gamma_sat, u_val = 0.0, 30.0, 18.0, 20.0, 0.0
+            gamma_dry = st.number_input("Dry Unit Weight (γ_dry) [kN/m³]", 15.0, 25.0, 18.0)
+            gamma_sat = st.number_input("Saturated Unit Weight (γ_sat) [kN/m³]", 15.0, 25.0, 20.0)
             
-            if soil_case == "Dry Cohesionless (Sand)":
-                phi_prime = st.number_input("Friction Angle (ϕ') [deg]", 10.0, 45.0, 32.0, key="trans_phi_sand")
-            elif soil_case == "Seepage Parallel to Slope":
-                phi_prime = st.number_input("Friction Angle (ϕ') [deg]", 10.0, 45.0, 32.0, key="trans_phi_seep")
-                gamma_sat = st.number_input("Saturated Unit Weight (γ_sat) [kN/m³]", 15.0, 25.0, 20.0, key="trans_gsat")
-            else:
-                c_prime = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, 10.0, key="trans_c")
-                phi_prime = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 45.0, 25.0, key="trans_phi_coh")
-                gamma = st.number_input("Unit Weight (γ) [kN/m³]", 15.0, 25.0, 19.0, key="trans_gamma")
-                if st.checkbox("Include Pore Pressure?", key="trans_check_u"):
-                    u_val = st.number_input("Pore Pressure (u) [kPa]", 0.0, 100.0, 20.0, key="trans_u")
-
+            m_ratio = st.slider("Water Table Ratio (m = z_w / z)", 0.0, 1.0, 0.0)
             calc_t = st.button("Calculate FS", type="primary", key="btn_calc_translational")
 
         with col_t2:
@@ -92,7 +84,12 @@ def app():
             x = np.linspace(0, 10, 100)
             beta_r = math.radians(beta)
             y_surf = x * math.tan(beta_r)
-            y_fail = y_surf - z
+            # unit normal vector
+            nx = -math.sin(beta_r)
+            ny = math.cos(beta_r)
+            
+            x_fail = x + nx * z
+            y_fail = y_surf + ny * z
             
             ax_t.plot(x, y_surf, 'k-', linewidth=2, label="Ground Surface")
             ax_t.plot(x, y_fail, 'r--', linewidth=2, label="Failure Plane")
@@ -111,14 +108,27 @@ def app():
             st.pyplot(fig_t)
             
             if calc_t:
-                fs_val, form_tex = calculate_infinite_slope(beta, phi_prime, c_prime, gamma, gamma_sat, z, u_val, soil_case)
-                st.latex(form_tex)
-                if fs_val < 1.0:
-                    st.error(f"**FS = {fs_val:.2f} (Unstable)**")
-                elif fs_val < 1.5:
-                    st.warning(f"**FS = {fs_val:.2f} (Marginal)**")
+                FS, sigma, u, tau, sigma_eff = calculate_infinite_slope_general(beta, phi_prime, c_prime, gamma_dry, gamma_sat, z, m_ratio)
+                st.markdown("### Stress Components")
+
+                st.write(f"Total Normal Stress σ = {sigma:.2f} kPa")
+                st.write(f"Pore Pressure u = {u:.2f} kPa")
+                st.write(f"Effective Stress σ' = {sigma_eff:.2f} kPa")
+                st.write(f"Shear Stress τ = {tau:.2f} kPa")
+                
+                st.markdown("### Factor of Safety")
+                
+                if FS < 1:
+                    st.error(f"FS = {FS:.3f} (Unstable)")
+                elif FS < 1.5:
+                    st.warning(f"FS = {FS:.3f} (Marginal)")
                 else:
-                    st.success(f"**FS = {fs_val:.2f} (Stable)**")
+                    st.success(f"FS = {FS:.3f} (Stable)")
+                if c_prime == 0 and m_ratio == 0:
+                    st.info("Special Case: Dry Cohesionless Slope")
+                
+                if c_prime == 0 and m_ratio == 1:
+                    st.info("Special Case: Fully Saturated Seepage Slope")
 
     # ---------------------------------------------------------
     # TAB 2: ROTATIONAL (CIRCULAR)
