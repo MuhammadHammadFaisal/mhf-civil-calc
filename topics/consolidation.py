@@ -204,11 +204,11 @@ def app():
                 
                 # Header for the layer
                 details = f"### Layer {L['id']} ({L['type']})\n"
-                details += f"**Given:** Thickness $H = {H}m$, Initial Void Ratio $e_0 = {p.get('e0', 'N/A')}$\n\n"
-                details += f"**Stress Analysis:**\n"
-                details += f"- Initial Effective Stress $\sigma'_0 = {sigma0:.2f} \ kPa$\n"
-                details += f"- Stress Increment $\Delta\sigma = {surcharge_q:.2f} \ kPa$\n"
-                details += f"- Final Effective Stress $\sigma'_f = \sigma'_0 + \Delta\sigma = {sigma_f:.2f} \ kPa$\n\n"
+                details += rf"**Given:** Thickness $H = {H}m$, Initial Void Ratio $e_0 = {p.get('e0', 'N/A')}$\n\n"
+                details += rf"**Stress Analysis:**\n"
+                details += rf"- Initial Effective Stress $\sigma'_0 = {sigma0:.2f} \ kPa$\n"
+                details += rf"- Stress Increment $\Delta\sigma = {surcharge_q:.2f} \ kPa$\n"
+                details += rf"- Final Effective Stress $\sigma'_f = \sigma'_0 + \Delta\sigma = {sigma_f:.2f} \ kPa$\n\n"
 
                 calc_type = "Unknown"
 
@@ -228,54 +228,54 @@ def app():
                     Cr = p["Cr"]
                     e0 = p["e0"]
                     
-                    details += f"**Consolidation State Analysis:**\n"
-                    details += f"- Preconsolidation Pressure $\sigma'_p = {sp} \ kPa$\n"
+                    details += rf"**Consolidation State Analysis:**\n"
+                    details += rf"- Preconsolidation Pressure $\sigma'_p = {sp} \ kPa$\n"
 
                     # Case 1: Normally Consolidated
                     if sigma0 >= sp:
                         calc_type = "Normally Consolidated (NC)"
-                        details += f"- Since $\sigma'_0 \ge \sigma'_p$ ({sigma0:.1f} $\ge$ {sp}), the soil is **Normally Consolidated**.\n"
-                        details += f"- We use the Compression Index ($C_c$) for the full range.\n\n"
+                        details += rf"- Since $\sigma'_0 \ge \sigma'_p$ ({sigma0:.1f} $\ge$ {sp}), the soil is **Normally Consolidated**.\n"
+                        details += rf"- We use the Compression Index ($C_c$) for the full range.\n\n"
                         details += r"$$S = \frac{C_c \cdot H}{1+e_0} \cdot \log_{10}\left(\frac{\sigma'_f}{\sigma'_0}\right)$$"
                         
                         S = (Cc * H / (1 + e0)) * np.log10(sigma_f / sigma0)
                         
-                        details += f"\n\n**Substitution:**\n"
-                        details += f"$$S = \\frac{{{Cc} \cdot {H}}}{{1+{e0}}} \cdot \log_{{10}}\\left(\\frac{{{sigma_f:.1f}}}{{{sigma0:.1f}}}\\right)$$"
-                        details += f"\n$$S = {S:.5f} m$$"
+                        details += rf"\n\n**Substitution:**\n"
+                        details += rf"$$S = \\frac{{{Cc} \cdot {H}}}{{1+{e0}}} \cdot \log_{{10}}\\left(\\frac{{{sigma_f:.1f}}}{{{sigma0:.1f}}}\\right)$$"
+                        details += rf"\n$$S = {S:.5f} m$$"
 
                     # Case 2: Over Consolidated (Remains OC)
                     elif sigma_f <= sp:
                         calc_type = "Over Consolidated (OC)"
-                        details += f"- Since $\sigma'_f \le \sigma'_p$ ({sigma_f:.1f} $\le$ {sp}), the soil remains **Over Consolidated**.\n"
-                        details += f"- We use the Recompression Index ($C_r$) only.\n\n"
+                        details += rf"- Since $\sigma'_f \le \sigma'_p$ ({sigma_f:.1f} $\le$ {sp}), the soil remains **Over Consolidated**.\n"
+                        details += rf"- We use the Recompression Index ($C_r$) only.\n\n"
                         details += r"$$S = \frac{C_r \cdot H}{1+e_0} \cdot \log_{10}\left(\frac{\sigma'_f}{\sigma'_0}\right)$$"
                         
                         S = (Cr * H / (1 + e0)) * np.log10(sigma_f / sigma0)
                         
-                        details += f"\n\n**Substitution:**\n"
-                        details += f"$$S = \\frac{{{Cr} \cdot {H}}}{{1+{e0}}} \cdot \log_{{10}}\\left(\\frac{{{sigma_f:.1f}}}{{{sigma0:.1f}}}\\right)$$"
-                        details += f"\n$$S = {S:.5f} m$$"
+                        details += rf"\n\n**Substitution:**\n"
+                        details += rf"$$S = \\frac{{{Cr} \cdot {H}}}{{1+{e0}}} \cdot \log_{{10}}\\left(\\frac{{{sigma_f:.1f}}}{{{sigma0:.1f}}}\\right)$$"
+                        details += rf"\n$$S = {S:.5f} m$$"
 
                     # Case 3: Transition (OC -> NC)
                     else:
                         calc_type = "Transition (OC to NC)"
-                        details += f"- Since $\sigma'_0 < \sigma'_p < \sigma'_f$ ({sigma0:.1f} < {sp} < {sigma_f:.1f}), the loading pushes the soil past the preconsolidation pressure.\n"
-                        details += f"- **Part 1 (Recompression):** From $\sigma'_0$ to $\sigma'_p$ using $C_r$.\n"
-                        details += f"- **Part 2 (Virgin Compression):** From $\sigma'_p$ to $\sigma'_f$ using $C_c$.\n\n"
+                        details += rf"- Since $\sigma'_0 < \sigma'_p < \sigma'_f$ ({sigma0:.1f} < {sp} < {sigma_f:.1f}), the loading pushes the soil past the preconsolidation pressure.\n"
+                        details += rf"- **Part 1 (Recompression):** From $\sigma'_0$ to $\sigma'_p$ using $C_r$.\n"
+                        details += rf"- **Part 2 (Virgin Compression):** From $\sigma'_p$ to $\sigma'_f$ using $C_c$.\n\n"
                         
                         # Part 1
                         s1 = (Cr * H / (1 + e0)) * np.log10(sp / sigma0)
                         details += r"**Step 1:** $$S_1 = \frac{C_r \cdot H}{1+e_0} \cdot \log_{10}\left(\frac{\sigma'_p}{\sigma'_0}\right)$$"
-                        details += f"\n$$S_1 = \\frac{{{Cr} \cdot {H}}}{{1+{e0}}} \cdot \log_{{10}}\\left(\\frac{{{sp}}}{{{sigma0:.1f}}}\\right) = {s1:.5f} m$$"
+                        details += rf"\n$$S_1 = \\frac{{{Cr} \cdot {H}}}{{1+{e0}}} \cdot \log_{{10}}\\left(\\frac{{{sp}}}{{{sigma0:.1f}}}\\right) = {s1:.5f} m$$"
 
                         # Part 2
                         s2 = (Cc * H / (1 + e0)) * np.log10(sigma_f / sp)
                         details += r"**Step 2:** $$S_2 = \frac{C_c \cdot H}{1+e_0} \cdot \log_{10}\left(\frac{\sigma'_f}{\sigma'_p}\right)$$"
-                        details += f"\n$$S_2 = \\frac{{{Cc} \cdot {H}}}{{1+{e0}}} \cdot \log_{{10}}\\left(\\frac{{{sigma_f:.1f}}}{{{sp}}}\\right) = {s2:.5f} m$$"
+                        details += rf"\n$$S_2 = \\frac{{{Cc} \cdot {H}}}{{1+{e0}}} \cdot \log_{{10}}\\left(\\frac{{{sigma_f:.1f}}}{{{sp}}}\\right) = {s2:.5f} m$$"
 
                         S = s1 + s2
-                        details += f"\n\n**Total:** $$S = S_1 + S_2 = {s1:.5f} + {s2:.5f} = {S:.5f} m$$"
+                        details += rf"\n\n**Total:** $$S = S_1 + S_2 = {s1:.5f} + {s2:.5f} = {S:.5f} m$$"
 
                 # -------------------------------------------------------
                 # METHOD B: mv
@@ -284,13 +284,13 @@ def app():
                     mv = p["mv"]
                     calc_type = "Coefficient of Volume Compressibility ($m_v$)"
                     
-                    details += f"**Formula:**\n"
+                    details += rf"**Formula:**\n"
                     details += r"$$S = m_v \cdot \Delta\sigma \cdot H$$"
                     
                     S = mv * surcharge_q * H
                     
-                    details += f"\n\n**Substitution:**\n"
-                    details += f"$$S = {mv:.5f} \\cdot {surcharge_q:.2f} \\cdot {H} = {S:.5f} m$$"
+                    details += rf"\n\n**Substitution:**\n"
+                    details += rf"$$S = {mv:.5f} \\cdot {surcharge_q:.2f} \\cdot {H} = {S:.5f} m$$"
 
                 # -------------------------------------------------------
                 # METHOD C: Delta e
@@ -300,13 +300,13 @@ def app():
                     e0 = p["e0"]
                     calc_type = "Void Ratio Change ($\Delta e$)"
                     
-                    details += f"**Formula:**\n"
+                    details += rf"**Formula:**\n"
                     details += r"$$S = \frac{e_0 - e_f}{1+e_0} \cdot H$$"
                     
                     S = ((e0 - ef) / (1 + e0)) * H
                     
-                    details += f"\n\n**Substitution:**\n"
-                    details += f"$$S = \\frac{{{e0} - {ef}}}{{1+{e0}}} \cdot {H} = {S:.5f} m$$"
+                    details += rf"\n\n**Substitution:**\n"
+                    details += rf"$$S = \\frac{{{e0} - {ef}}}{{1+{e0}}} \cdot {H} = {S:.5f} m$$"
 
                 total_settlement += S
                 results_data.append([f"Layer {L['id']}", f"{sigma0:.1f}", f"{sigma_f:.1f}", f"{S*1000:.2f}", calc_type])
