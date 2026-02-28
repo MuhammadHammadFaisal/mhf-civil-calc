@@ -245,6 +245,7 @@ def app():
             ax_p.set_aspect('equal')
             ax_p.axis('off')
             st.pyplot(fig_profile)
+            plt.close(fig_profile)
 
         # --- RESULT GRAPH ---
         if calc_trigger:
@@ -515,6 +516,7 @@ def app():
             ax_w.axis('off')
             ax_w.set_title("Free Body Diagram of Wedge", fontweight='bold')
             st.pyplot(fig_w)
+            plt.close(fig_w)
 
             # --- CALCULATION PANEL ---
             if c_calc_btn:

@@ -287,6 +287,7 @@ def app():
             ax.set_ylim(datum_y - 1.5, max(wl_bot, wl_top) + 1)
             ax.axis('off')
             st.pyplot(fig)
+            plt.close(fig)
 
         # ------------------------- RESULTS (FULL WIDTH) -------------------------
                 # ------------------------- RESULTS (FULL WIDTH) -------------------------
@@ -471,6 +472,7 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
                 ax2.plot([1.5, 3], [4, 4], 'k--', lw=0.5); ax2.plot([1.5, 3], [6, 6], 'k--', lw=0.5)
 
             st.pyplot(fig2)
+            plt.close(fig2)
 # =================================================================
     # TAB 3: MULTI-LAYER SEEPAGE (EXAM QUESTIONS)
     # =================================================================
@@ -593,6 +595,7 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
             
 #             # Ensure the plot fits the Streamlit container perfectly
 #             st.pyplot(fig3, use_container_width=True)
+#             plt.close(fig3, use_container_width=True)
 # # === CRITICAL CHANGE: Indent the RESULTS block so it is inside the tab3 block ===
 #         if solve_clicked:
 #             # --- PHASE 1: MATHEMATICAL SOLVER ---

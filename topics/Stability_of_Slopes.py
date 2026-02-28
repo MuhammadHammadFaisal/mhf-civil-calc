@@ -126,6 +126,7 @@ def app():
             ax_t.legend()
             ax_t.axis('off')
             st.pyplot(fig_t)
+            plt.close(fig_t)
             
             if calc_t:
                 FS, sigma, u, tau, sigma_eff = calculate_infinite_slope_general(beta, phi_prime, c_prime, gamma_dry, gamma_sat, z, m_ratio)
@@ -253,6 +254,7 @@ def app():
                 ax_c.set_ylim(-2, o_y + 5)
                 ax_c.axis('off')
                 st.pyplot(fig_c)
+                plt.close(fig_c)
                 
                 if calc_rot:
                     M_res = Cu * L_calc * R
@@ -382,6 +384,7 @@ def app():
             ax_b.set_ylim(-2, H_right + 2)
             ax_b.axis('off')
             st.pyplot(fig_b)
+            plt.close(fig_b)
             
             if calc_blk:
                 resisting_base = (c_base * L_block) + (W_block * math.tan(math.radians(phi_base)))

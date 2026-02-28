@@ -386,6 +386,7 @@ def app():
                 ax1.set_xlabel("Local Degree of Consolidation, Uz")
                 ax1.set_ylabel("Depth (m)")
                 st.pyplot(fig1)
+                plt.close(fig1)
             with tab2_plot:
                 fig2, ax2 = plt.subplots()
                 ax2.plot(u_vals, plot_depths, color='blue')
@@ -395,6 +396,7 @@ def app():
                 ax2.set_ylabel("Depth (m)")
                 ax2.grid(True, linestyle='--', alpha=0.6)
                 st.pyplot(fig2)
+                plt.close(fig2)
             with tab3_plot:
                 t_max = max(time_val*2, 10)
                 times = np.linspace(0.01,t_max,100)
@@ -413,6 +415,7 @@ def app():
                 ax3.set_ylabel("Average Consolidation U (%)")
                 ax3.grid(True)
                 st.pyplot(fig3)
+                plt.close(fig3)
                 # Current U_avg metric
                 Tv_curr = Cv*time_val/(Hdr**2)
                 U_curr = 2*np.sqrt(Tv_curr/np.pi) if Tv_curr<=0.28 else 1-10**(-(Tv_curr+0.085)/0.933)

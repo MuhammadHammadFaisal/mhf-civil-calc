@@ -219,6 +219,7 @@ def app():
                     color=color, fontsize=10, fontweight='bold')
 
         st.pyplot(fig)
+        plt.close(fig)
 
     # =================================================================
     # 4. RESULTS SECTION

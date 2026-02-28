@@ -160,6 +160,7 @@ def app():
             ax.axis('off')
             ax.plot([0, 5], [0, 0], 'k-', linewidth=2) 
             st.pyplot(fig)
+            plt.close(fig)
 
         # -------------------------------------------------
         # 3. CALCULATE
@@ -322,6 +323,7 @@ def app():
                     fig, ax = plt.subplots(figsize=(5, 6))
                     plot_results(df, title, ax)
                     st.pyplot(fig)
+                    plt.close(fig)
             # --- INDENTED CORRECTLY: Outside the loop so it only prints once ---
             with st.expander("Show Calculation Logs", expanded=False):
                 write_text("subheader", "Initial State Logs")
@@ -423,6 +425,7 @@ def app():
                 ax_stress.grid(True, axis='x', linestyle=':', alpha=0.5)
 
             st.pyplot(fig_h)
+            plt.close(fig_h)
 
         # -------------------------------------------------
         # 3. CALCULATION OUTPUT
