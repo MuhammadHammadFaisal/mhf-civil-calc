@@ -93,13 +93,33 @@ def app():
             
             ax_t.plot(x, y_surf, 'k-', linewidth=2, label="Ground Surface")
             ax_t.plot(x, y_fail, 'r--', linewidth=2, label="Failure Plane")
-            ax_t.fill_between(x, y_fail, y_surf, color='#E6D690', alpha=0.5)
+            ax_t.fill_between(x, y_surf, y_fail, where=(y_surf >= y_fail),
+                  color='#E6D690', alpha=0.5)
             
-            if soil_case == "Seepage Parallel to Slope":
-                ax_t.plot(x, y_surf - 0.2, 'b--', linewidth=1, label="Flow Line")
+            if m_ratio > 0:
+                ax_t.plot(x, y_surf - 0.2, 'b--', linewidth=1, label="Water Table / Seepage Line")
             
             ax_t.text(5, 5*math.tan(beta_r) + 1, f"β={beta}°", ha='center')
-            ax_t.arrow(5, 5*math.tan(beta_r), 0, -z, length_includes_head=True, head_width=0.2, color='black')
+            # Draw normal depth arrow
+            x0 = 5
+            y0 = 5 * math.tan(beta_r)
+            
+            ax_t.arrow(
+                x0,
+                y0,
+                nx * z,
+                ny * z,
+                length_includes_head=True,
+                head_width=0.2,
+                color='black'
+            )
+            
+            ax_t.text(
+                x0 + nx * z / 2,
+                y0 + ny * z / 2,
+                f"z={z}m",
+                va='center'
+            )
             ax_t.text(5.2, 5*math.tan(beta_r) - z/2, f"z={z}m", va='center')
 
             ax_t.set_aspect('equal')
@@ -129,6 +149,8 @@ def app():
                 
                 if c_prime == 0 and m_ratio == 1:
                     st.info("Special Case: Fully Saturated Seepage Slope")
+                if sigma_eff < 0:
+                    st.warning("Effective stress is negative (possible tension condition).")
 
     # ---------------------------------------------------------
     # TAB 2: ROTATIONAL (CIRCULAR)
