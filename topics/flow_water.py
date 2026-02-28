@@ -474,7 +474,7 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
 # =================================================================
     # TAB 3: MULTI-LAYER SEEPAGE (EXAM QUESTIONS)
     # =================================================================
-    with tab3:
+    #with tab3:
         
         col_setup, col_viz = st.columns([2, 1.2])
         
