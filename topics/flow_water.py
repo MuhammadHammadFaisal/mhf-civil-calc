@@ -594,7 +594,7 @@ $$\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot {
             # Ensure the plot fits the Streamlit container perfectly
             st.pyplot(fig3, use_container_width=True)
 # === CRITICAL CHANGE: Indent the RESULTS block so it is inside the tab3 block ===
-                if solve_clicked:
+        if solve_clicked:
             # --- PHASE 1: MATHEMATICAL SOLVER ---
             # 1. Establish Datum and Boundary Heads (Datum at z=0, downwards is positive depth)
             h_top = h_surface
