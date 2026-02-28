@@ -394,7 +394,7 @@ def app():
                 if total_driving > 0:
                     FS_block = total_resisting / total_driving
                     st.markdown("### Results")
-                    st.latex(r"FS = \frac{P_p + (c'L + W_{block}\tan\\phi')}{P_a}")
+                    st.latex(r"FS = \frac{P_p + (c'L + W_{block}\\tan\\phi')}{P_a}")
                     st.write(f"**Base Resistance:** {resisting_base:.1f} kN")
                     st.write(f"**Total Resisting:** {total_resisting:.1f} kN")
                     

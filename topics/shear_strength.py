@@ -298,7 +298,7 @@ def app():
         
                     glass_box(
                         r"Final governing equation: "
-                        r"$\sigma_1 = \sigma_3 \tan^2(45 + \\phi/2) + 2c\tan(45 + \\phi/2)$"
+                        r"$\sigma_1 = \sigma_3 \\tan^2(45 + \\phi/2) + 2c\\tan(45 + \\phi/2)$"
                     )
 if __name__ == "__main__":
     app()
