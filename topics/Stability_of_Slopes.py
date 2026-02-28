@@ -85,8 +85,8 @@ def app():
             beta_r = math.radians(beta)
             y_surf = x * math.tan(beta_r)
             # unit normal vector
-            nx = -math.sin(beta_r)
-            ny = math.cos(beta_r)
+            nx = math.sin(beta_r)
+            ny = -math.cos(beta_r)
             
             x_fail = x + nx * z
             y_fail = y_surf + ny * z
