@@ -100,7 +100,7 @@ def calculate_pore_pressure(px, py, mode, pile_d, pile_x, dam_w, h_up, h_down, s
 
 def app():
 
-    tab1, tab2, tab3 = st.tabs(["1D Seepage", "Permeability", "Multi-Layer Seepage"])
+    tab1, tab2= st.tabs(["1D Seepage", "Permeability"])
     
     # =================================================================
     # TAB 1: 1D SEEPAGE (Effective Stress)
