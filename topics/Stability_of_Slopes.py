@@ -898,30 +898,34 @@ def app():
                 results_list = []
         
                 for _, row in edited_df.iterrows():
+
+                    # Skip incomplete rows (new rows are None while typing)
+                    required_cols = ["b (m)", "W (kN/m)", "α (deg)"]
+                    if any(pd.isna(row.get(col, np.nan)) for col in required_cols):
+                        continue
+                
                     b = float(row.get("b (m)", 0.0))
                     W_s = float(row.get("W (kN/m)", 0.0))
                     alpha_deg = float(row.get("α (deg)", 0.0))
                     u_head = float(row.get("u/γ_w (m)", 0.0))
                     h_val = float(row.get("h (m)", 0.0))
+                
+                    # Safe slice number
                     raw_slice = row.get("Slice", None)
                     try:
-                        slice_no = int(raw_slice) if raw_slice is not None and str(raw_slice).strip() != "" else 0
+                        slice_no = int(raw_slice) if raw_slice is not None and str(raw_slice).strip() != "" else (len(results_list) + 1)
                     except Exception:
-                        slice_no = 0
-        
+                        slice_no = len(results_list) + 1
+                
                     alpha_rad = math.radians(alpha_deg)
                     cos_a = math.cos(alpha_rad)
-                    sin_a = math.sin(alpha_rad)
-        
                     l = b / cos_a if abs(cos_a) > 1e-9 else 0.0
+                
                     W_cos = W_s * cos_a
-                    W_sin = W_s * sin_a
+                    W_sin = W_s * math.sin(alpha_rad)
                     u_l = u_head * gamma_w * l
-        
-                    sum_l += l
-                    sum_W_cos += W_cos
-                    sum_W_sin += W_sin
-                    sum_u_l += u_l
+                
+                    # then continue with your sums + results_list.append(...)
         
                     results_list.append({
                         "Slice No": slice_no,
