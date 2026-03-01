@@ -120,57 +120,110 @@ def app():
             st.pyplot(fig_t)
             plt.close(fig_t)
     
-        # =====================================================
+# =====================================================
         # RESULTS SECTION (OUTSIDE COLUMNS)
         # =====================================================
         if calc_t:
-    
+
             FS, sigma, u, tau, sigma_eff = calculate_infinite_slope_general(
                 beta, phi_prime, c_prime,
                 gamma_dry, gamma_sat,
                 z, m_ratio
             )
-    
-            # Stress Table
-            with glass_box("Stress Components"):
-                stress_df = pd.DataFrame({
-                    "Parameter": [
-                        "Total Normal Stress (σ)",
-                        "Pore Pressure (u)",
-                        "Effective Stress (σ')",
-                        "Shear Stress (τ)"
-                    ],
-                    "Value (kPa)": [
-                        round(sigma, 2),
-                        round(u, 2),
-                        round(sigma_eff, 2),
-                        round(tau, 2)
-                    ]
-                })
-    
-                glass_table(stress_df)
-    
-            #  Factor of Safety
-            with glass_box(" Factor of Safety"):
-    
-                st.metric("Factor of Safety (FS)", f"{FS:.3f}")
-    
-                if FS < 1:
-                    st.error("Slope is UNSTABLE")
-                elif FS < 1.5:
-                    st.warning("Slope is Marginally Stable")
+
+            st.markdown("---")
+            write_text("subheader", "📊 Analysis Results")
+
+            # ── Stress Components ─────────────────────────────────
+            st.markdown("**Stress Components**")
+
+            s1, s2, s3, s4 = st.columns(4)
+            s1.metric("Total Normal Stress (σ)", f"{sigma:.2f} kPa")
+            s2.metric("Pore Pressure (u)",        f"{u:.2f} kPa")
+            s3.metric("Effective Stress (σ')",    f"{sigma_eff:.2f} kPa")
+            s4.metric("Shear Stress (τ)",         f"{tau:.2f} kPa")
+
+            st.markdown("")  # spacer
+
+            # ── Factor of Safety ──────────────────────────────────
+            fs_col, status_col = st.columns([1, 2])
+
+            with fs_col:
+                if FS >= 1.5:
+                    fs_color = "#2ecc71"
+                    fs_label = "🟢 Stable"
+                elif FS >= 1.0:
+                    fs_color = "#f39c12"
+                    fs_label = "🟡 Marginally Stable"
                 else:
-                    st.success("Slope is Stable")
-    
-                # Special cases
+                    fs_color = "#e74c3c"
+                    fs_label = "🔴 Unstable"
+
+                st.markdown(
+                    f"""
+                    <div style="
+                        background: linear-gradient(135deg, {fs_color}22, {fs_color}44);
+                        border: 2px solid {fs_color};
+                        border-radius: 12px;
+                        padding: 20px;
+                        text-align: center;
+                    ">
+                        <div style="font-size: 13px; color: #aaa; margin-bottom: 4px;">
+                            Factor of Safety
+                        </div>
+                        <div style="font-size: 42px; font-weight: 800; color: {fs_color};">
+                            {FS:.3f}
+                        </div>
+                        <div style="font-size: 16px; font-weight: 600; color: {fs_color};">
+                            {fs_label}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            with status_col:
+                # FS stability bar
+                st.markdown("**Stability Range**")
+                bar_pct = min(FS / 3.0, 1.0) * 100
+                st.markdown(
+                    f"""
+                    <div style="background:#2a2a2a; border-radius:8px; height:18px; width:100%; margin-bottom:6px;">
+                        <div style="
+                            background: linear-gradient(90deg, #e74c3c, #f39c12 33%, #2ecc71 66%);
+                            width:{bar_pct:.1f}%; height:100%; border-radius:8px;
+                        "></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:11px; color:#aaa;">
+                        <span>0 — Unstable</span><span>1.0</span><span>1.5</span><span>3.0 — Very Stable</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                # Special case notices
+                notices = []
                 if c_prime == 0 and m_ratio == 0:
-                    st.info("Special Case: Dry Cohesionless Slope")
-    
+                    notices.append(("ℹ️", "Special Case: Dry Cohesionless Slope", "blue"))
                 if c_prime == 0 and m_ratio == 1:
-                    st.info("Special Case: Fully Saturated Seepage Slope")
-    
+                    notices.append(("ℹ️", "Special Case: Fully Saturated Seepage Slope", "blue"))
                 if sigma_eff < 0:
-                    st.warning("Effective stress is negative (Tension condition possible)")
+                    notices.append(("⚠️", "Effective stress is negative — tension condition possible", "orange"))
+
+                for icon, msg, color in notices:
+                    st.markdown(
+                        f"""
+                        <div style="
+                            border-left: 4px solid {color};
+                            padding: 8px 12px;
+                            border-radius: 4px;
+                            background: {color}18;
+                            margin-top: 10px;
+                            font-size: 13px;
+                        ">{icon} {msg}</div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
     # ---------------------------------------------------------
     # TAB 2: ROTATIONAL (CIRCULAR)
