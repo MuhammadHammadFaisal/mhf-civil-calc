@@ -175,24 +175,29 @@ def app():
                 
                 st.markdown("**Failure Circle**")
                 R = st.number_input("Radius (R) [m]", 5.0, 50.0, 12.1, key="mass_R")
-                o_x = st.number_input("Center X-coord (o_x) [m]", -20.0, 20.0, -2.0, key="mass_ox") # New dynamic input
+                o_x = st.number_input("Center X-coord (o_x) [m]", -20.0, 20.0, -2.0, key="mass_ox")
                 dist_d = st.number_input("Moment Arm (d) [m]", 0.0, 20.0, 4.5, help="Horizontal distance from Center O to Centroid", key="mass_d")
-                                
+                
                 st.subheader("2. Soil Properties")
                 gamma_clay = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, 19.0, key="mass_gamma")
-                Cu = st.number_input("Undrained Shear Strength (Cu) [kPa]", 10.0, 200.0, 65.0, key="mass_cu")
-                # --- TENSION CRACK CALCULATION ---
-                st.markdown("**Tension Crack**")
-                z_c = (2 * Cu) / gamma_clay
-                st.info(f"Tension Crack Depth ($z_c$) = **{z_c:.2f} m**")
+                # Minimum cohesion set to 0.0
+                Cu = st.number_input("Undrained Shear Strength (Cu) [kPa]", 0.0, 200.0, 65.0, key="mass_cu")
                 
-                if z_c >= H_slope:
-                    st.warning("Calculated tension crack depth exceeds the slope height. Review inputs.")
-                # ---------------------------------
                 st.caption("Weight Calculation:")
                 area_approx = st.number_input("Area of Sliding Mass [m²]", 1.0, 500.0, 70.0, key="mass_area")
                 W_calc = area_approx * gamma_clay
                 st.write(f"Weight (W) = {W_calc:.1f} kN/m")
+                
+                # --- TENSION CRACK & WATER ---
+                st.markdown("**Tension Crack**")
+                z_c = (2 * Cu) / gamma_clay
+                z_c = min(z_c, H_slope) # Ensure crack isn't deeper than slope
+                
+                st.info(f"Tension Crack Depth ($z_c$) = **{z_c:.2f} m**")
+                
+                water_crack = False
+                if z_c > 0:
+                    water_crack = st.checkbox("Crack filled with water (Adds driving force)", value=False)
                 
                 calc_rot = st.button("Calculate FS (Mass Procedure)", type="primary", key="btn_calc_mass")
 
@@ -209,108 +214,121 @@ def app():
                 
                 ax_c.plot(ground_x, ground_y, 'k-', linewidth=2.5, label="Ground Surface")
                 
-                # Tension Crack Calculation
-                z_c = (2 * Cu) / gamma_clay
-                z_c = min(z_c, H_slope) # Ensure crack isn't deeper than the slope itself
                 y_crack_bottom = Y_crest - z_c
                 
                 # 2. Failure Circle (Arc)
-                # Using the dynamic o_x if you added it, otherwise hardcoded -2.0
-                o_x = -2.0 
-                o_y = math.sqrt(R**2 - o_x**2) 
-                
-                # Calculate Intersection with the BOTTOM of the tension crack
-                term = R**2 - (y_crack_bottom - o_y)**2
-                
-                if term > 0:
-                    x_intersect = o_x + math.sqrt(term)
+                if R**2 >= o_x**2:
+                    o_y = math.sqrt(R**2 - o_x**2) 
                     
-                    theta_start = math.atan2(0 - o_y, 0 - o_x)
-                    theta_end = math.atan2(y_crack_bottom - o_y, x_intersect - o_x)
+                    term = R**2 - (y_crack_bottom - o_y)**2
                     
-                    thetas = np.linspace(theta_start, theta_end, 50)
-                    arc_x = o_x + R * np.cos(thetas)
-                    arc_y = o_y + R * np.sin(thetas)
-                    
-                    # 3. Create the "Wedge" Polygon (Hatched)
-                    poly_verts = list(zip(arc_x, arc_y))
-                    poly_verts.append((x_intersect, Y_crest)) # Top of tension crack
-                    poly_verts.append((X_crest, Y_crest))     # Slope crest corner
-                    poly_verts.append((0, 0))                 # Slope toe
-                    
-                    soil_mass = patches.Polygon(poly_verts, closed=True, facecolor='none', edgecolor='black', hatch='//', alpha=0.5)
-                    ax_c.add_patch(soil_mass)
-                    ax_c.plot(arc_x, arc_y, 'k-', linewidth=1.5)
-                    
-                    # Draw the actual tension crack (vertical red line)
-                    ax_c.plot([x_intersect, x_intersect], [y_crack_bottom, Y_crest], 'r-', linewidth=2, label="Tension Crack")
-                    
-                    # Calculate REDUCED Arc Length
-                    theta_deg = math.degrees(theta_end - theta_start)
-                    L_calc = (theta_deg/360) * 2 * math.pi * R
-                else:
-                    L_calc = 0
-                    st.error("Geometry Error: Circle does not intersect the tension crack elevation.")
-
-                # Annotations
-                ax_c.plot(o_x, o_y, 'bo', label="O")
-                ax_c.plot([o_x, 0], [o_y, 0], 'b--', linewidth=1)
-                ax_c.text(o_x/2, o_y/2, f"R={R}m", color='blue', rotation=60)
-                
-                X_w = o_x + dist_d
-                Y_w = Y_crest / 2 
-                ax_c.plot([o_x, o_x], [o_y, o_y+2], 'k-', linewidth=0.5)
-                ax_c.plot([X_w, X_w], [Y_w, o_y+2], 'k-', linewidth=0.5)
-                ax_c.annotate(f"d={dist_d}m", xy=(o_x, o_y+1.5), xytext=(X_w, o_y+1.5), arrowprops=dict(arrowstyle='<->'))
-                
-                ax_c.arrow(X_w, Y_w, 0, -3, head_width=0.5, color='black', width=0.1)
-                ax_c.text(X_w + 0.5, Y_w - 3, "W", fontweight='bold')
-
-                ax_c.set_aspect('equal')
-                ax_c.set_xlim(-5, X_crest + 10)
-                ax_c.set_ylim(-2, o_y + 5)
-                ax_c.legend(loc="upper right")
-                ax_c.axis('off')
-                st.pyplot(fig_c)
-                plt.close(fig_c)
-                
-                if calc_rot:
-                    M_res = Cu * L_calc * R
-                    M_drv = W_calc * dist_d
-                
-                    st.markdown("## 🔎 Step-by-Step Calculation")
-                    st.info(f"**Tension Crack Depth ($z_c$):** {z_c:.2f} m")
-                
-                    st.markdown("### 1️⃣ Arc Length (Truncated)")
-                    st.latex(r"L_{arc} = R \cdot \theta_{reduced}")
-                    st.write(f"L_arc = {L_calc:.2f} m")
-                    st.caption(f"Note: Arc length is reduced because soil above z={y_crack_bottom:.2f}m is separated by the tension crack.")
-                
-                    st.markdown("### 2️⃣ Resisting Moment")
-                    st.latex(r"M_{res} = C_u \cdot L_{arc} \cdot R")
-                    st.write(f"M_res = {Cu:.2f} × {L_calc:.2f} × {R:.2f}")
-                    st.write(f"M_res = {M_res:.2f} kNm")
-                
-                    st.markdown("### 3️⃣ Driving Moment")
-                    st.latex(r"M_{drv} = W \cdot d")
-                    st.write(f"M_drv = {W_calc:.2f} × {dist_d:.2f}")
-                    st.write(f"M_drv = {M_drv:.2f} kNm")
-                
-                    if M_drv > 0:
-                        FS = M_res / M_drv
-                
-                        st.markdown("### 4️⃣ Factor of Safety")
-                        st.latex(r"FS = \frac{M_{res}}{M_{drv}}")
-                        st.metric("Factor of Safety", f"{FS:.3f}")
-                
-                        if FS < 1.0:
-                            st.error("Slope is UNSTABLE")
-                        elif FS < 1.5:
-                            st.warning("Slope is Marginally Stable")
-                        else:
-                            st.success("Slope is Stable")
+                    if term > 0:
+                        x_intersect = o_x + math.sqrt(term)
+                        
+                        theta_start = math.atan2(0 - o_y, 0 - o_x)
+                        theta_end = math.atan2(y_crack_bottom - o_y, x_intersect - o_x)
+                        
+                        thetas = np.linspace(theta_start, theta_end, 50)
+                        arc_x = o_x + R * np.cos(thetas)
+                        arc_y = o_y + R * np.sin(thetas)
+                        
+                        # 3. Create the "Wedge" Polygon
+                        poly_verts = list(zip(arc_x, arc_y))
+                        if z_c > 0:
+                            poly_verts.append((x_intersect, Y_crest)) 
+                        poly_verts.append((X_crest, Y_crest)) 
+                        poly_verts.append((0, 0)) 
+                        
+                        soil_mass = patches.Polygon(poly_verts, closed=True, facecolor='none', edgecolor='black', hatch='//', alpha=0.5)
+                        ax_c.add_patch(soil_mass)
+                        ax_c.plot(arc_x, arc_y, 'k-', linewidth=1.5)
+                        
+                        # Draw Tension Crack
+                        if z_c > 0:
+                            ax_c.plot([x_intersect, x_intersect], [y_crack_bottom, Y_crest], 'r-', linewidth=2, label="Tension Crack")
+                            # Draw water force if checked
+                            if water_crack:
+                                ax_c.fill_between([x_intersect - 0.5, x_intersect], [y_crack_bottom, Y_crest], color='blue', alpha=0.3, label="Water Pressure")
+                                y_force = Y_crest - (2 * z_c / 3)
+                                ax_c.arrow(x_intersect - 1.5, y_force, 1.5, 0, head_width=0.3, color='blue', width=0.05)
+                                ax_c.text(x_intersect - 2.0, y_force, "Pw", color='blue', fontweight='bold')
+                        
+                        theta_deg = math.degrees(theta_end - theta_start)
+                        L_calc = (theta_deg/360) * 2 * math.pi * R
                     else:
-                        st.info("Driving moment is zero. The slope is theoretically perfectly stable against this specific failure surface.")
+                        L_calc = 0
+                        st.error("Geometry Error: Circle does not intersect the tension crack/crest elevation.")
+
+                    # Annotations
+                    ax_c.plot(o_x, o_y, 'bo', label="O")
+                    ax_c.plot([o_x, 0], [o_y, 0], 'b--', linewidth=1)
+                    
+                    X_w = o_x + dist_d
+                    Y_w = Y_crest / 2 
+                    ax_c.plot([o_x, o_x], [o_y, o_y+2], 'k-', linewidth=0.5)
+                    ax_c.plot([X_w, X_w], [Y_w, o_y+2], 'k-', linewidth=0.5)
+                    
+                    ax_c.arrow(X_w, Y_w, 0, -3, head_width=0.5, color='black', width=0.1)
+                    ax_c.text(X_w + 0.5, Y_w - 3, "W", fontweight='bold')
+
+                    ax_c.set_aspect('equal')
+                    ax_c.set_xlim(-5, X_crest + 10)
+                    ax_c.set_ylim(-2, o_y + 5)
+                    ax_c.legend(loc="upper right", fontsize=8)
+                    ax_c.axis('off')
+                    st.pyplot(fig_c)
+                    plt.close(fig_c)
+                    
+                    if calc_rot:
+                        M_res = Cu * L_calc * R
+                        M_drv_weight = W_calc * dist_d
+                        
+                        M_drv_water = 0.0
+                        P_w = 0.0
+                        if water_crack and z_c > 0:
+                            gamma_w = 9.81
+                            P_w = 0.5 * gamma_w * (z_c ** 2)
+                            y_force = Y_crest - (2 * z_c / 3)
+                            arm_water = y_force - o_y
+                            M_drv_water = P_w * arm_water
+                            
+                        M_drv_total = M_drv_weight + M_drv_water
+                    
+                        st.markdown("## 🔎 Step-by-Step Calculation")
+                        
+                        st.markdown("### 1️⃣ Resisting Moment")
+                        st.write(f"Arc Length (L) = {L_calc:.2f} m")
+                        st.latex(r"M_{res} = C_u \cdot L \cdot R")
+                        st.write(f"M_res = {M_res:.2f} kNm")
+                        if Cu == 0:
+                            st.warning("Cohesion is 0, so resisting moment is 0. Slope is unconditionally unstable in this undrained analysis.")
+                    
+                        st.markdown("### 2️⃣ Driving Moments")
+                        st.write(f"Moment from Soil Weight: {M_drv_weight:.2f} kNm")
+                        
+                        if water_crack and z_c > 0:
+                            st.write(f"Hydrostatic Force ($P_w$) = {P_w:.2f} kN")
+                            st.write(f"Moment from Water Pressure: {M_drv_water:.2f} kNm")
+                            
+                        st.write(f"**Total Driving Moment ($M_{{drv}}$) = {M_drv_total:.2f} kNm**")
+                    
+                        if M_drv_total > 0:
+                            FS = M_res / M_drv_total
+                    
+                            st.markdown("### 3️⃣ Factor of Safety")
+                            st.latex(r"FS = \frac{M_{res}}{M_{drv}}")
+                            st.metric("Factor of Safety", f"{FS:.3f}")
+                    
+                            if FS < 1.0:
+                                st.error("Slope is UNSTABLE")
+                            elif FS < 1.5:
+                                st.warning("Slope is Marginally Stable")
+                            else:
+                                st.success("Slope is Stable")
+                        else:
+                            st.info("Total driving moment is zero or negative. Slope is theoretically stable against this failure surface.")
+                else:
+                    st.error("Geometry Error: Radius (R) is too small to calculate center.")
         # --- B. METHOD OF SLICES ---
         else:
             col_s1, col_s2 = st.columns([0.4, 0.6], gap="medium")
