@@ -175,8 +175,9 @@ def app():
                 
                 st.markdown("**Failure Circle**")
                 R = st.number_input("Radius (R) [m]", 5.0, 50.0, 12.1, key="mass_R")
+                o_x = st.number_input("Center X-coord (o_x) [m]", -20.0, 20.0, -2.0, key="mass_ox") # New dynamic input
                 dist_d = st.number_input("Moment Arm (d) [m]", 0.0, 20.0, 4.5, help="Horizontal distance from Center O to Centroid", key="mass_d")
-                
+                                
                 st.subheader("2. Soil Properties")
                 gamma_clay = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, 19.0, key="mass_gamma")
                 Cu = st.number_input("Undrained Shear Strength (Cu) [kPa]", 10.0, 200.0, 65.0, key="mass_cu")
@@ -289,6 +290,8 @@ def app():
                             st.warning("Slope is Marginally Stable")
                         else:
                             st.success("Slope is Stable")
+                    else:
+                        st.info("Driving moment is zero. The slope is theoretically perfectly stable against this specific failure surface.")
 
         # --- B. METHOD OF SLICES ---
         else:
@@ -391,24 +394,6 @@ def app():
                 
                         st.dataframe(pd.DataFrame(details))
                     
-                    for index, row in edited_df.iterrows():
-                        W = row["Weight (kN)"]
-                        alpha = math.radians(row["Base Angle α (deg)"])
-                        l = row["Base Length l (m)"]
-                        u = row["u (kPa)"]
-                        
-                        N_prime = (W * math.cos(alpha)) - (u * l)
-                        T_f = (c_sl * l) + (N_prime * math.tan(phi_rad))
-                        T_d = W * math.sin(alpha)
-                        
-                        sum_resisting += T_f
-                        sum_driving += T_d
-                        details.append({"Slice": row["Slice"], "Driving": round(T_d, 1), "Resisting": round(T_f, 1)})
-                    
-                    if sum_driving != 0:
-                        FS_slices = sum_resisting / sum_driving
-                        st.metric("Factor of Safety", f"{FS_slices:.3f}")
-                        st.dataframe(pd.DataFrame(details))
 
     # ---------------------------------------------------------
     # TAB 3: COMPOUND (BLOCK & WEDGE)
