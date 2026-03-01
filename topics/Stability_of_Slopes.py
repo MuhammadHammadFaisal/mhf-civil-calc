@@ -52,17 +52,7 @@ def app():
 
         c1, c2, c3 = st.columns([0.40, 0.40, 0.70], gap="large")
 
-        # -----------------------------
-        # Example Scenarios (optional)
-        # -----------------------------
-        with st.expander("Example Scenarios (optional)"):
-            preset = st.selectbox(
-                "Auto-fill typical values",
-                ["Custom", "Dry Sand (c'=0, m=0)", "Dry Soil (c'>0, m=0)", "Saturated (m=1)"],
-                index=0,
-                help="This only changes input values. It does NOT change the calculation method.",
-                key="inf_preset"
-            )
+
 
         # Initialize session defaults
         if "inf_initialized" not in st.session_state:
