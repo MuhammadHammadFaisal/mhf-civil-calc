@@ -100,13 +100,13 @@ def app():
 
             # Stability colour
             if FS >= 1.5:
-                fs_color  = "#2ecc71"
+                fs_color  = "#60A5FA"
                 fs_status = "Stable"
             elif FS >= 1.0:
-                fs_color  = "#f39c12"
+                fs_color  = "#60A5FA"
                 fs_status = "Marginally Stable"
             else:
-                fs_color  = "#e74c3c"
+                fs_color  = "#60A5FA"
                 fs_status = "Unstable"
 
             # Blue accent (replaces yellow #FDE047 from theme)
