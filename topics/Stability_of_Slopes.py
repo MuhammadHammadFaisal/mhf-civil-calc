@@ -340,13 +340,17 @@ def app():
                 c_sl = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, 5.0, key="slice_c")
                 phi_sl = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 45.0, 30.0, key="slice_phi")
                 
+                # Updated to match the textbook input columns exactly
                 default_data = pd.DataFrame([
-                    {"Slice": 1, "Weight (kN)": 150, "Base Angle α (deg)": -10, "Base Length l (m)": 2.5, "u (kPa)": 0},
-                    {"Slice": 2, "Weight (kN)": 250, "Base Angle α (deg)": 10, "Base Length l (m)": 2.5, "u (kPa)": 15},
-                    {"Slice": 3, "Weight (kN)": 200, "Base Angle α (deg)": 35, "Base Length l (m)": 2.8, "u (kPa)": 10},
+                    {"Slice": 1, "b (m)": 2.0, "h (m)": 1.0, "W (kN/m)": 38.0, "α (deg)": -5.0, "u/γ_w (m)": 0.0},
+                    {"Slice": 2, "b (m)": 4.0, "h (m)": 3.2, "W (kN/m)": 243.0, "α (deg)": 12.0, "u/γ_w (m)": 0.5},
+                    {"Slice": 3, "b (m)": 4.8, "h (m)": 5.2, "W (kN/m)": 474.0, "α (deg)": 28.0, "u/γ_w (m)": 1.2},
+                    {"Slice": 4, "b (m)": 4.0, "h (m)": 6.0, "W (kN/m)": 456.0, "α (deg)": 45.0, "u/γ_w (m)": 0.8},
+                    {"Slice": 5, "b (m)": 4.0, "h (m)": 3.5, "W (kN/m)": 266.0, "α (deg)": 60.0, "u/γ_w (m)": 0.0},
                 ])
+                st.markdown("**Input Slice Data**")
                 edited_df = st.data_editor(default_data, num_rows="dynamic", key="slice_editor")
-                calc_slices = st.button("Calculate FS (Ordinary Method)", type="primary", key="btn_calc_slices")
+                calc_slices = st.button("Calculate FS", type="primary", key="btn_calc_slices")
 
             with col_s2:
                 st.subheader("Slice Representation")
@@ -406,13 +410,13 @@ def app():
                         mid_y = (max(y_b_left, y_b_right) + min(y_t_left, y_t_right)) / 2
                         y_t_mid = np.interp(mid_x, ground_x, ground_y)
                         
-                        # Fetch user data
+                        # Fetch user data (UPDATED COLUMN NAMES)
                         row = edited_df.iloc[i]
                         slice_num = int(row['Slice'])
-                        weight = row['Weight (kN)']
-                        alpha = row['Base Angle α (deg)']
+                        weight = row['W (kN/m)']
+                        alpha = row['α (deg)']
                         
-                        # Draw the slice number inside a circle (like Image 3)
+                        # Draw the slice number inside a circle
                         circle = patches.Circle((mid_x, y_t_mid - 1.2), 0.5, 
                                                 edgecolor='black', facecolor='white', zorder=3)
                         ax_slice.add_patch(circle)
@@ -431,6 +435,95 @@ def app():
                 
                 st.pyplot(fig_slice)
                 plt.close(fig_slice)
+                
+                # --- CALCULATION LOGIC ---
+                if calc_slices:
+                    gamma_w = 9.81
+                    sum_l = 0.0
+                    sum_W_cos = 0.0
+                    sum_W_sin = 0.0
+                    sum_u_l = 0.0
+                    
+                    results_list = []
+                    
+                    for index, row in edited_df.iterrows():
+                        slice_num = int(row["Slice"])
+                        b = row["b (m)"]
+                        h = row["h (m)"]
+                        W = row["W (kN/m)"]
+                        alpha_deg = row["α (deg)"]
+                        alpha_rad = math.radians(alpha_deg)
+                        u_head = row["u/γ_w (m)"]
+                        
+                        # 1. Calculate base length (l = b / cos(alpha))
+                        l = b / math.cos(alpha_rad) if math.cos(alpha_rad) != 0 else 0.0
+                        
+                        # 2. Calculate weight components
+                        W_cos = W * math.cos(alpha_rad)
+                        W_sin = W * math.sin(alpha_rad)
+                        
+                        # 3. Calculate pore pressure force (u * l)
+                        u_pressure = u_head * gamma_w
+                        u_l = u_pressure * l
+                        
+                        # Add to global sums
+                        sum_l += l
+                        sum_W_cos += W_cos
+                        sum_W_sin += W_sin
+                        sum_u_l += u_l
+                        
+                        # Append calculated values for the final display table
+                        results_list.append({
+                            "Slice No": slice_num,
+                            "b (m)": b,
+                            "h (m)": h,
+                            "W (kN/m)": W,
+                            "α (degrees)": alpha_deg,
+                            "W × cos(α)": round(W_cos, 2),
+                            "W × sin(α)": round(W_sin, 2),
+                            "u/γ_w (m)": u_head,
+                            "l (m)": round(l, 2),
+                            "u × l": round(u_l, 2)
+                        })
+                    
+                    st.markdown("---")
+                    st.markdown("## 📊 Completed Calculation Table")
+                    
+                    res_df = pd.DataFrame(results_list)
+                    st.dataframe(res_df, use_container_width=True, hide_index=True)
+                    
+                    # Apply the global formula
+                    sum_N_prime = sum_W_cos - sum_u_l
+                    phi_rad = math.radians(phi_sl)
+                    
+                    resisting_forces = (c_sl * sum_l) + (math.tan(phi_rad) * sum_N_prime)
+                    driving_forces = sum_W_sin
+                    
+                    st.markdown("## 📐 Final Factor of Safety")
+                    st.latex(r"F_s = \frac{c' \times \sum l + \tan \phi' \times \sum(W \times \cos \alpha - u \times l)}{\sum W \times \sin \alpha}")
+                    
+                    col_res1, col_res2 = st.columns(2)
+                    with col_res1:
+                        st.write(f"**$\sum l$** = {sum_l:.2f} m")
+                        st.write(f"**$\sum (W \times \cos\alpha)$** = {sum_W_cos:.2f} kN/m")
+                        st.write(f"**$\sum (u \times l)$** = {sum_u_l:.2f} kN/m")
+                        st.write(f"**$\sum W \times \sin\alpha$ (Driving)** = {sum_W_sin:.2f} kN/m")
+                        
+                    with col_res2:
+                        st.write(f"**Effective Normal $\sum(W\cos\alpha - ul)$** = {sum_N_prime:.2f} kN/m")
+                        st.write(f"**Total Resisting Forces** = {resisting_forces:.2f} kN/m")
+                        
+                        if driving_forces != 0:
+                            FS_slices = resisting_forces / driving_forces
+                            st.metric("Factor of Safety (Fs)", f"{FS_slices:.3f}")
+                            if FS_slices < 1.0:
+                                st.error("Slope is UNSTABLE")
+                            elif FS_slices < 1.5:
+                                st.warning("Slope is Marginally Stable")
+                            else:
+                                st.success("Slope is Stable")
+                        else:
+                            st.error("Driving forces sum to zero. Check input angles and weights.")
     # ---------------------------------------------------------
     # TAB 3: COMPOUND (BLOCK & WEDGE)
     # ---------------------------------------------------------
