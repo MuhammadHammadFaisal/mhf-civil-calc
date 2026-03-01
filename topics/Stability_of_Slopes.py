@@ -74,25 +74,8 @@ def app():
             st.session_state.inf_gdry = 18.0
             st.session_state.inf_gsat = 20.0
             st.session_state.inf_m = 0.0
-            st.session_state.inf_last_preset = "Custom"
-
-        # Apply preset only when changed
-        if preset != st.session_state.inf_last_preset:
-            if preset == "Dry Sand (c'=0, m=0)":
-                st.session_state.inf_c = 0.0
-                st.session_state.inf_phi = 32.0
-                st.session_state.inf_m = 0.0
-            elif preset == "Dry Soil (c'>0, m=0)":
-                st.session_state.inf_c = 8.0
-                st.session_state.inf_phi = 28.0
-                st.session_state.inf_m = 0.0
-            elif preset == "Saturated (m=1)":
-                st.session_state.inf_c = 5.0
-                st.session_state.inf_phi = 30.0
-                st.session_state.inf_m = 1.0
-
-            st.session_state.inf_last_preset = preset
-
+            
+        
         # -----------------------------
         # INPUTS
         # -----------------------------
@@ -395,18 +378,7 @@ def app():
         # =========================================================
         if "Mass Procedure" in method:
     
-            # -----------------------------
-            # Optional Preset (UI only)
-            # -----------------------------
-            with st.expander("Example Scenarios (optional)"):
-                preset_mass = st.selectbox(
-                    "Auto-fill typical values",
-                    ["Custom", "Typical Clay Slope", "High Cu (Stiffer Clay)", "With Water Crack (demo)"],
-                    index=0,
-                    help="This only changes input values. It does NOT change the calculation method.",
-                    key="mass_preset",
-                )
-    
+            
             # Initialize session defaults
             if "mass_initialized" not in st.session_state:
                 st.session_state.mass_initialized = True
