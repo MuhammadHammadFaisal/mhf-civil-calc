@@ -349,19 +349,16 @@ def app():
     # TAB 2: ROTATIONAL (CIRCULAR)
     # ---------------------------------------------------------
     with tab_rot:
-        c1, c2, c3 = st.columns([0.40, 0.40, 0.70], gap="large")
+        write_text("subheader", "Rotational (Circular) Slope Stability")
     
-        # -----------------------------
-        # Method Selector (Top)
-        # -----------------------------
-        with st.expander("Calculation Method (choose one)", expanded=True):
-            method = st.radio(
-                "",
-                ["A. Mass Procedure (Undrained / ϕ=0)", "B. Method of Slices"],
-                horizontal=True,
-                key="rot_method_select",
-                label_visibility="collapsed",
-            )
+        method = st.radio(
+            "Calculation Method",
+            ["A. Mass Procedure (Undrained / ϕ=0)", "B. Method of Slices"],
+            horizontal=True,
+            key="rot_method_select",
+        )
+    
+        st.markdown("---")
     
         # =========================================================
         # A) MASS PROCEDURE (UI like Tab 1)
