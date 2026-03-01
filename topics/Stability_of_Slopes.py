@@ -1044,151 +1044,291 @@ def app():
         
                 for s in [step1, step2, step3, step4]:
                     glass_box(s)
-    # ---------------------------------------------------------
+        # ---------------------------------------------------------
     # TAB 3: COMPOUND (BLOCK & WEDGE)
     # ---------------------------------------------------------
     with tab_comp:
-        col_c1, col_c2 = st.columns([0.4, 0.6], gap="medium")
+        write_text("subheader", "Compound (Block & Wedge) Slope Stability")
+        st.markdown("---")
 
-        with col_c1:
-            write_text("subheader", "Inputs")
-            st.markdown("**Geometry**")
-            H_left = st.number_input("Passive Depth at Toe (H_p) [m]", 1.0, 50.0, 3.0, key="blk_Hp")
-            H_right = st.number_input("Active Depth at Crest (H_a) [m]", 1.0, 50.0, 18.0, key="blk_Ha")
-            L_block = st.number_input("Block Length (L) [m]", 1.0, 100.0, 22.5, key="blk_L")
-            st.markdown("**1. Top Soil Properties (Wedges & Block)**")
-            gamma_top = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 30.0, 20.0, key="blk_gamma")
-            c_top = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, 0.0, key="blk_c_top")
-            phi_top = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 50.0, 36.0, key="blk_phi_top")
-            st.markdown("**2. Weak Layer Properties (Base)**")
-            c_base = st.number_input("Undrained Shear Strength / Cohesion (Cu) [kPa]", 0.0, 200.0, 24.0, key="blk_c_base")
-            phi_base = st.number_input("Base Friction (ϕ_base) [deg]", 0.0, 45.0, 0.0, key="blk_phi_base")
-            calc_blk = st.button("Calculate FS", type="primary", key="btn_calc_block")
+        c1, c2, c3 = st.columns([0.40, 0.40, 0.70], gap="large")
 
-        with col_c2:
+        # -----------------------------
+        # INPUTS (Column 1)
+        # -----------------------------
+        with c1:
+            write_text("subheader", "1. Geometry")
+
+            H_left = st.number_input(
+                "Passive Depth at Toe (H_p) [m]",
+                min_value=1.0, max_value=50.0,
+                value=3.0,
+                key="blk_Hp"
+            )
+
+            H_right = st.number_input(
+                "Active Depth at Crest (H_a) [m]",
+                min_value=1.0, max_value=50.0,
+                value=18.0,
+                key="blk_Ha"
+            )
+
+            L_block = st.number_input(
+                "Block Length (L) [m]",
+                min_value=1.0, max_value=100.0,
+                value=22.5,
+                key="blk_L"
+            )
+
+            write_text("caption", "This model uses Rankine active/passive thrust + base shear resistance.")
+
+        # -----------------------------
+        # INPUTS (Column 2)
+        # -----------------------------
+        with c2:
+            write_text("subheader", "2. Soil Properties")
+
+            st.markdown("**Top Soil Properties (Wedges & Block)**")
+            gamma_top = st.number_input(
+                "Unit Weight (γ) [kN/m³]",
+                min_value=10.0, max_value=30.0,
+                value=20.0,
+                key="blk_gamma"
+            )
+
+            c_top = st.number_input(
+                "Cohesion (c') [kPa]",
+                min_value=0.0, max_value=100.0,
+                value=0.0,
+                key="blk_c_top"
+            )
+
+            phi_top = st.number_input(
+                "Friction Angle (ϕ') [deg]",
+                min_value=0.0, max_value=50.0,
+                value=36.0,
+                key="blk_phi_top"
+            )
+
+            st.markdown("**Weak Layer Properties (Base)**")
+            c_base = st.number_input(
+                "Undrained Shear Strength / Cohesion (Cu) [kPa]",
+                min_value=0.0, max_value=200.0,
+                value=24.0,
+                key="blk_c_base"
+            )
+
+            phi_base = st.number_input(
+                "Base Friction (ϕ_base) [deg]",
+                min_value=0.0, max_value=45.0,
+                value=0.0,
+                key="blk_phi_base"
+            )
+
+            calc_blk = st.button("Calculate Factor of Safety", type="primary", key="btn_calc_block")
+
+        # -----------------------------
+        # DIAGRAM (Column 3)
+        # -----------------------------
+        with c3:
             write_text("subheader", "Block & Wedge Diagram")
+
             fig_b, ax_b = plt.subplots(figsize=(8, 4))
+
             wedge_L_width = H_left
             wedge_R_width = H_right
             block_x_start = wedge_L_width
             block_x_end = wedge_L_width + L_block
+
             ground_x = [0, block_x_start, block_x_end, block_x_end + wedge_R_width]
             ground_y = [H_left, H_left, H_right, H_right]
+
             ax_b.plot(ground_x, ground_y, 'k-', linewidth=2, label="Ground Surface")
             ax_b.plot([0, block_x_end + wedge_R_width], [0, 0], 'b-', linewidth=3, label="Weak Layer")
+
             ax_b.plot([block_x_start, block_x_start], [0, H_left], 'k--', linewidth=1)
             ax_b.plot([block_x_end, block_x_end], [0, H_right], 'k--', linewidth=1)
+
             ax_b.fill_between([0, block_x_start], 0, H_left, color='#A5D6A7', alpha=0.5)
-            ax_b.fill_between([block_x_start, block_x_end], 0,
-                              np.interp([block_x_start, block_x_end], ground_x, ground_y),
-                              color='lightgrey', hatch='//', alpha=0.5)
-            ax_b.fill_between([block_x_end, block_x_end + wedge_R_width], 0, H_right,
-                              color='#FFCCBC', alpha=0.5)
+            ax_b.fill_between(
+                [block_x_start, block_x_end],
+                0,
+                np.interp([block_x_start, block_x_end], ground_x, ground_y),
+                color='lightgrey', hatch='//', alpha=0.5
+            )
+            ax_b.fill_between([block_x_end, block_x_end + wedge_R_width], 0, H_right, color='#FFCCBC', alpha=0.5)
+
             ax_b.text(block_x_start / 2, H_left / 2, "Passive\nZone", ha='center', fontsize=9)
-            ax_b.text((block_x_start + block_x_end) / 2, (H_left + H_right) / 3,
-                      "Central Block", ha='center', fontweight='bold')
+            ax_b.text((block_x_start + block_x_end) / 2, (H_left + H_right) / 3, "Central Block",
+                      ha='center', fontweight='bold')
             ax_b.text(block_x_end + wedge_R_width / 2, H_right / 2, "Active\nZone", ha='center', fontsize=9)
+
             ax_b.arrow(block_x_end + 1.5, H_right / 3, -1.5, 0, head_width=0.5, color='red', width=0.1)
             ax_b.text(block_x_end + 1.6, H_right / 3, "Pa", color='red', fontweight='bold', va='center')
+
             ax_b.arrow(block_x_start - 1.5, H_left / 3, 1.5, 0, head_width=0.5, color='green', width=0.1)
             ax_b.text(block_x_start - 2.5, H_left / 3, "Pp", color='green', fontweight='bold', va='center')
+
             ax_b.text((block_x_start + block_x_end) / 2, -1.5, r"$\tau_f$ (Shear Resistance)", ha='center')
             ax_b.arrow((block_x_start + block_x_end) / 2, -0.5, -3, 0, head_width=0.3, color='black')
-            ax_b.annotate(f"L={L_block}m", xy=(block_x_start, -0.5), xytext=(block_x_end, -0.5),
-                          arrowprops=dict(arrowstyle='<->'))
+
+            ax_b.annotate(
+                f"L={L_block}m",
+                xy=(block_x_start, -0.5),
+                xytext=(block_x_end, -0.5),
+                arrowprops=dict(arrowstyle='<->')
+            )
+
             ax_b.set_xlim(-2, block_x_end + wedge_R_width + 2)
             ax_b.set_ylim(-3, H_right + 3)
             ax_b.axis('off')
+
             st.pyplot(fig_b)
             plt.close(fig_b)
 
-            if calc_blk:
-                phi_top_rad = math.radians(phi_top)
-                Ka = (1 - math.sin(phi_top_rad)) / (1 + math.sin(phi_top_rad))
-                Kp = (1 + math.sin(phi_top_rad)) / (1 - math.sin(phi_top_rad))
-                Pa_raw = (0.5 * gamma_top * H_right**2 * Ka) - (2 * c_top * H_right * math.sqrt(Ka))
-                Pa = max(Pa_raw, 0.0)
-                Pp = (0.5 * gamma_top * H_left**2 * Kp) + (2 * c_top * H_left * math.sqrt(Kp))
-                W_block = ((H_left + H_right) / 2.0) * L_block * gamma_top
-                tau_f = (c_base * L_block) + (W_block * math.tan(math.radians(phi_base)))
-                total_resisting = Pp + tau_f
+        # -----------------------------
+        # CALCULATION + PERSISTENT RESULTS
+        # -----------------------------
+        if "blk_last_result" not in st.session_state:
+            st.session_state.blk_last_result = None
 
-                st.markdown("---")
+        if calc_blk:
+            phi_top_rad = math.radians(phi_top)
 
-                if Pa > 0:
-                    FS_blk = total_resisting / Pa
-                    col_tok, fs_status = fs_colour(FS_blk)
+            Ka = (1 - math.sin(phi_top_rad)) / (1 + math.sin(phi_top_rad))
+            Kp = (1 + math.sin(phi_top_rad)) / (1 - math.sin(phi_top_rad))
 
-                    with st.container(border=True):
-                        st.markdown(f"## Factor of Safety: :{col_tok}[{FS_blk:.2f}] — :{col_tok}[{fs_status}]")
+            Pa_raw = (0.5 * gamma_top * (H_right ** 2) * Ka) - (2 * c_top * H_right * math.sqrt(Ka))
+            Pa = max(Pa_raw, 0.0)
 
-                        forces_df = pd.DataFrame({
-                            "Force Component": [
-                                "Earth Pressure Coeff. Ka",
-                                "Active Thrust Pa (Driving)",
-                                "Earth Pressure Coeff. Kp",
-                                "Passive Resistance Pp",
-                                "Block Weight W",
-                                "Base Shear Resistance τf",
-                                "Total Resisting (Pp + τf)",
-                            ],
-                            "Value": [
-                                f"{Ka:.3f}",
-                                f"{Pa:.1f} kN/m",
-                                f"{Kp:.3f}",
-                                f"{Pp:.1f} kN/m",
-                                f"{W_block:.1f} kN/m",
-                                f"{tau_f:.1f} kN/m",
-                                f"{total_resisting:.1f} kN/m",
-                            ],
-                        })
-                        glass_table(forces_df)
+            Pp = (0.5 * gamma_top * (H_left ** 2) * Kp) + (2 * c_top * H_left * math.sqrt(Kp))
 
-                        write_text("subheader", "Detailed Calculation Log")
+            W_block = ((H_left + H_right) / 2.0) * L_block * gamma_top
+            tau_f = (c_base * L_block) + (W_block * math.tan(math.radians(phi_base)))
+            total_resisting = Pp + tau_f
 
-                        step_ka = (
-                            "### Step 1 — Rankine Earth Pressure Coefficients\n\n"
-                            r"$$K_A = \frac{1-\sin\phi'}{1+\sin\phi'} \qquad K_P = \frac{1+\sin\phi'}{1-\sin\phi'}$$"
-                            "\n\n**Substitution:**\n\n"
-                            rf"$$K_A = \frac{{1-\sin({phi_top}°)}}{{1+\sin({phi_top}°)}} = {Ka:.3f}$$"
-                            "\n\n"
-                            rf"$$K_P = \frac{{1+\sin({phi_top}°)}}{{1-\sin({phi_top}°)}} = {Kp:.3f}$$"
-                        )
-                        step_pa = (
-                            "### Step 2 — Active Thrust (Driving Force)\n\n"
-                            r"$$P_A = \frac{1}{2}\gamma H_a^2 K_A - 2c' H_a \sqrt{K_A}$$"
-                            "\n\n**Substitution:**\n\n"
-                            rf"$$P_A = 0.5 \times {gamma_top} \times {H_right}^2 \times {Ka:.3f} - 2 \times {c_top} \times {H_right} \times \sqrt{{{Ka:.3f}}}$$"
-                            "\n\n"
-                            rf"$$P_A = {Pa_raw:.1f} \rightarrow P_A = {Pa:.1f} \ kN/m \ (\text{{min 0}})$$"
-                        )
-                        step_pp = (
-                            "### Step 3 — Passive Resistance\n\n"
-                            r"$$P_P = \frac{1}{2}\gamma H_p^2 K_P + 2c' H_p \sqrt{K_P}$$"
-                            "\n\n**Substitution:**\n\n"
-                            rf"$$P_P = 0.5 \times {gamma_top} \times {H_left}^2 \times {Kp:.3f} + 2 \times {c_top} \times {H_left} \times \sqrt{{{Kp:.3f}}}$$"
-                            "\n\n"
-                            rf"$$P_P = {Pp:.1f} \ kN/m$$"
-                        )
-                        step_tau = (
-                            "### Step 4 — Base Shear Resistance\n\n"
-                            r"$$\tau_f = C_u \cdot L + W \cdot \tan(\phi_{base})$$"
-                            "\n\n**Block weight:**\n\n"
-                            rf"$$W = \frac{{H_p + H_a}}{{2}} \times L \times \gamma = \frac{{{H_left}+{H_right}}}{{2}} \times {L_block} \times {gamma_top} = {W_block:.1f} \ kN/m$$"
-                            "\n\n**Substitution:**\n\n"
-                            rf"$$\tau_f = {c_base} \times {L_block} + {W_block:.1f} \times \tan({phi_base}°) = {tau_f:.1f} \ kN/m$$"
-                        )
-                        step_fs = (
-                            "### Step 5 — Factor of Safety\n\n"
-                            r"$$FS = \frac{P_P + \tau_f}{P_A}$$"
-                            "\n\n**Substitution:**\n\n"
-                            rf"$$FS = \frac{{{Pp:.1f} + {tau_f:.1f}}}{{{Pa:.1f}}} = \frac{{{total_resisting:.1f}}}{{{Pa:.1f}}} = {FS_blk:.2f} \quad \rightarrow \quad \textbf{{{fs_status}}}$$"
-                        )
-                        for step in [step_ka, step_pa, step_pp, step_tau, step_fs]:
-                            glass_box(step)
-                else:
-                    st.error("Active Thrust ($P_a$) is zero or negative. No driving force to calculate FS.")
+            if Pa > 1e-9:
+                FS_blk = total_resisting / Pa
+            else:
+                FS_blk = 999.0
 
+            level_class, status_text = fs_theme_class(FS_blk)
+
+            st.session_state.blk_last_result = {
+                "FS": FS_blk,
+                "level_class": level_class,
+                "status_text": status_text,
+                "Ka": Ka,
+                "Kp": Kp,
+                "Pa_raw": Pa_raw,
+                "Pa": Pa,
+                "Pp": Pp,
+                "W_block": W_block,
+                "tau_f": tau_f,
+                "total_resisting": total_resisting,
+                "phi_top": float(phi_top),
+                "phi_base": float(phi_base),
+                "gamma_top": float(gamma_top),
+                "c_top": float(c_top),
+                "c_base": float(c_base),
+                "H_left": float(H_left),
+                "H_right": float(H_right),
+                "L_block": float(L_block),
+            }
+
+        if st.session_state.blk_last_result is not None:
+            r = st.session_state.blk_last_result
+
+            st.markdown("---")
+
+            st.markdown(
+                f"""
+                <div class="fs-card">
+                    <div class="fs-row">
+                        <div class="fs-title">Factor of Safety</div>
+                        <div class="fs-badge fs-{r['level_class']}">
+                            <span class="fs-dot fs-dot-{r['level_class']}"></span>
+                            <span>FS = {r['FS']:.3f}</span>
+                            <span>—</span>
+                            <span>{r['status_text']}</span>
+                        </div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            forces_df = pd.DataFrame({
+                "Force Component": [
+                    "Earth Pressure Coeff. Ka",
+                    "Active Thrust Pa (Driving)",
+                    "Earth Pressure Coeff. Kp",
+                    "Passive Resistance Pp",
+                    "Block Weight W",
+                    "Base Shear Resistance τf",
+                    "Total Resisting (Pp + τf)",
+                ],
+                "Value": [
+                    f"{r['Ka']:.3f}",
+                    f"{r['Pa']:.1f} kN/m",
+                    f"{r['Kp']:.3f}",
+                    f"{r['Pp']:.1f} kN/m",
+                    f"{r['W_block']:.1f} kN/m",
+                    f"{r['tau_f']:.1f} kN/m",
+                    f"{r['total_resisting']:.1f} kN/m",
+                ],
+            })
+            glass_table(forces_df)
+
+            write_text("subheader", "Detailed Calculation Log")
+
+            if r["Pa"] <= 1e-9:
+                glass_box("### Active Thrust Check\n\nActive thrust $P_a$ is zero or negative, so there is no driving force. FS is set to 999 by convention.")
+            else:
+                step_ka = (
+                    "### Step 1 — Rankine Earth Pressure Coefficients\n\n"
+                    r"$$K_A = \frac{1-\sin\phi'}{1+\sin\phi'} \qquad K_P = \frac{1+\sin\phi'}{1-\sin\phi'}$$"
+                    "\n\n**Substitution:**\n\n"
+                    rf"$$K_A = \frac{{1-\sin({r['phi_top']}°)}}{{1+\sin({r['phi_top']}°)}} = {r['Ka']:.3f}$$"
+                    "\n\n"
+                    rf"$$K_P = \frac{{1+\sin({r['phi_top']}°)}}{{1-\sin({r['phi_top']}°)}} = {r['Kp']:.3f}$$"
+                )
+
+                step_pa = (
+                    "### Step 2 — Active Thrust (Driving Force)\n\n"
+                    r"$$P_A = \frac{1}{2}\gamma H_a^2 K_A - 2c' H_a \sqrt{K_A}$$"
+                    "\n\n**Substitution:**\n\n"
+                    rf"$$P_A = 0.5 \times {r['gamma_top']} \times {r['H_right']}^2 \times {r['Ka']:.3f} - 2 \times {r['c_top']} \times {r['H_right']} \times \sqrt{{{r['Ka']:.3f}}}$$"
+                    "\n\n"
+                    rf"$$P_A = {r['Pa_raw']:.1f} \rightarrow P_A = {r['Pa']:.1f} \ \text{{kN/m}} \ (\text{{min 0}})$$"
+                )
+
+                step_pp = (
+                    "### Step 3 — Passive Resistance\n\n"
+                    r"$$P_P = \frac{1}{2}\gamma H_p^2 K_P + 2c' H_p \sqrt{K_P}$$"
+                    "\n\n**Substitution:**\n\n"
+                    rf"$$P_P = 0.5 \times {r['gamma_top']} \times {r['H_left']}^2 \times {r['Kp']:.3f} + 2 \times {r['c_top']} \times {r['H_left']} \times \sqrt{{{r['Kp']:.3f}}}$$"
+                    "\n\n"
+                    rf"$$P_P = {r['Pp']:.1f} \ \text{{kN/m}}$$"
+                )
+
+                step_tau = (
+                    "### Step 4 — Base Shear Resistance\n\n"
+                    r"$$\tau_f = C_u \cdot L + W \cdot \tan(\phi_{base})$$"
+                    "\n\n**Block weight:**\n\n"
+                    rf"$$W = \frac{{H_p + H_a}}{{2}} \times L \times \gamma = \frac{{{r['H_left']}+{r['H_right']}}}{{2}} \times {r['L_block']} \times {r['gamma_top']} = {r['W_block']:.1f} \ \text{{kN/m}}$$"
+                    "\n\n**Substitution:**\n\n"
+                    rf"$$\tau_f = {r['c_base']} \times {r['L_block']} + {r['W_block']:.1f} \times \tan({r['phi_base']}°) = {r['tau_f']:.1f} \ \text{{kN/m}}$$"
+                )
+
+                step_fs = (
+                    "### Step 5 — Factor of Safety\n\n"
+                    r"$$FS = \frac{P_P + \tau_f}{P_A}$$"
+                    "\n\n**Substitution:**\n\n"
+                    rf"$$FS = \frac{{{r['Pp']:.1f} + {r['tau_f']:.1f}}}{{{r['Pa']:.1f}}} = \frac{{{r['total_resisting']:.1f}}}{{{r['Pa']:.1f}}} = {r['FS']:.3f}$$"
+                )
+
+                glass_box("\n\n".join([step_ka, step_pa, step_pp, step_tau, step_fs]))
 
 if __name__ == "__main__":
     app()
