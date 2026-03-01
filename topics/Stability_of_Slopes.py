@@ -398,7 +398,7 @@ def app():
                 beta_slope = st.number_input(
                     "Slope Angle [deg]",
                     min_value=0.0, max_value=90.0,
-                    value=45,
+                    value=45.0,
                     key="mass_beta",
                 )
     
