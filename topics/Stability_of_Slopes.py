@@ -535,18 +535,18 @@ def app():
             st.subheader("Inputs")
             
             st.markdown("**Geometry**")
-            H_left = st.number_input("Passive Wedge Height (H_p) [m]", 1.0, 10.0, 3.0, key="blk_Hp")
-            H_right = st.number_input("Active Wedge Height (H_a) [m]", 1.0, 20.0, 8.0, key="blk_Ha")
-            L_block = st.number_input("Block Length (L) [m]", 1.0, 50.0, 12.0, key="blk_L")
+            H_left = st.number_input("Passive Depth at Toe (H_p) [m]", 1.0, 50.0, 3.0, key="blk_Hp")
+            H_right = st.number_input("Active Depth at Crest (H_a) [m]", 1.0, 50.0, 18.0, key="blk_Ha")
+            L_block = st.number_input("Block Length (L) [m]", 1.0, 100.0, 22.5, key="blk_L")
             
-            st.markdown("**Forces**")
-            Pa = st.number_input("Active Thrust (Driving) Pa [kN]", 0.0, 5000.0, 500.0, key="block_Pa")
-            Pp = st.number_input("Passive Resistance (Resisting) Pp [kN]", 0.0, 5000.0, 200.0, key="block_Pp")
-            W_block = st.number_input("Weight of Central Block [kN]", 0.0, 10000.0, 2000.0, key="block_W")
+            st.markdown("**1. Top Soil Properties (Wedges & Block)**")
+            gamma_top = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 30.0, 20.0, key="blk_gamma")
+            c_top = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, 0.0, key="blk_c_top")
+            phi_top = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 50.0, 36.0, key="blk_phi_top")
             
-            st.markdown("**Weak Layer**")
-            c_base = st.number_input("Base Cohesion (c') [kPa]", 0.0, 100.0, 5.0, key="block_c")
-            phi_base = st.number_input("Base Friction (ϕ') [deg]", 0.0, 45.0, 20.0, key="block_phi")
+            st.markdown("**2. Weak Layer Properties (Base)**")
+            c_base = st.number_input("Undrained Shear Strength / Cohesion (Cu) [kPa]", 0.0, 200.0, 24.0, key="blk_c_base")
+            phi_base = st.number_input("Base Friction (ϕ_base) [deg]", 0.0, 45.0, 0.0, key="blk_phi_base")
             
             calc_blk = st.button("Calculate FS", type="primary", key="btn_calc_block")
 
@@ -554,66 +554,114 @@ def app():
             st.subheader("Block & Wedge Diagram")
             fig_b, ax_b = plt.subplots(figsize=(8, 4))
             
-            # Draw Geometry matching User Image
+            # Draw Schematic Geometry
             wedge_L_width = H_left 
             wedge_R_width = H_right
             
-            # 1. Passive Wedge (Left)
-            passive_poly = [[0, 0], [wedge_L_width, H_left], [wedge_L_width, 0]]
-            ax_b.add_patch(patches.Polygon(passive_poly, facecolor='#A5D6A7', edgecolor='black', alpha=0.5))
-            ax_b.text(wedge_L_width/2, H_left/3, "Passive\nWedge", ha='center', fontsize=8)
-            ax_b.text(wedge_L_width/2, 0.2, "45-ϕ/2", fontsize=7)
-            
-            # 2. Central Block
             block_x_start = wedge_L_width
             block_x_end = wedge_L_width + L_block
-            block_poly = [
-                [block_x_start, 0], [block_x_start, H_left], 
-                [block_x_end, H_right], [block_x_end, 0]
-            ]
-            ax_b.add_patch(patches.Polygon(block_poly, facecolor='lightgrey', edgecolor='black', hatch='//', alpha=0.5))
-            ax_b.text((block_x_start+block_x_end)/2, (H_left+H_right)/4, "BLOCK", ha='center', fontweight='bold')
             
-            # 3. Active Wedge (Right)
-            active_poly = [[block_x_end, 0], [block_x_end, H_right], [block_x_end + wedge_R_width, H_right]]
-            ax_b.add_patch(patches.Polygon(active_poly, facecolor='#FFCCBC', edgecolor='black', alpha=0.5))
-            ax_b.text(block_x_end + wedge_R_width/3, H_right*0.8, "Active\nWedge", ha='center', fontsize=8)
-            ax_b.text(block_x_end + wedge_R_width/2, 0.2, "45+ϕ/2", fontsize=7)
+            # Ground Surface Profile
+            ground_x = [0, block_x_start, block_x_end, block_x_end + wedge_R_width]
+            ground_y = [H_left, H_left, H_right, H_right]
             
-            # 4. Forces
-            ax_b.arrow(block_x_end + 1.5, H_right/3, -1.5, 0, head_width=0.3, color='red', width=0.05)
+            # Weak Layer Base
+            base_x = [0, block_x_end + wedge_R_width]
+            base_y = [0, 0]
+            
+            # Plot the main outlines
+            ax_b.plot(ground_x, ground_y, 'k-', linewidth=2, label="Ground Surface")
+            ax_b.plot(base_x, base_y, 'b-', linewidth=3, label="Weak Layer")
+            
+            # Draw vertical lines separating wedges and block
+            ax_b.plot([block_x_start, block_x_start], [0, H_left], 'k--', linewidth=1)
+            ax_b.plot([block_x_end, block_x_end], [0, H_right], 'k--', linewidth=1)
+            
+            # Fill zones
+            ax_b.fill_between([0, block_x_start], 0, H_left, color='#A5D6A7', alpha=0.5)
+            ax_b.fill_between([block_x_start, block_x_end], 0, np.interp([block_x_start, block_x_end], ground_x, ground_y), color='lightgrey', hatch='//', alpha=0.5)
+            ax_b.fill_between([block_x_end, block_x_end + wedge_R_width], 0, H_right, color='#FFCCBC', alpha=0.5)
+            
+            # Labels
+            ax_b.text(block_x_start/2, H_left/2, "Passive\nZone", ha='center', fontsize=9)
+            ax_b.text((block_x_start+block_x_end)/2, (H_left+H_right)/3, "Central Block", ha='center', fontweight='bold')
+            ax_b.text(block_x_end + wedge_R_width/2, H_right/2, "Active\nZone", ha='center', fontsize=9)
+            
+            # Forces
+            ax_b.arrow(block_x_end + 1.5, H_right/3, -1.5, 0, head_width=0.5, color='red', width=0.1)
             ax_b.text(block_x_end + 1.6, H_right/3, "Pa", color='red', fontweight='bold', va='center')
             
-            ax_b.arrow(block_x_start - 1.5, H_left/3, 1.5, 0, head_width=0.3, color='green', width=0.05)
-            ax_b.text(block_x_start - 2.0, H_left/3, "Pp", color='green', fontweight='bold', va='center')
+            ax_b.arrow(block_x_start - 1.5, H_left/3, 1.5, 0, head_width=0.5, color='green', width=0.1)
+            ax_b.text(block_x_start - 2.5, H_left/3, "Pp", color='green', fontweight='bold', va='center')
             
-            ax_b.text((block_x_start+block_x_end)/2, -0.5, r"$\tau_f$ (Weak Layer)", ha='center')
-            ax_b.arrow((block_x_start+block_x_end)/2, 0, -2, 0, head_width=0.2, color='black') # Resisting shear
+            ax_b.text((block_x_start+block_x_end)/2, -1.5, r"$\tau_f$ (Shear Resistance)", ha='center')
+            ax_b.arrow((block_x_start+block_x_end)/2, -0.5, -3, 0, head_width=0.3, color='black') 
             
-            ax_b.annotate(f"L={L_block}m", xy=(block_x_start, -1), xytext=(block_x_end, -1), arrowprops=dict(arrowstyle='<->'))
+            ax_b.annotate(f"L={L_block}m", xy=(block_x_start, -0.5), xytext=(block_x_end, -0.5), arrowprops=dict(arrowstyle='<->'))
 
             ax_b.set_xlim(-2, block_x_end + wedge_R_width + 2)
-            ax_b.set_ylim(-2, H_right + 2)
+            ax_b.set_ylim(-3, H_right + 3)
             ax_b.axis('off')
             st.pyplot(fig_b)
             plt.close(fig_b)
             
             if calc_blk:
-                resisting_base = (c_base * L_block) + (W_block * math.tan(math.radians(phi_base)))
-                total_resisting = Pp + resisting_base
+                # 1. Rankine Earth Pressure Coefficients
+                phi_top_rad = math.radians(phi_top)
+                Ka = (1 - math.sin(phi_top_rad)) / (1 + math.sin(phi_top_rad))
+                Kp = (1 + math.sin(phi_top_rad)) / (1 - math.sin(phi_top_rad))
+                
+                # 2. Active Force (Pa) - Driving
+                # Formula: 0.5 * gamma * H^2 * Ka - 2*c*H*sqrt(Ka)
+                Pa_calc = (0.5 * gamma_top * (H_right**2) * Ka) - (2 * c_top * H_right * math.sqrt(Ka))
+                Pa = max(Pa_calc, 0.0) # Active force cannot be negative
+                
+                # 3. Passive Force (Pp) - Resisting
+                Pp = (0.5 * gamma_top * (H_left**2) * Kp) + (2 * c_top * H_left * math.sqrt(Kp))
+                
+                # 4. Central Block Weight
+                area_block = ((H_left + H_right) / 2.0) * L_block
+                W_block = area_block * gamma_top
+                
+                # 5. Base Resistance
+                phi_base_rad = math.radians(phi_base)
+                tau_f = (c_base * L_block) + (W_block * math.tan(phi_base_rad))
+                
+                total_resisting = Pp + tau_f
                 total_driving = Pa
                 
+                st.markdown("## 🔎 Step-by-Step Calculation")
+                
+                col_res1, col_res2 = st.columns(2)
+                
+                with col_res1:
+                    st.markdown("### Active Thrust (Driving)")
+                    st.write(f"$K_A$ = {Ka:.3f}")
+                    st.write(f"$P_A$ = {Pa:.1f} kN/m")
+                    
+                    st.markdown("### Passive Resistance")
+                    st.write(f"$K_P$ = {Kp:.3f}")
+                    st.write(f"$P_P$ = {Pp:.1f} kN/m")
+                    
+                with col_res2:
+                    st.markdown("### Base Shear Resistance")
+                    st.write(f"Block Weight (W) = {W_block:.1f} kN/m")
+                    st.write(f"$\tau_f = C_u \cdot L + W \cdot \tan(\phi_{{base}})$")
+                    st.write(f"$\tau_f$ = {tau_f:.1f} kN/m")
+                
+                st.markdown("---")
+                st.markdown("### 📐 Final Factor of Safety")
                 if total_driving > 0:
                     FS_block = total_resisting / total_driving
-                    st.markdown("### Results")
-                    st.latex(r"FS = \frac{P_p + (c'L + W_{block}\\tan\\phi')}{P_a}")
-                    st.write(f"**Base Resistance:** {resisting_base:.1f} kN")
-                    st.write(f"**Total Resisting:** {total_resisting:.1f} kN")
+                    st.latex(r"FS = \frac{P_P + \tau_f}{P_A}")
+                    st.write(f"FS = ({Pp:.1f} + {tau_f:.1f}) / {Pa:.1f}")
+                    st.metric("Factor of Safety (Fs)", f"{FS_block:.2f}")
                     
-                    if FS_block < 1: st.error(f"**FS = {FS_block:.2f} (Unstable)**")
-                    else: st.success(f"**FS = {FS_block:.2f} (Stable)**")
+                    if FS_block < 1: st.error("Slope is UNSTABLE")
+                    elif FS_block < 1.5: st.warning("Slope is Marginally Stable")
+                    else: st.success("Slope is Stable")
                 else:
-                    st.error("Active Thrust (Pa) must be > 0")
+                    st.error("Active Thrust ($P_a$) is zero. No driving force to calculate FS.")
 
 if __name__ == "__main__":
     app()
