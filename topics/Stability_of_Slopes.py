@@ -132,98 +132,149 @@ def app():
             )
 
             st.markdown("---")
-            write_text("subheader", "📊 Analysis Results")
 
-            # ── Stress Components ─────────────────────────────────
-            st.markdown("**Stress Components**")
+            # ── Hero: Factor of Safety ────────────────────────────
+            if FS >= 1.5:
+                fs_color = "#2ecc71"
+                fs_status = "Stable"
+            elif FS >= 1.0:
+                fs_color = "#f39c12"
+                fs_status = "Marginally Stable"
+            else:
+                fs_color = "#e74c3c"
+                fs_status = "Unstable"
 
-            s1, s2, s3, s4 = st.columns(4)
-            s1.metric("Total Normal Stress (σ)", f"{sigma:.2f} kPa")
-            s2.metric("Pore Pressure (u)",        f"{u:.2f} kPa")
-            s3.metric("Effective Stress (σ')",    f"{sigma_eff:.2f} kPa")
-            s4.metric("Shear Stress (τ)",         f"{tau:.2f} kPa")
+            st.markdown(
+                f"""
+                <h2 style="font-size:2rem; font-weight:800; margin-bottom:4px;">
+                    Factor of Safety:
+                    <span style="color:{fs_color};">{FS:.3f}</span>
+                    <span style="font-size:1rem; font-weight:500; color:{fs_color};
+                                 background:{fs_color}22; border:1px solid {fs_color};
+                                 border-radius:20px; padding:3px 12px; margin-left:10px;
+                                 vertical-align:middle;">
+                        {fs_status}
+                    </span>
+                </h2>
+                """,
+                unsafe_allow_html=True,
+            )
 
-            st.markdown("")  # spacer
+            # ── Stress Summary Table ───────────────────────────────
+            stress_df = pd.DataFrame({
+                "Parameter": [
+                    "Total Normal Stress (σ)",
+                    "Pore Water Pressure (u)",
+                    "Effective Normal Stress (σ')",
+                    "Shear Stress (τ)",
+                ],
+                "Value (kPa)": [
+                    f"{sigma:.2f}",
+                    f"{u:.2f}",
+                    f"{sigma_eff:.2f}",
+                    f"{tau:.2f}",
+                ],
+            })
+            st.dataframe(stress_df, use_container_width=True, hide_index=True)
 
-            # ── Factor of Safety ──────────────────────────────────
-            fs_col, status_col = st.columns([1, 2])
+            # ── Special Case Banners ───────────────────────────────
+            if c_prime == 0 and m_ratio == 0:
+                st.info("ℹ️ Special Case: Dry Cohesionless Slope — FS = tan(ϕ') / tan(β)")
+            if c_prime == 0 and m_ratio == 1:
+                st.info("ℹ️ Special Case: Fully Saturated with Seepage — FS = (γ' / γ_sat) · tan(ϕ') / tan(β)")
+            if sigma_eff < 0:
+                st.warning("⚠️ Effective stress is negative — tension condition may exist at failure plane.")
 
-            with fs_col:
-                if FS >= 1.5:
-                    fs_color = "#2ecc71"
-                    fs_label = "🟢 Stable"
-                elif FS >= 1.0:
-                    fs_color = "#f39c12"
-                    fs_label = "🟡 Marginally Stable"
-                else:
-                    fs_color = "#e74c3c"
-                    fs_label = "🔴 Unstable"
+            # ── Detailed Calculation Log ───────────────────────────
+            st.markdown("**Detailed Calculation Log**")
 
-                st.markdown(
-                    f"""
-                    <div style="
-                        background: linear-gradient(135deg, {fs_color}22, {fs_color}44);
-                        border: 2px solid {fs_color};
-                        border-radius: 12px;
-                        padding: 20px;
-                        text-align: center;
-                    ">
-                        <div style="font-size: 13px; color: #aaa; margin-bottom: 4px;">
-                            Factor of Safety
-                        </div>
-                        <div style="font-size: 42px; font-weight: 800; color: {fs_color};">
-                            {FS:.3f}
-                        </div>
-                        <div style="font-size: 16px; font-weight: 600; color: {fs_color};">
-                            {fs_label}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+            beta_r = math.radians(beta)
+            phi_r  = math.radians(phi_prime)
+            z_w    = m_ratio * z
 
-            with status_col:
-                # FS stability bar
-                st.markdown("**Stability Range**")
-                bar_pct = min(FS / 3.0, 1.0) * 100
-                st.markdown(
-                    f"""
-                    <div style="background:#2a2a2a; border-radius:8px; height:18px; width:100%; margin-bottom:6px;">
-                        <div style="
-                            background: linear-gradient(90deg, #e74c3c, #f39c12 33%, #2ecc71 66%);
-                            width:{bar_pct:.1f}%; height:100%; border-radius:8px;
-                        "></div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:11px; color:#aaa;">
-                        <span>0 — Unstable</span><span>1.0</span><span>1.5</span><span>3.0 — Very Stable</span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+            log_html = f"""
+            <div style="
+                background: rgba(255,255,255,0.04);
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 12px;
+                padding: 28px 32px;
+                font-size: 14px;
+                line-height: 2;
+                backdrop-filter: blur(6px);
+            ">
+                <h3 style="margin-top:0; font-size:1.25rem;">Infinite Slope Analysis</h3>
 
-                # Special case notices
-                notices = []
-                if c_prime == 0 and m_ratio == 0:
-                    notices.append(("ℹ️", "Special Case: Dry Cohesionless Slope", "blue"))
-                if c_prime == 0 and m_ratio == 1:
-                    notices.append(("ℹ️", "Special Case: Fully Saturated Seepage Slope", "blue"))
-                if sigma_eff < 0:
-                    notices.append(("⚠️", "Effective stress is negative — tension condition possible", "orange"))
+                <p><strong>Given:</strong>
+                   Slope angle β = {beta}°,
+                   Depth to failure plane z = {z} m,
+                   Cohesion c' = {c_prime} kPa,
+                   Friction angle ϕ' = {phi_prime}°,
+                   γ<sub>dry</sub> = {gamma_dry} kN/m³,
+                   γ<sub>sat</sub> = {gamma_sat} kN/m³,
+                   m = z<sub>w</sub>/z = {m_ratio}
+                </p>
 
-                for icon, msg, color in notices:
-                    st.markdown(
-                        f"""
-                        <div style="
-                            border-left: 4px solid {color};
-                            padding: 8px 12px;
-                            border-radius: 4px;
-                            background: {color}18;
-                            margin-top: 10px;
-                            font-size: 13px;
-                        ">{icon} {msg}</div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+                <hr style="border-color:rgba(255,255,255,0.1); margin:12px 0;">
+
+                <p><strong>Step 1 — Total Normal Stress</strong></p>
+                <p>
+                    Saturated depth = m · z = {m_ratio} × {z} = <strong>{z_w:.2f} m</strong>.
+                </p>
+                <p>
+                    σ = [γ<sub>dry</sub>(1 − m) + γ<sub>sat</sub> · m] · z · cos²β
+                    = [{gamma_dry}×{(1-m_ratio):.2f} + {gamma_sat}×{m_ratio:.2f}] × {z} × cos²({beta}°)
+                    = <strong>{sigma:.2f} kPa</strong>
+                </p>
+
+                <hr style="border-color:rgba(255,255,255,0.1); margin:12px 0;">
+
+                <p><strong>Step 2 — Pore Water Pressure</strong></p>
+                <p>
+                    u = γ<sub>w</sub> · m · z · cos²β
+                    = 9.81 × {m_ratio} × {z} × cos²({beta}°)
+                    = <strong>{u:.2f} kPa</strong>
+                </p>
+
+                <hr style="border-color:rgba(255,255,255,0.1); margin:12px 0;">
+
+                <p><strong>Step 3 — Effective Normal Stress</strong></p>
+                <p>
+                    σ' = σ − u = {sigma:.2f} − {u:.2f} = <strong>{sigma_eff:.2f} kPa</strong>
+                    {"<span style='color:#f39c12;'> ⚠ Tension condition</span>" if sigma_eff < 0 else ""}
+                </p>
+
+                <hr style="border-color:rgba(255,255,255,0.1); margin:12px 0;">
+
+                <p><strong>Step 4 — Shear Stress on Failure Plane</strong></p>
+                <p>
+                    τ = [γ<sub>dry</sub>(1 − m) + γ<sub>sat</sub> · m] · z · sinβ · cosβ
+                    = <strong>{tau:.2f} kPa</strong>
+                </p>
+
+                <hr style="border-color:rgba(255,255,255,0.1); margin:12px 0;">
+
+                <p><strong>Step 5 — Shear Strength (Mohr-Coulomb)</strong></p>
+                <p>
+                    τ<sub>f</sub> = c' + σ' · tan(ϕ')
+                    = {c_prime} + {sigma_eff:.2f} × tan({phi_prime}°)
+                    = {c_prime} + {sigma_eff:.2f} × {math.tan(phi_r):.4f}
+                    = <strong>{c_prime + sigma_eff * math.tan(phi_r):.2f} kPa</strong>
+                </p>
+
+                <hr style="border-color:rgba(255,255,255,0.1); margin:12px 0;">
+
+                <p><strong>Step 6 — Factor of Safety</strong></p>
+                <p>
+                    FS = τ<sub>f</sub> / τ
+                    = {c_prime + sigma_eff * math.tan(phi_r):.2f} / {tau:.2f}
+                    = <span style="color:{fs_color}; font-weight:800; font-size:1.2em;">{FS:.3f}</span>
+                    &nbsp;→&nbsp;
+                    <span style="color:{fs_color}; font-weight:600;">{fs_status}</span>
+                </p>
+            </div>
+            """
+
+            st.markdown(log_html, unsafe_allow_html=True)
 
     # ---------------------------------------------------------
     # TAB 2: ROTATIONAL (CIRCULAR)
