@@ -766,13 +766,13 @@ def app():
             # -----------------------------------------------------
             # 1) Layout: 3 columns like Tab 1
             # -----------------------------------------------------
-            c1, c2= st.columns([0.60, 0.40], gap="large")
+            c1, c2= st.columns([0.60, 0.40], gap="medium")
         
             # Inputs
             with c1:
                 write_text("subheader", "1. Global Parameters")
-                c1, c2= st.columns([0.40, 0.40], gap="large")
-                with c1:
+                c3, c4= st.columns([0.40, 0.40], gap="medium")
+                with c3:
                     c_sl = st.number_input(
                         "Cohesion (c') [kPa]",
                         min_value=0.0,
@@ -780,7 +780,7 @@ def app():
                         value=float(st.session_state.get("slice_c", 5.0)),
                         key="slice_c",
                     )
-                with c2:
+                with c4:
                     phi_sl = st.number_input(
                         "Friction Angle (ϕ') [deg]",
                         min_value=0.0,
