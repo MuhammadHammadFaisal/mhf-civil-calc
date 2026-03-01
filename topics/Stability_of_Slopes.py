@@ -62,9 +62,6 @@ def app():
 # TAB 1: TRANSLATIONAL (INFINITE SLOPE)
 # ---------------------------------------------------------
 with tab_trans:
-
-    
-
     c1, c2, c3 = st.columns([1, 1, 1])
 
     # -------------------------------
