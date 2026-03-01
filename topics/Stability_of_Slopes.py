@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import math
-
+from theme import write_text, glass_box, glass_table, apply_theme, render_page_header
 # =========================================================
 # HELPER FUNCTIONS
 # =========================================================
@@ -47,12 +47,17 @@ def calculate_infinite_slope_general(beta, phi, c, gamma_dry, gamma_sat, z, m):
 # MAIN APP
 # =========================================================
 def app():
-
+    # Apply the blueprint theme and the page icon/title
+    apply_theme(page_title="MHF Civil Calc - Slope Stability")
     
+    # Render the professional header with your logo
+    render_page_header("Stability of Slopes")
+
     tab_trans, tab_rot, tab_comp = st.tabs([
         "1. Translational (Infinite)", 
         "2. Rotational (Circular)", 
         "3. Compound (Block)"
+    ])
     ])
 
     # ---------------------------------------------------------
