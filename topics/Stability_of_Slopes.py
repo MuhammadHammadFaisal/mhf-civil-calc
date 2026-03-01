@@ -418,7 +418,7 @@ def app():
                 R = st.number_input(
                     "Radius (R) [m]",
                     min_value=5.0, max_value=50.0,
-                    value=float(st.session_state.mass_R),
+                    value=12.1,
                     key="mass_R",
                 )
     
