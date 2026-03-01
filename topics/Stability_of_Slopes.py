@@ -766,32 +766,31 @@ def app():
             # -----------------------------------------------------
             # 1) Layout: 3 columns like Tab 1
             # -----------------------------------------------------
-            c1, c2, c3 = st.columns([0.40, 0.40, 0.70], gap="large")
+            c1, c2= st.columns([0.40, 0.70], gap="large")
         
             # Inputs
             with c1:
                 write_text("subheader", "1. Global Parameters")
-        
-                c_sl = st.number_input(
-                    "Cohesion (c') [kPa]",
-                    min_value=0.0,
-                    max_value=100.0,
-                    value=float(st.session_state.get("slice_c", 5.0)),
-                    key="slice_c",
-                )
-        
-                phi_sl = st.number_input(
-                    "Friction Angle (ϕ') [deg]",
-                    min_value=0.0,
-                    max_value=45.0,
-                    value=float(st.session_state.get("slice_phi", 30.0)),
-                    key="slice_phi",
-                )
+                c1, c2= st.columns([0.40, 0.40], gap="large")
+                with c1:
+                    c_sl = st.number_input(
+                        "Cohesion (c') [kPa]",
+                        min_value=0.0,
+                        max_value=100.0,
+                        value=float(st.session_state.get("slice_c", 5.0)),
+                        key="slice_c",
+                    )
+                with c2:
+                    phi_sl = st.number_input(
+                        "Friction Angle (ϕ') [deg]",
+                        min_value=0.0,
+                        max_value=45.0,
+                        value=float(st.session_state.get("slice_phi", 30.0)),
+                        key="slice_phi",
+                    )
         
                 write_text("caption", "Ordinary Method of Slices (force equilibrium form).")
         
-            # Table editor
-            with c2:
                 write_text("subheader", "2. Input Slice Data")
         
                 default_data = pd.DataFrame([
@@ -812,7 +811,7 @@ def app():
                 write_text("caption", "Press Calculate to freeze results while you explore inputs.")
         
             # Diagram
-            with c3:
+            with c2:
                 write_text("subheader", "Slice Representation")
         
                 fig_slice, ax_slice = plt.subplots(figsize=(8, 6))
