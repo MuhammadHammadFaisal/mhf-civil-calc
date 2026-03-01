@@ -838,34 +838,44 @@ def app():
                     for i in range(num_slices):
                         x_left = float(slice_edges[i])
                         x_right = float(slice_edges[i + 1])
-        
+                    
                         y_b_left = o_y_sl - math.sqrt(max(0.0, R_sl**2 - (x_left - o_x_sl)**2))
                         y_b_right = o_y_sl - math.sqrt(max(0.0, R_sl**2 - (x_right - o_x_sl)**2))
-        
+                    
                         y_t_left = float(np.interp(x_left, ground_x, ground_y))
                         y_t_right = float(np.interp(x_right, ground_x, ground_y))
-        
+                    
                         if i > 0:
                             ax_slice.plot([x_left, x_left], [y_b_left, y_t_left], 'k--', linewidth=1)
                         if i == num_slices - 1:
                             ax_slice.plot([x_right, x_right], [y_b_right, y_t_right], 'k--', linewidth=1)
-        
+                    
                         mid_x = (x_left + x_right) / 2.0
                         y_t_mid = float(np.interp(mid_x, ground_x, ground_y))
-        
+                    
                         row = edited_df.iloc[i]
-                        slice_no = int(row.get("Slice", i + 1))
-        
+                    
+                        # Skip drawing if row is incomplete while user is typing a new row
+                        required_cols = ["b (m)", "W (kN/m)", "α (deg)"]
+                        if any(pd.isna(row.get(col, np.nan)) for col in required_cols):
+                            continue
+                    
+                        # Safe slice number
+                        raw_slice = row.get("Slice", None)
+                        try:
+                            slice_no = int(raw_slice) if raw_slice is not None and str(raw_slice).strip() != "" else (i + 1)
+                        except Exception:
+                            slice_no = i + 1
+                    
                         circ = patches.Circle((mid_x, y_t_mid - 1.2), 0.5, edgecolor='black', facecolor='white', zorder=3)
                         ax_slice.add_patch(circ)
                         ax_slice.text(mid_x, y_t_mid - 1.2, str(slice_no), ha='center', va='center',
                                       fontweight='bold', zorder=4)
-        
+                    
                         W_show = float(row.get("W (kN/m)", 0.0))
                         a_show = float(row.get("α (deg)", 0.0))
                         ax_slice.text(mid_x, (y_b_left + y_t_left) / 2.0, f"W={W_show:.1f}\nα={a_show:.1f}°",
                                       ha='center', va='center', fontsize=8)
-        
                 ax_slice.set_aspect('equal')
                 ax_slice.set_xlim(-4, 20)
                 ax_slice.set_ylim(-4, 14)
