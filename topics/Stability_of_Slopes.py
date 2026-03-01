@@ -716,7 +716,7 @@ def app():
                 steps.append(step_last)
     
                 all_steps = "\n\n".join(steps)
-                    glass_box(all_steps)
+                glass_box(all_steps)
     
         # =========================================================
         # B) METHOD OF SLICES (UI like Tab 1)
