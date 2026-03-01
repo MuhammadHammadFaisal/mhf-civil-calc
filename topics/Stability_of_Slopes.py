@@ -49,113 +49,227 @@ def app():
     # TAB 1: TRANSLATIONAL (INFINITE SLOPE)
     # ---------------------------------------------------------
     with tab_trans:
-        c1, c2, c3 = st.columns([1, 1, 1])
-
+        # Wider diagram column for better readability
+        c1, c2, c3 = st.columns([0.40, 0.40, 0.70], gap="large")
+    
+        # -----------------------------
+        # Presets (optional, UI-only)
+        # -----------------------------
+        preset = st.selectbox(
+            "Quick Preset",
+            ["Custom", "Dry Sand (c'=0, m=0)", "Dry Soil (c'>0, m=0)", "Saturated (m=1)"],
+            index=0,
+            help="Loads typical starting values so you can begin quickly.",
+            key="inf_preset"
+        )
+    
+        # Default values stored in session_state (so preset can update inputs)
+        if "inf_init_done" not in st.session_state:
+            st.session_state.inf_init_done = True
+            st.session_state.inf_beta = 25.0
+            st.session_state.inf_z = 5.0
+            st.session_state.inf_c = 5.0
+            st.session_state.inf_phi = 30.0
+            st.session_state.inf_gdry = 18.0
+            st.session_state.inf_gsat = 20.0
+            st.session_state.inf_m = 0.0
+    
+        # Apply preset values (only when preset changes)
+        if "inf_last_preset" not in st.session_state:
+            st.session_state.inf_last_preset = "Custom"
+    
+        if preset != st.session_state.inf_last_preset:
+            if preset == "Dry Sand (c'=0, m=0)":
+                st.session_state.inf_c = 0.0
+                st.session_state.inf_phi = 32.0
+                st.session_state.inf_m = 0.0
+                st.session_state.inf_gdry = 18.0
+                st.session_state.inf_gsat = 20.0
+    
+            elif preset == "Dry Soil (c'>0, m=0)":
+                st.session_state.inf_c = 8.0
+                st.session_state.inf_phi = 28.0
+                st.session_state.inf_m = 0.0
+                st.session_state.inf_gdry = 18.0
+                st.session_state.inf_gsat = 20.0
+    
+            elif preset == "Saturated (m=1)":
+                st.session_state.inf_c = 5.0
+                st.session_state.inf_phi = 30.0
+                st.session_state.inf_m = 1.0
+                st.session_state.inf_gdry = 18.0
+                st.session_state.inf_gsat = 20.0
+    
+            # Custom does nothing
+            st.session_state.inf_last_preset = preset
+    
         with c1:
             write_text("subheader", "1. Geometry")
-            beta = st.number_input("Slope Angle (β) [deg]", 0.0, 60.0, 25.0)
-            z = st.number_input("Depth Normal to Slope (z) [m]", 0.5, 20.0, 5.0)
-
+    
+            beta = st.number_input(
+                "Slope Angle (β) [deg]",
+                min_value=0.0, max_value=60.0,
+                value=float(st.session_state.inf_beta),
+                help="Angle of the ground surface measured from horizontal.",
+                key="inf_beta"
+            )
+    
+            z = st.number_input(
+                "Depth Normal to Slope (z) [m]",
+                min_value=0.5, max_value=20.0,
+                value=float(st.session_state.inf_z),
+                help="Thickness above the assumed failure plane measured perpendicular to the slope surface.",
+                key="inf_z"
+            )
+    
+            write_text("caption", "Assumption: failure plane is parallel to the ground surface (infinite slope).")
+    
+            with st.expander("Assumptions used in this model"):
+                st.markdown(
+                    "- Failure plane is **parallel** to slope surface (infinite slope).\n"
+                    "- Combined unit weight:  $\\gamma_{total} = (1-m)\\gamma_{dry} + m\\gamma_{sat}$.\n"
+                    "- Pore pressure model:  $u = \\gamma_w (m z)\\cos^2\\beta$.\n"
+                    "- Stresses shown in **kPa** (since kN/m² = kPa)."
+                )
+    
         with c2:
             write_text("subheader", "2. Soil Properties")
-            c_prime = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, 5.0)
-            phi_prime = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 45.0, 30.0)
-            gamma_dry = st.number_input("Dry Unit Weight (γ_dry) [kN/m³]", 15.0, 25.0, 18.0)
-            gamma_sat = st.number_input("Saturated Unit Weight (γ_sat) [kN/m³]", 15.0, 25.0, 20.0)
-            m_ratio = st.slider("Water Table Ratio (m = z_w / z)", 0.0, 1.0, 0.0)
-            calc_t = st.button("Calculate Factor of Safety", type="primary")
-
+    
+            c_prime = st.number_input(
+                "Cohesion (c') [kPa]",
+                min_value=0.0, max_value=100.0,
+                value=float(st.session_state.inf_c),
+                help="Effective cohesion in Mohr–Coulomb shear strength.",
+                key="inf_c"
+            )
+    
+            phi_prime = st.number_input(
+                "Friction Angle (ϕ') [deg]",
+                min_value=0.0, max_value=45.0,
+                value=float(st.session_state.inf_phi),
+                help="Effective friction angle used in shear strength.",
+                key="inf_phi"
+            )
+    
+            gamma_dry = st.number_input(
+                "Dry Unit Weight (γ_dry) [kN/m³]",
+                min_value=15.0, max_value=25.0,
+                value=float(st.session_state.inf_gdry),
+                help="Typical: ~16–20 kN/m³ for many soils.",
+                key="inf_gdry"
+            )
+    
+            gamma_sat = st.number_input(
+                "Saturated Unit Weight (γ_sat) [kN/m³]",
+                min_value=15.0, max_value=25.0,
+                value=float(st.session_state.inf_gsat),
+                help="Typical: ~19–22 kN/m³ depending on soil.",
+                key="inf_gsat"
+            )
+    
+            m_ratio = st.slider(
+                "Water Table Ratio (m = z_w / z)",
+                min_value=0.0, max_value=1.0,
+                value=float(st.session_state.inf_m),
+                help="m=0 → dry. m=1 → fully saturated thickness.",
+                key="inf_m"
+            )
+    
+            calc_t = st.button("Calculate Factor of Safety", type="primary", key="inf_calc_btn")
+            write_text("caption", "Press Calculate to freeze results while you explore inputs.")
+    
         with c3:
             write_text("subheader", "Slope Diagram")
-            fig_t, ax_t = plt.subplots(figsize=(6, 4))
-            x = np.linspace(0, 10, 100)
+    
+            fig_t, ax_t = plt.subplots(figsize=(7.2, 5.2))
+    
+            x = np.linspace(0, 10, 200)
             beta_r_diag = math.radians(beta)
+    
+            # Ground surface line
             y_surf = x * math.tan(beta_r_diag)
+    
+            # Unit normal pointing into the slope (perpendicular to surface)
             nx = math.sin(beta_r_diag)
             ny = -math.cos(beta_r_diag)
+    
+            # Failure plane at depth z (normal)
             x_fail = x + nx * z
             y_fail = y_surf + ny * z
-            ax_t.plot(x, y_surf, 'k-', linewidth=2)
-            ax_t.plot(x, y_fail, 'r--', linewidth=2)
-            ax_t.fill_between(x, y_surf, y_fail, where=(y_surf >= y_fail), alpha=0.3)
-            if m_ratio > 0:
-                ax_t.plot(x, y_surf - 0.2, 'b--', linewidth=1)
+    
+            ax_t.plot(x, y_surf, 'k-', linewidth=2.5, label="Ground Surface")
+            ax_t.plot(x_fail, y_fail, 'r--', linewidth=2.5, label="Failure Plane")
+    
+            ax_t.fill_between(x, y_surf, y_fail, where=(y_surf >= y_fail), alpha=0.22)
+    
+            # Water table at z_w = m*z normal depth (meaningful)
+            z_w = m_ratio * z
+            if z_w > 0:
+                x_wt = x + nx * z_w
+                y_wt = y_surf + ny * z_w
+                ax_t.plot(x_wt, y_wt, 'b--', linewidth=2.5, label="Water Table (z_w = m·z)")
+    
             ax_t.set_aspect('equal')
             ax_t.axis('off')
+            ax_t.legend(loc="upper left", fontsize=9)
             st.pyplot(fig_t)
             plt.close(fig_t)
-
+    
+        # -----------------------------
+        # Persistent Results (UI-only)
+        # -----------------------------
+        if "inf_last_result" not in st.session_state:
+            st.session_state.inf_last_result = None
+    
         if calc_t:
             FS, sigma, u, tau, sigma_eff = calculate_infinite_slope_general(
                 beta, phi_prime, c_prime, gamma_dry, gamma_sat, z, m_ratio
             )
-            beta_r = math.radians(beta)
-            phi_r  = math.radians(phi_prime)
-            z_w    = m_ratio * z
-            tau_f  = c_prime + sigma_eff * math.tan(phi_r)
+            phi_r = math.radians(phi_prime)
+            tau_f = c_prime + sigma_eff * math.tan(phi_r)
             col_tok, fs_status = fs_colour(FS)
-
+    
+            st.session_state.inf_last_result = {
+                "FS": FS,
+                "sigma": sigma,
+                "u": u,
+                "tau": tau,
+                "sigma_eff": sigma_eff,
+                "tau_f": tau_f,
+                "status": fs_status,
+                "color": col_tok,
+            }
+    
+        if st.session_state.inf_last_result is not None:
+            r = st.session_state.inf_last_result
+    
             st.markdown("---")
             with st.container(border=True):
-                st.markdown(f"## Factor of Safety: :{col_tok}[{FS:.3f}] — :{col_tok}[{fs_status}]")
-
+                st.markdown(f"## Factor of Safety: :{r['color']}[{r['FS']:.3f}] — :{r['color']}[{r['status']}]")
+    
                 stress_df = pd.DataFrame({
-                    "Parameter": ["Total Normal Stress (σ)", "Pore Water Pressure (u)",
-                                  "Effective Normal Stress (σ')", "Shear Stress (τ)"],
-                    "Value (kPa)": [f"{sigma:.2f}", f"{u:.2f}", f"{sigma_eff:.2f}", f"{tau:.2f}"],
+                    "Parameter": [
+                        "Total Normal Stress (σ)",
+                        "Pore Water Pressure (u)",
+                        "Effective Normal Stress (σ')",
+                        "Shear Stress (τ)",
+                        "Shear Strength (τ_f)"
+                    ],
+                    "Value (kPa)": [
+                        f"{r['sigma']:.2f}",
+                        f"{r['u']:.2f}",
+                        f"{r['sigma_eff']:.2f}",
+                        f"{r['tau']:.2f}",
+                        f"{r['tau_f']:.2f}"
+                    ],
                 })
                 glass_table(stress_df)
-
+    
+                # Keep your existing “special case” notes if you want:
                 if c_prime == 0 and m_ratio == 0:
                     st.info("ℹ️ Special Case: Dry Cohesionless Slope — FS = tan(ϕ') / tan(β)")
-                if c_prime == 0 and m_ratio == 1:
-                    st.info("ℹ️ Special Case: Fully Saturated with Seepage — FS = (γ' / γ_sat) · tan(ϕ') / tan(β)")
                 if sigma_eff < 0:
                     st.warning("⚠️ Effective stress is negative — tension condition may exist at failure plane.")
-
-                write_text("subheader", "Detailed Calculation Log")
-
-                step1 = (
-                    f"### Step 1 — Total Normal Stress\n\n"
-                    f"**Given:** β = {beta}°, z = {z} m, γ_dry = {gamma_dry} kN/m³, γ_sat = {gamma_sat} kN/m³, m = {m_ratio}\n\n"
-                    f"Saturated depth = m · z = {m_ratio} × {z} = **{z_w:.2f} m**\n\n"
-                    r"$$\sigma = \left[\gamma_{dry}(1-m) + \gamma_{sat} \cdot m\right] \cdot z \cdot \cos^2\beta$$"
-                    "\n\n**Substitution:**\n\n"
-                    rf"$$\sigma = \left[{gamma_dry} \times {(1-m_ratio):.2f} + {gamma_sat} \times {m_ratio:.2f}\right] \times {z} \times \cos^2({beta}°) = {sigma:.2f} \ kPa$$"
-                )
-                step2 = (
-                    f"### Step 2 — Pore Water Pressure\n\n"
-                    r"$$u = \gamma_w \cdot m \cdot z \cdot \cos^2\beta$$"
-                    "\n\n**Substitution:**\n\n"
-                    rf"$$u = 9.81 \times {m_ratio} \times {z} \times \cos^2({beta}°) = {u:.2f} \ kPa$$"
-                )
-                step3 = (
-                    f"### Step 3 — Effective Normal Stress\n\n"
-                    r"$$\sigma' = \sigma - u$$"
-                    "\n\n**Substitution:**\n\n"
-                    rf"$$\sigma' = {sigma:.2f} - {u:.2f} = {sigma_eff:.2f} \ kPa$$"
-                    + ("\n\n⚠️ **Tension condition — effective stress is negative.**" if sigma_eff < 0 else "")
-                )
-                step4 = (
-                    f"### Step 4 — Shear Stress on Failure Plane\n\n"
-                    r"$$\tau = \left[\gamma_{dry}(1-m) + \gamma_{sat} \cdot m\right] \cdot z \cdot \sin\beta \cdot \cos\beta$$"
-                    "\n\n**Substitution:**\n\n"
-                    rf"$$\tau = \left[{gamma_dry} \times {(1-m_ratio):.2f} + {gamma_sat} \times {m_ratio:.2f}\right] \times {z} \times \sin({beta}°) \times \cos({beta}°) = {tau:.2f} \ kPa$$"
-                )
-                step5 = (
-                    f"### Step 5 — Shear Strength (Mohr-Coulomb)\n\n"
-                    r"$$\tau_f = c' + \sigma' \cdot \tan(\phi')$$"
-                    "\n\n**Substitution:**\n\n"
-                    rf"$$\tau_f = {c_prime} + {sigma_eff:.2f} \times \tan({phi_prime}°) = {c_prime} + {sigma_eff:.2f} \times {math.tan(phi_r):.4f} = {tau_f:.2f} \ kPa$$"
-                )
-                step6 = (
-                    f"### Step 6 — Factor of Safety\n\n"
-                    r"$$FS = \frac{\tau_f}{\tau}$$"
-                    "\n\n**Substitution:**\n\n"
-                    rf"$$FS = \frac{{{tau_f:.2f}}}{{{tau:.2f}}} = {FS:.3f} \quad \rightarrow \quad \textbf{{{fs_status}}}$$"
-                )
-                for step in [step1, step2, step3, step4, step5, step6]:
-                    glass_box(step)
 
     # ---------------------------------------------------------
     # TAB 2: ROTATIONAL (CIRCULAR)
