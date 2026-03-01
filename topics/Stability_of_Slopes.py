@@ -158,39 +158,113 @@ def app():
             calc_t = st.button("Calculate Factor of Safety", type="primary")
 
         # -----------------------------
-        # DIAGRAM
+        # DIAGRAM (REPLACE THIS WHOLE BLOCK)
         # -----------------------------
         with c3:
             write_text("subheader", "Slope Diagram")
-
+        
             fig_t, ax_t = plt.subplots(figsize=(7, 5))
-
-            x = np.linspace(0, 10, 200)
+        
+            # Main slope line
+            x = np.linspace(0, 10, 400)
             beta_r = math.radians(beta)
-
             y_surf = x * math.tan(beta_r)
-
+        
+            # Unit normal pointing into the slope (perpendicular to surface)
             nx = math.sin(beta_r)
             ny = -math.cos(beta_r)
-
+        
+            # Failure plane at depth z (normal to slope)
             x_fail = x + nx * z
             y_fail = y_surf + ny * z
-
-            ax_t.plot(x, y_surf, 'k-', linewidth=2.5)
-            ax_t.plot(x_fail, y_fail, 'r--', linewidth=2.5)
+        
+            # Plot ground + failure plane
+            ax_t.plot(x, y_surf, 'k-', linewidth=3.0, label="Ground Surface")
+            ax_t.plot(x_fail, y_fail, 'r--', linewidth=3.0, label="Failure Plane")
+        
+            # Shade soil mass between surface and failure plane
             ax_t.fill_between(x, y_surf, y_fail, where=(y_surf >= y_fail), alpha=0.22)
-
+        
+            # Water table line at z_w = m*z (parallel to slope)
             z_w = m_ratio * z
             if z_w > 0:
                 x_wt = x + nx * z_w
                 y_wt = y_surf + ny * z_w
-                ax_t.plot(x_wt, y_wt, 'b--', linewidth=2.5)
-
+                ax_t.plot(x_wt, y_wt, 'b--', linewidth=2.5, label="Water Table")
+        
+            # -----------------------------
+            # 1 m slice (visual)
+            # -----------------------------
+            slice_x1 = 3.0
+            slice_x2 = 4.0  # 1 m width
+        
+            y_surf_x1 = np.interp(slice_x1, x, y_surf)
+            y_fail_x1 = np.interp(slice_x1, x_fail, y_fail)
+            y_surf_x2 = np.interp(slice_x2, x, y_surf)
+            y_fail_x2 = np.interp(slice_x2, x_fail, y_fail)
+        
+            ax_t.plot([slice_x1, slice_x1], [y_fail_x1, y_surf_x1], 'k-', linewidth=1.8)
+            ax_t.plot([slice_x2, slice_x2], [y_fail_x2, y_surf_x2], 'k-', linewidth=1.8)
+        
+            ax_t.text((slice_x1 + slice_x2) / 2, max(y_surf_x1, y_surf_x2) + 0.4, "1 m",
+                      ha="center", fontweight="bold")
+        
+            # -----------------------------
+            # Forces on slice (W, Wsinβ, Wcosβ)
+            # -----------------------------
+            mid_x = (slice_x1 + slice_x2) / 2
+            mid_y = (y_surf_x1 + y_surf_x2) / 2 - 0.8
+        
+            # Weight W (vertical down)
+            ax_t.arrow(mid_x, mid_y, 0, -1.4,
+                       head_width=0.20, head_length=0.25,
+                       color='black', width=0.04, length_includes_head=True)
+            ax_t.text(mid_x + 0.25, mid_y - 1.5, "W", fontweight="bold")
+        
+            # Unit vectors along plane and normal to plane
+            tx, ty = math.cos(beta_r), math.sin(beta_r)      # along slope
+            nx_p, ny_p = -math.sin(beta_r), math.cos(beta_r) # outward normal (for display)
+        
+            # Component arrows (purely illustrative directions)
+            comp_len = 1.2
+        
+            # W sinβ (downslope, along plane)
+            ax_t.arrow(mid_x, mid_y - 0.5, tx * comp_len, ty * comp_len,
+                       head_width=0.18, head_length=0.22,
+                       color='red', width=0.035, length_includes_head=True)
+            ax_t.text(mid_x + tx * (comp_len + 0.2), mid_y - 0.5 + ty * (comp_len + 0.2),
+                      r"$W\sin\beta$", color="red", fontweight="bold")
+        
+            # W cosβ (normal to plane)
+            ax_t.arrow(mid_x, mid_y - 0.5, nx_p * comp_len, ny_p * comp_len,
+                       head_width=0.18, head_length=0.22,
+                       color='blue', width=0.035, length_includes_head=True)
+            ax_t.text(mid_x + nx_p * (comp_len + 0.2), mid_y - 0.5 + ny_p * (comp_len + 0.2),
+                      r"$W\cos\beta$", color="blue", fontweight="bold")
+        
+            # -----------------------------
+            # Stress labels on failure plane
+            # -----------------------------
+            # Place labels near left slice edge on the failure plane
+            lab_x = slice_x1 + 0.2
+            lab_y = np.interp(lab_x, x_fail, y_fail)
+        
+            ax_t.text(lab_x + 0.4, lab_y + 0.15, r"$\tau$", color="red", fontweight="bold")
+            ax_t.text(lab_x - 0.2, lab_y + 0.50, r"$\sigma$", color="blue", fontweight="bold")
+        
+            # -----------------------------
+            # Show beta angle at toe (visual only)
+            # -----------------------------
+            # Small arc hint
+            ax_t.text(0.35, 0.15, r"$\beta$", fontsize=13, fontweight="bold")
+        
+            # Final formatting
             ax_t.set_aspect('equal')
             ax_t.axis('off')
+            ax_t.legend(loc="upper left", fontsize=9)
+        
             st.pyplot(fig_t)
             plt.close(fig_t)
-
         # -----------------------------
         # CALCULATION + RESULTS
         # -----------------------------
