@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import math
-from theme import write_text, glass_box, glass_table, apply_theme, render_page_header
+from theme import write_text, glass_box, glass_table, apply_theme
 # =========================================================
 # HELPER FUNCTIONS
 # =========================================================
