@@ -729,63 +729,71 @@ def app():
         # B) METHOD OF SLICES (UI like Tab 1)
         # =========================================================
         else:
-            # Optional presets (UI only)
-            with st.expander("Example Scenarios (optional)"):
-                preset_slices = st.selectbox(
-                    "Auto-fill typical values",
-                    ["Custom", "Dry (u=0 everywhere)", "Moderate Pore Pressure", "Higher Friction (φ'=35°)"],
-                    index=0,
-                    help="This only changes input values / table defaults. It does NOT change the calculation method.",
-                    key="slice_preset",
-                )
-    
-            if "slice_initialized" not in st.session_state:
-                st.session_state.slice_initialized = True
-                st.session_state.slice_phi = 30.0
-                st.session_state.slice_c = 5.0
-                st.session_state.slice_last_result = None
-                st.session_state.slice_last_preset = "Custom"
-    
-            # Apply preset only when changed (only updates phi/c; table can be edited by user anyway)
+            # -----------------------------------------------------
+            # 0) Safe defaults (never crashes)
+            # -----------------------------------------------------
+            st.session_state.setdefault("slice_initialized", True)
+            st.session_state.setdefault("slice_phi", 30.0)
+            st.session_state.setdefault("slice_c", 5.0)
+            st.session_state.setdefault("slice_last_result", None)
+            st.session_state.setdefault("slice_last_preset", "Custom")
+        
+            # Always define preset_slices (so no NameError even if expander removed later)
+            preset_slices = st.selectbox(
+                "Quick Preset",
+                ["Custom", "Dry (u=0 everywhere)", "Moderate Pore Pressure", "Higher Friction (φ'=35°)"],
+                index=0,
+                help="This only changes input values / table defaults. It does NOT change the calculation method.",
+                key="slice_preset",
+            )
+        
+            # Apply preset only when changed (only updates phi/c; table is still editable)
             if preset_slices != st.session_state.slice_last_preset:
                 if preset_slices == "Dry (u=0 everywhere)":
                     st.session_state.slice_phi = 30.0
                     st.session_state.slice_c = 5.0
-    
+        
                 elif preset_slices == "Moderate Pore Pressure":
                     st.session_state.slice_phi = 30.0
                     st.session_state.slice_c = 5.0
-    
+        
                 elif preset_slices == "Higher Friction (φ'=35°)":
                     st.session_state.slice_phi = 35.0
                     st.session_state.slice_c = 5.0
-    
+        
                 st.session_state.slice_last_preset = preset_slices
-    
+        
+            # -----------------------------------------------------
+            # 1) Layout: 3 columns like Tab 1
+            # -----------------------------------------------------
+            c1, c2, c3 = st.columns([0.40, 0.40, 0.70], gap="large")
+        
             # Inputs
             with c1:
                 write_text("subheader", "1. Global Parameters")
-    
+        
                 c_sl = st.number_input(
                     "Cohesion (c') [kPa]",
-                    min_value=0.0, max_value=100.0,
-                    value=float(st.session_state.slice_c),
+                    min_value=0.0,
+                    max_value=100.0,
+                    value=float(st.session_state.get("slice_c", 5.0)),
                     key="slice_c",
                 )
-    
+        
                 phi_sl = st.number_input(
                     "Friction Angle (ϕ') [deg]",
-                    min_value=0.0, max_value=45.0,
-                    value=float(st.session_state.slice_phi),
+                    min_value=0.0,
+                    max_value=45.0,
+                    value=float(st.session_state.get("slice_phi", 30.0)),
                     key="slice_phi",
                 )
-    
+        
                 write_text("caption", "Ordinary Method of Slices (force equilibrium form).")
-    
+        
             # Table editor
             with c2:
                 write_text("subheader", "2. Input Slice Data")
-    
+        
                 default_data = pd.DataFrame([
                     {"Slice": 1, "b (m)": 2.0, "h (m)": 1.0, "W (kN/m)": 38.0,  "α (deg)": -5.0, "u/γ_w (m)": 0.0},
                     {"Slice": 2, "b (m)": 4.0, "h (m)": 3.2, "W (kN/m)": 243.0, "α (deg)": 12.0, "u/γ_w (m)": 0.5},
@@ -793,130 +801,139 @@ def app():
                     {"Slice": 4, "b (m)": 4.0, "h (m)": 6.0, "W (kN/m)": 456.0, "α (deg)": 45.0, "u/γ_w (m)": 0.8},
                     {"Slice": 5, "b (m)": 4.0, "h (m)": 3.5, "W (kN/m)": 266.0, "α (deg)": 60.0, "u/γ_w (m)": 0.0},
                 ])
-    
+        
                 # If preset says "dry", prefill u with 0 (still editable)
                 if preset_slices == "Dry (u=0 everywhere)":
                     default_data["u/γ_w (m)"] = 0.0
-    
+        
                 edited_df = st.data_editor(default_data, num_rows="dynamic", key="slice_editor")
-    
+        
                 calc_slices = st.button("Calculate Factor of Safety", type="primary", key="btn_calc_slices")
                 write_text("caption", "Press Calculate to freeze results while you explore inputs.")
-    
+        
             # Diagram
             with c3:
                 write_text("subheader", "Slice Representation")
-    
+        
                 fig_slice, ax_slice = plt.subplots(figsize=(8, 6))
-    
+        
                 ground_x = [-4, 0, 10, 18]
                 ground_y = [0, 0, 8, 8]
                 ax_slice.plot(ground_x, ground_y, 'k-', linewidth=2.5)
-    
+        
                 o_x_sl, o_y_sl = 3.0, 12.0
                 R_sl = math.sqrt(o_x_sl**2 + o_y_sl**2)
-    
+        
                 arc_x_full = np.linspace(0, 14.5, 160)
                 arc_y_full = o_y_sl - np.sqrt(R_sl**2 - (arc_x_full - o_x_sl)**2)
                 ax_slice.plot(arc_x_full, arc_y_full, 'k-', linewidth=2.5)
-    
+        
                 ax_slice.plot(o_x_sl, o_y_sl, 'ko')
                 ax_slice.text(o_x_sl - 0.5, o_y_sl + 0.5, "O", fontweight='bold', fontsize=12)
-    
+        
                 ax_slice.text(14, 11, "— NOT TO SCALE —", ha='center', fontsize=10, fontweight='bold')
-    
+        
                 num_slices = len(edited_df)
                 if num_slices > 0:
                     slice_edges = np.linspace(0, 14.5, num_slices + 1)
                     for i in range(num_slices):
-                        x_left = slice_edges[i]
-                        x_right = slice_edges[i + 1]
-    
-                        y_b_left = o_y_sl - math.sqrt(R_sl**2 - (x_left - o_x_sl)**2)
-                        y_b_right = o_y_sl - math.sqrt(R_sl**2 - (x_right - o_x_sl)**2)
-    
-                        y_t_left = np.interp(x_left, ground_x, ground_y)
-                        y_t_right = np.interp(x_right, ground_x, ground_y)
-    
+                        x_left = float(slice_edges[i])
+                        x_right = float(slice_edges[i + 1])
+        
+                        y_b_left = o_y_sl - math.sqrt(max(0.0, R_sl**2 - (x_left - o_x_sl)**2))
+                        y_b_right = o_y_sl - math.sqrt(max(0.0, R_sl**2 - (x_right - o_x_sl)**2))
+        
+                        y_t_left = float(np.interp(x_left, ground_x, ground_y))
+                        y_t_right = float(np.interp(x_right, ground_x, ground_y))
+        
                         if i > 0:
                             ax_slice.plot([x_left, x_left], [y_b_left, y_t_left], 'k--', linewidth=1)
                         if i == num_slices - 1:
                             ax_slice.plot([x_right, x_right], [y_b_right, y_t_right], 'k--', linewidth=1)
-    
-                        mid_x = (x_left + x_right) / 2
-                        y_t_mid = np.interp(mid_x, ground_x, ground_y)
+        
+                        mid_x = (x_left + x_right) / 2.0
+                        y_t_mid = float(np.interp(mid_x, ground_x, ground_y))
+        
                         row = edited_df.iloc[i]
-    
-                        circ = patches.Circle((mid_x, y_t_mid - 1.2), 0.5,
-                                              edgecolor='black', facecolor='white', zorder=3)
+                        slice_no = int(row.get("Slice", i + 1))
+        
+                        circ = patches.Circle((mid_x, y_t_mid - 1.2), 0.5, edgecolor='black', facecolor='white', zorder=3)
                         ax_slice.add_patch(circ)
-                        ax_slice.text(mid_x, y_t_mid - 1.2, str(int(row["Slice"])),
-                                      ha='center', va='center', fontweight='bold', zorder=4)
-    
-                        ax_slice.text(mid_x, (y_b_left + y_t_left) / 2,
-                                      f"W={row['W (kN/m)']}\nα={row['α (deg)']}°",
+                        ax_slice.text(mid_x, y_t_mid - 1.2, str(slice_no), ha='center', va='center',
+                                      fontweight='bold', zorder=4)
+        
+                        W_show = float(row.get("W (kN/m)", 0.0))
+                        a_show = float(row.get("α (deg)", 0.0))
+                        ax_slice.text(mid_x, (y_b_left + y_t_left) / 2.0, f"W={W_show:.1f}\nα={a_show:.1f}°",
                                       ha='center', va='center', fontsize=8)
-    
+        
                 ax_slice.set_aspect('equal')
                 ax_slice.set_xlim(-4, 20)
                 ax_slice.set_ylim(-4, 14)
                 ax_slice.axis('off')
-    
+        
                 st.pyplot(fig_slice)
                 plt.close(fig_slice)
-    
-            # Calculation + persistent results
+        
+            # -----------------------------------------------------
+            # 2) Calculation + persistent results (type-safe)
+            # -----------------------------------------------------
             if calc_slices:
                 gamma_w = 9.81
+        
                 sum_l = 0.0
                 sum_W_cos = 0.0
                 sum_W_sin = 0.0
                 sum_u_l = 0.0
-    
+        
                 results_list = []
-    
+        
                 for _, row in edited_df.iterrows():
-                    b = row["b (m)"]
-                    W_s = row["W (kN/m)"]
-                    alpha_rad = math.radians(row["α (deg)"])
-                    u_head = row["u/γ_w (m)"]
-    
-                    l = b / math.cos(alpha_rad) if math.cos(alpha_rad) != 0 else 0.0
-                    W_cos = W_s * math.cos(alpha_rad)
-                    W_sin = W_s * math.sin(alpha_rad)
+                    b = float(row.get("b (m)", 0.0))
+                    W_s = float(row.get("W (kN/m)", 0.0))
+                    alpha_deg = float(row.get("α (deg)", 0.0))
+                    u_head = float(row.get("u/γ_w (m)", 0.0))
+                    h_val = float(row.get("h (m)", 0.0))
+                    slice_no = int(row.get("Slice", 0))
+        
+                    alpha_rad = math.radians(alpha_deg)
+                    cos_a = math.cos(alpha_rad)
+                    sin_a = math.sin(alpha_rad)
+        
+                    l = b / cos_a if abs(cos_a) > 1e-9 else 0.0
+                    W_cos = W_s * cos_a
+                    W_sin = W_s * sin_a
                     u_l = u_head * gamma_w * l
-    
+        
                     sum_l += l
                     sum_W_cos += W_cos
                     sum_W_sin += W_sin
                     sum_u_l += u_l
-    
+        
                     results_list.append({
-                        "Slice No": int(row["Slice"]),
+                        "Slice No": slice_no,
                         "b (m)": b,
-                        "h (m)": row["h (m)"],
+                        "h (m)": h_val,
                         "W (kN/m)": W_s,
-                        "α (°)": row["α (deg)"],
+                        "α (°)": alpha_deg,
                         "W·cos(α)": round(W_cos, 2),
                         "W·sin(α)": round(W_sin, 2),
                         "u/γ_w (m)": u_head,
                         "l (m)": round(l, 2),
                         "u·l": round(u_l, 2),
                     })
-    
+        
                 sum_N_prime = sum_W_cos - sum_u_l
-                phi_rad = math.radians(phi_sl)
-    
-                resisting = (c_sl * sum_l) + (math.tan(phi_rad) * sum_N_prime)
+                phi_rad = math.radians(float(phi_sl))
+                tan_phi = math.tan(phi_rad)
+        
+                resisting = (float(c_sl) * sum_l) + (tan_phi * sum_N_prime)
                 driving = sum_W_sin
-    
-                if driving != 0:
-                    FS_sl = resisting / driving
-                else:
-                    FS_sl = 999.0
-    
+        
+                FS_sl = (resisting / driving) if abs(driving) > 1e-9 else 999.0
+        
                 level_class, status_text = fs_theme_class(FS_sl)
-    
+        
                 st.session_state.slice_last_result = {
                     "FS": FS_sl,
                     "level_class": level_class,
@@ -929,14 +946,16 @@ def app():
                     "sum_W_sin": sum_W_sin,
                     "resisting": resisting,
                     "driving": driving,
-                    "tan_phi": math.tan(phi_rad),
+                    "tan_phi": tan_phi,
+                    "c_sl": float(c_sl),
+                    "phi_sl": float(phi_sl),
                 }
-    
+        
             if st.session_state.get("slice_last_result") is not None:
                 r = st.session_state.slice_last_result
-    
+        
                 st.markdown("---")
-    
+        
                 st.markdown(
                     f"""
                     <div class="fs-card">
@@ -953,10 +972,10 @@ def app():
                     """,
                     unsafe_allow_html=True
                 )
-    
+        
                 res_df = pd.DataFrame(r["results_list"])
                 glass_table(res_df)
-    
+        
                 sums_df = pd.DataFrame({
                     "Summation": [
                         "Σl (m)",
@@ -976,33 +995,33 @@ def app():
                     ],
                 })
                 glass_table(sums_df)
-    
+        
                 write_text("subheader", "Detailed Calculation Log")
-    
+        
                 step1 = (
                     "### Step 1 — Ordinary Method of Slices Formula\n\n"
                     r"$$F_s = \frac{c' \cdot \sum l + \tan\phi' \cdot \sum(W\cos\alpha - u \cdot l)}{\sum W\sin\alpha}$$"
                 )
-    
+        
                 step2 = (
                     "### Step 2 — Resisting Forces\n\n"
-                    rf"**Cohesion term:** $c' \cdot \Sigma l = {c_sl:.2f} \times {r['sum_l']:.2f} = {(c_sl * r['sum_l']):.2f}\ \text{{kN/m}}$\n\n"
+                    rf"**Cohesion term:** $c' \cdot \Sigma l = {r['c_sl']:.2f} \times {r['sum_l']:.2f} = {(r['c_sl'] * r['sum_l']):.2f}\ \text{{kN/m}}$\n\n"
                     rf"**Friction term:** $\tan(\phi') \cdot \Sigma N' = {r['tan_phi']:.4f} \times {r['sum_N_prime']:.2f} = {(r['tan_phi'] * r['sum_N_prime']):.2f}\ \text{{kN/m}}$\n\n"
                     rf"$$\text{{Total Resisting}} = {r['resisting']:.2f}\ \text{{kN/m}}$$"
                 )
-    
+        
                 step3 = (
                     "### Step 3 — Driving Forces\n\n"
                     rf"$$\sum W \sin\alpha = {r['driving']:.2f}\ \text{{kN/m}}$$"
                 )
-    
+        
                 step4 = (
                     "### Step 4 — Factor of Safety\n\n"
                     r"$$FS = \frac{\text{Resisting}}{\text{Driving}}$$"
                     "\n\n**Substitution:**\n\n"
                     rf"$$FS = \frac{{{r['resisting']:.2f}}}{{{r['driving']:.2f}}} = {r['FS']:.3f}$$"
                 )
-    
+        
                 for s in [step1, step2, step3, step4]:
                     glass_box(s)
     # ---------------------------------------------------------
