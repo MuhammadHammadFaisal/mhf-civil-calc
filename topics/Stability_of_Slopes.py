@@ -349,81 +349,77 @@ def app():
                 calc_slices = st.button("Calculate FS (Ordinary Method)", type="primary", key="btn_calc_slices")
 
             with col_s2:
-                st.subheader("Visual Cross-Section")
+                st.subheader("Slice Representation")
                 fig_slice, ax_slice = plt.subplots(figsize=(8, 6))
                 
-                if not edited_df.empty:
-                    # 1. Reconstruct the failure arc from the table's bases and angles
-                    x_pos = 0
-                    y_pos = 0
-                    arc_x = [x_pos]
-                    arc_y = [y_pos]
+                # 1. Static "Not to Scale" Geometry
+                # Ground surface (fixed dimensions for visual reference)
+                ground_x = [-3, 0, 12, 22]
+                ground_y = [0, 0, 10, 10]
+                ax_slice.plot(ground_x, ground_y, 'k-', linewidth=2.5, label="Ground Surface")
+                
+                # Failure Arc (Fixed circular arc passing from toe to crest)
+                o_x, o_y = 4.0, 15.0
+                R = math.sqrt(o_x**2 + o_y**2) # Radius to pass through (0,0)
+                
+                # Generate points for the smooth slip circle
+                arc_x_full = np.linspace(0, 18, 100)
+                arc_y_full = o_y - np.sqrt(R**2 - (arc_x_full - o_x)**2)
+                ax_slice.plot(arc_x_full, arc_y_full, 'r-', linewidth=2.5, label="Slip Surface")
+                
+                # Add "NOT TO SCALE" indicator exactly like the textbook
+                ax_slice.text(15, 13, "— NOT TO SCALE —", ha='center', fontsize=10, fontweight='bold')
+                
+                # 2. Dynamic Slices based on User Table Rows
+                num_slices = len(edited_df)
+                if num_slices > 0:
+                    # Evenly divide the arc based on the number of slices in the table
+                    slice_edges = np.linspace(0, 18, num_slices + 1)
                     
-                    for index, row in edited_df.iterrows():
-                        alpha = math.radians(row["Base Angle α (deg)"])
-                        l = row["Base Length l (m)"]
+                    for i in range(num_slices):
+                        x_left = slice_edges[i]
+                        x_right = slice_edges[i+1]
                         
-                        # Calculate horizontal slice width
-                        b = l * math.cos(alpha) 
+                        # Calculate bottom bounds on the arc
+                        y_b_left = o_y - math.sqrt(R**2 - (x_left - o_x)**2)
+                        y_b_right = o_y - math.sqrt(R**2 - (x_right - o_x)**2)
                         
-                        x_pos += b
-                        y_pos += b * math.tan(alpha)
-                        
-                        arc_x.append(x_pos)
-                        arc_y.append(y_pos)
-                        
-                    # 2. Approximate a ground surface based on the total width
-                    total_width = arc_x[-1]
-                    crest_x = total_width * 0.5 # Assume crest is halfway across
-                    
-                    # Estimate ground height based on the heaviest slice
-                    max_weight = edited_df["Weight (kN)"].max()
-                    crest_y = max(arc_y) + (max_weight / 25.0) 
-                    
-                    ground_x = [-5, 0, crest_x, total_width + 5]
-                    ground_y = [0, 0, crest_y, crest_y]
-                    
-                    ax_slice.plot(ground_x, ground_y, 'k-', linewidth=2.5, label="Ground Surface")
-                    ax_slice.plot(arc_x, arc_y, 'r-', linewidth=2.5, label="Slip Surface")
-                    
-                    # 3. Draw the individual slices (vertical drops)
-                    for i in range(len(edited_df)):
-                        row = edited_df.iloc[i]
-                        slice_num = int(row['Slice'])
-                        
-                        x_left = arc_x[i]
-                        x_right = arc_x[i+1]
-                        y_bottom_left = arc_y[i]
-                        y_bottom_right = arc_y[i+1]
-                        
-                        # Interpolate top points on the ground surface so they match the slope
-                        y_top_left = np.interp(x_left, ground_x, ground_y)
-                        y_top_right = np.interp(x_right, ground_x, ground_y)
+                        # Calculate top bounds on the ground surface
+                        y_t_left = np.interp(x_left, ground_x, ground_y)
+                        y_t_right = np.interp(x_right, ground_x, ground_y)
                         
                         # Draw the closed polygon for the slice
-                        poly = [[x_left, y_bottom_left], [x_right, y_bottom_right], 
-                                [x_right, y_top_right], [x_left, y_top_left]]
+                        poly = [[x_left, y_b_left], [x_right, y_b_right], 
+                                [x_right, y_t_right], [x_left, y_t_left]]
                         
                         slice_patch = patches.Polygon(poly, edgecolor='black', facecolor='lightgrey', alpha=0.5)
                         ax_slice.add_patch(slice_patch)
                         
-                        # Labels and center lines
+                        # Center coordinates for text labels
                         mid_x = (x_left + x_right) / 2
-                        mid_y = (y_bottom_left + y_top_left) / 2
+                        mid_y = (max(y_b_left, y_b_right) + min(y_t_left, y_t_right)) / 2
                         
-                        ax_slice.text(mid_x, mid_y, f"S{slice_num}", ha='center', fontweight='bold')
-                        ax_slice.plot([mid_x, mid_x], [mid_y, (y_bottom_left+y_bottom_right)/2], 'k--', linewidth=0.5)
+                        # Get user's actual data from the table to display
+                        row = edited_df.iloc[i]
+                        slice_num = int(row['Slice'])
+                        weight = row['Weight (kN)']
+                        
+                        # Draw vertical dashed line down the center of the slice
+                        y_b_mid = o_y - math.sqrt(R**2 - (mid_x - o_x)**2)
+                        y_t_mid = np.interp(mid_x, ground_x, ground_y)
+                        ax_slice.plot([mid_x, mid_x], [y_b_mid, y_t_mid], 'k--', linewidth=0.5)
+                        
+                        # Label the slice with its ID and Weight
+                        ax_slice.text(mid_x, mid_y, f"S{slice_num}\n{weight}kN", 
+                                      ha='center', va='center', fontsize=8, fontweight='bold')
 
-                    ax_slice.set_aspect('equal')
-                    ax_slice.set_xlim(-2, total_width + 2)
-                    ax_slice.set_ylim(min(arc_y) - 2, crest_y + 3)
-                    ax_slice.axis('off')
-                    
-                    st.pyplot(fig_slice)
-                    plt.close(fig_slice)
-                else:
-                    st.warning("Enter slice data to generate the diagram.")
-                    
+                ax_slice.set_aspect('equal')
+                ax_slice.set_xlim(-4, 24)
+                ax_slice.set_ylim(-4, 16)
+                ax_slice.axis('off')
+                
+                st.pyplot(fig_slice)
+                plt.close(fig_slice)
 
     # ---------------------------------------------------------
     # TAB 3: COMPOUND (BLOCK & WEDGE)
