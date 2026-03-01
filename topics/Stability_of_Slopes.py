@@ -391,7 +391,7 @@ def app():
                 H_slope = st.number_input(
                     "Slope Height (H) [m]",
                     min_value=1.0, max_value=50.0,
-                    value=float(st.session_state.mass_H),
+                    value=8.5,
                     key="mass_H",
                 )
     
