@@ -646,8 +646,8 @@ def app():
                 with col_res2:
                     st.markdown("### Base Shear Resistance")
                     st.write(f"Block Weight (W) = {W_block:.1f} kN/m")
-                    st.write(f"$\tau_f = C_u \cdot L + W \cdot \tan(\phi_{{base}})$")
-                    st.write(f"$\tau_f$ = {tau_f:.1f} kN/m")
+                    st.latex(r"\tau_f = C_u \cdot L + W \cdot \tan(\phi_{base})")
+                    st.write(rf"$\tau_f$ = {tau_f:.1f} kN/m")
                 
                 st.markdown("---")
                 st.markdown("### 📐 Final Factor of Safety")
