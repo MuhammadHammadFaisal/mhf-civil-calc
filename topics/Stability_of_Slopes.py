@@ -202,6 +202,7 @@ def app():
                 # Minimum cohesion set to 0.0
                 Cu = st.number_input("Undrained Shear Strength (Cu) [kPa]", 0.0, 200.0, 65.0, key="mass_cu")
                 
+                calc_rot = st.button("Calculate Factor of Safety", type="primary", key="btn_calc_rot_mass")
                 st.caption("Weight Calculation:")
                 area_approx = st.number_input("Area of Sliding Mass [m²]", 1.0, 500.0, 70.0, key="mass_area")
                 W_calc = area_approx * gamma_clay
