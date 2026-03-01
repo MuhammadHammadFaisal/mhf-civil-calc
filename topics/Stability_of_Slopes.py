@@ -47,10 +47,7 @@ def calculate_infinite_slope_general(beta, phi, c, gamma_dry, gamma_sat, z, m):
 # MAIN APP
 # =========================================================
 def app():
-    # Apply the blueprint theme and the page icon/title
-    apply_theme(page_title="MHF Civil Calc - Slope Stability")
-    
-
+    # Apply the blueprint theme and the page icon/titl
     tab_trans, tab_rot, tab_comp = st.tabs([
         "1. Translational (Infinite)", 
         "2. Rotational (Circular)", 
