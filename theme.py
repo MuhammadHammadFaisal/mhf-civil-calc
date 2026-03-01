@@ -177,6 +177,7 @@ def glass_box(content):
     """
     html = f"""<div style="background-color: rgba(0, 0, 0, 0.35); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); margin-bottom: 15px;">\n\n{content}\n\n</div>"""
     st.markdown(html, unsafe_allow_html=True)
+    return st.container()
 
 # =========================================================
 # BULLETPROOF GLASS TABLE (SCROLL FIXED)
