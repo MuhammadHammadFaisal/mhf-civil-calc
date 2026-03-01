@@ -924,7 +924,10 @@ def app():
                     W_cos = W_s * cos_a
                     W_sin = W_s * math.sin(alpha_rad)
                     u_l = u_head * gamma_w * l
-                
+                    sum_l += l
+                    sum_W_cos += W_cos
+                    sum_W_sin += W_sin
+                    sum_u_l += u_l
                     # then continue with your sums + results_list.append(...)
         
                     results_list.append({
