@@ -352,75 +352,85 @@ def app():
                 st.subheader("Slice Representation")
                 fig_slice, ax_slice = plt.subplots(figsize=(8, 6))
                 
-                # 1. Static "Not to Scale" Geometry
-                # Ground surface (fixed dimensions for visual reference)
-                ground_x = [-3, 0, 12, 22]
-                ground_y = [0, 0, 10, 10]
-                ax_slice.plot(ground_x, ground_y, 'k-', linewidth=2.5, label="Ground Surface")
+                # 1. Static "Not to Scale" Textbook Geometry
+                ground_x = [-4, 0, 10, 18]
+                ground_y = [0, 0, 8, 8]
+                ax_slice.plot(ground_x, ground_y, 'k-', linewidth=2)
                 
-                # Failure Arc (Fixed circular arc passing from toe to crest)
-                o_x, o_y = 4.0, 15.0
-                R = math.sqrt(o_x**2 + o_y**2) # Radius to pass through (0,0)
+                # Center of rotation and radius
+                o_x, o_y = 3.0, 12.0
+                R = math.sqrt(o_x**2 + o_y**2) 
                 
-                # Generate points for the smooth slip circle
-                arc_x_full = np.linspace(0, 18, 100)
+                # Draw the smooth failure arc
+                arc_x_full = np.linspace(0, 14.5, 100)
                 arc_y_full = o_y - np.sqrt(R**2 - (arc_x_full - o_x)**2)
-                ax_slice.plot(arc_x_full, arc_y_full, 'r-', linewidth=2.5, label="Slip Surface")
+                ax_slice.plot(arc_x_full, arc_y_full, 'k-', linewidth=2)
                 
-                # Add "NOT TO SCALE" indicator exactly like the textbook
-                ax_slice.text(15, 13, "— NOT TO SCALE —", ha='center', fontsize=10, fontweight='bold')
+                # Draw Center Point (O) and Radius (R) Arrow
+                ax_slice.plot(o_x, o_y, 'ko')
+                ax_slice.text(o_x - 0.5, o_y + 0.5, "O", fontweight='bold', fontsize=12)
+                
+                rad_angle = math.radians(285) # Point arrow down towards the slices
+                rad_x = o_x + R * math.cos(rad_angle)
+                rad_y = o_y + R * math.sin(rad_angle)
+                ax_slice.annotate("", xy=(rad_x, rad_y), xytext=(o_x, o_y), 
+                                  arrowprops=dict(arrowstyle="->", lw=1.5, color='black'))
+                ax_slice.text(o_x + 1.5, o_y - 4, "R", fontsize=12, fontweight='bold', rotation=-65)
+
+                # Add the "NOT TO SCALE" indicator
+                ax_slice.text(14, 11, "— NOT TO SCALE —", ha='center', fontsize=10, fontweight='bold')
                 
                 # 2. Dynamic Slices based on User Table Rows
                 num_slices = len(edited_df)
                 if num_slices > 0:
-                    # Evenly divide the arc based on the number of slices in the table
-                    slice_edges = np.linspace(0, 18, num_slices + 1)
+                    slice_edges = np.linspace(0, 14.5, num_slices + 1)
                     
                     for i in range(num_slices):
                         x_left = slice_edges[i]
                         x_right = slice_edges[i+1]
                         
-                        # Calculate bottom bounds on the arc
                         y_b_left = o_y - math.sqrt(R**2 - (x_left - o_x)**2)
                         y_b_right = o_y - math.sqrt(R**2 - (x_right - o_x)**2)
                         
-                        # Calculate top bounds on the ground surface
                         y_t_left = np.interp(x_left, ground_x, ground_y)
                         y_t_right = np.interp(x_right, ground_x, ground_y)
                         
-                        # Draw the closed polygon for the slice
-                        poly = [[x_left, y_b_left], [x_right, y_b_right], 
-                                [x_right, y_t_right], [x_left, y_t_left]]
+                        # Draw dashed vertical lines between slices
+                        if i > 0:
+                            ax_slice.plot([x_left, x_left], [y_b_left, y_t_left], 'k--', linewidth=1)
+                        if i == num_slices - 1:
+                            ax_slice.plot([x_right, x_right], [y_b_right, y_t_right], 'k--', linewidth=1)
                         
-                        slice_patch = patches.Polygon(poly, edgecolor='black', facecolor='lightgrey', alpha=0.5)
-                        ax_slice.add_patch(slice_patch)
-                        
-                        # Center coordinates for text labels
+                        # Midpoints for labels
                         mid_x = (x_left + x_right) / 2
                         mid_y = (max(y_b_left, y_b_right) + min(y_t_left, y_t_right)) / 2
+                        y_t_mid = np.interp(mid_x, ground_x, ground_y)
                         
-                        # Get user's actual data from the table to display
+                        # Fetch user data
                         row = edited_df.iloc[i]
                         slice_num = int(row['Slice'])
                         weight = row['Weight (kN)']
+                        alpha = row['Base Angle α (deg)']
                         
-                        # Draw vertical dashed line down the center of the slice
-                        y_b_mid = o_y - math.sqrt(R**2 - (mid_x - o_x)**2)
-                        y_t_mid = np.interp(mid_x, ground_x, ground_y)
-                        ax_slice.plot([mid_x, mid_x], [y_b_mid, y_t_mid], 'k--', linewidth=0.5)
+                        # Draw the slice number inside a circle (like Image 3)
+                        circle = patches.Circle((mid_x, y_t_mid - 1.2), 0.5, 
+                                                edgecolor='black', facecolor='white', zorder=3)
+                        ax_slice.add_patch(circle)
+                        ax_slice.text(mid_x, y_t_mid - 1.2, str(slice_num), 
+                                      ha='center', va='center', fontweight='bold', zorder=4)
                         
-                        # Label the slice with its ID and Weight
-                        ax_slice.text(mid_x, mid_y, f"S{slice_num}\n{weight}kN", 
-                                      ha='center', va='center', fontsize=8, fontweight='bold')
+                        # Write the dynamic Weight and Alpha inside the slice
+                        ax_slice.text(mid_x, mid_y - 0.5, f"W={weight}\nα={alpha}°", 
+                                      ha='center', va='center', fontsize=8)
 
+                # Lock aspect ratio and turn off axis frame
                 ax_slice.set_aspect('equal')
-                ax_slice.set_xlim(-4, 24)
-                ax_slice.set_ylim(-4, 16)
+                ax_slice.set_xlim(-4, 20)
+                ax_slice.set_ylim(-4, 14)
                 ax_slice.axis('off')
                 
                 st.pyplot(fig_slice)
                 plt.close(fig_slice)
-
     # ---------------------------------------------------------
     # TAB 3: COMPOUND (BLOCK & WEDGE)
     # ---------------------------------------------------------
