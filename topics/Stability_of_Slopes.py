@@ -349,89 +349,80 @@ def app():
                 calc_slices = st.button("Calculate FS (Ordinary Method)", type="primary", key="btn_calc_slices")
 
             with col_s2:
-                st.subheader("Slice Representation")
-
-                fig_slice, ax_slice = plt.subplots(figsize=(7, 4))
+                st.subheader("Visual Cross-Section")
+                fig_slice, ax_slice = plt.subplots(figsize=(8, 6))
                 
-                x_pos = 0
-                
-                for index, row in edited_df.iterrows():
-                    width = row["Base Length l (m)"]
-                    height = row["Weight (kN)"] / 100  # scaled for display
+                if not edited_df.empty:
+                    # 1. Reconstruct the failure arc from the table's bases and angles
+                    x_pos = 0
+                    y_pos = 0
+                    arc_x = [x_pos]
+                    arc_y = [y_pos]
                     
-                    rect = patches.Rectangle((x_pos, 0), width, height,
-                                             edgecolor='black',
-                                             facecolor='lightgrey',
-                                             alpha=0.6)
-                    ax_slice.add_patch(rect)
-                
-                    ax_slice.text(x_pos + width/2, height + 0.2,
-                                  f"S{int(row['Slice'])}",
-                                  ha='center')
-                
-                    ax_slice.text(x_pos + width/2, height/2,
-                                  f"α={row['Base Angle α (deg)']}°",
-                                  ha='center',
-                                  fontsize=8)
-                
-                    x_pos += width
-                
-                ax_slice.set_xlim(0, x_pos)
-                ax_slice.set_ylim(0, max(edited_df["Weight (kN)"])/80 + 2)
-                ax_slice.set_title("Method of Slices Conceptual Representation")
-                ax_slice.axis('off')
-                
-                st.pyplot(fig_slice)
-                plt.close(fig_slice)
-                if calc_slices:
-                    sum_resisting = 0.0
-                    sum_driving = 0.0
-                    phi_rad = math.radians(phi_sl)
-                    details = []
-                
-                    st.markdown("## 🔎 Slice-by-Slice Breakdown")
-                
                     for index, row in edited_df.iterrows():
-                        W = row["Weight (kN)"]
-                        alpha_deg = row["Base Angle α (deg)"]
-                        alpha = math.radians(alpha_deg)
+                        alpha = math.radians(row["Base Angle α (deg)"])
                         l = row["Base Length l (m)"]
-                        u = row["u (kPa)"]
-                
-                        N_prime = (W * math.cos(alpha)) - (u * l)
-                        T_f = (c_sl * l) + (N_prime * math.tan(phi_rad))
-                        T_d = W * math.sin(alpha)
-                
-                        sum_resisting += T_f
-                        sum_driving += T_d
-                
-                        with st.expander(f"Slice {int(row['Slice'])} Details"):
-                            st.latex(r"N' = W \cos\alpha - u l")
-                            st.write(f"N' = {N_prime:.2f} kN")
-                
-                            st.latex(r"T_f = c'l + N'\tan\phi'")
-                            st.write(f"T_f = {T_f:.2f} kN")
-                
-                            st.latex(r"T_d = W \sin\alpha")
-                            st.write(f"T_d = {T_d:.2f} kN")
-                
-                        details.append({
-                            "Slice": row["Slice"],
-                            "Driving (kN)": round(T_d, 1),
-                            "Resisting (kN)": round(T_f, 1)
-                        })
-                
-                    if sum_driving != 0:
-                        FS_slices = sum_resisting / sum_driving
-                
-                        st.markdown("## 📊 Global Equilibrium")
-                        st.write(f"Σ Resisting = {sum_resisting:.2f} kN")
-                        st.write(f"Σ Driving = {sum_driving:.2f} kN")
-                
-                        st.latex(r"FS = \frac{\sum T_f}{\sum T_d}")
-                        st.metric("Factor of Safety", f"{FS_slices:.3f}")
-                
-                        st.dataframe(pd.DataFrame(details))
+                        
+                        # Calculate horizontal slice width
+                        b = l * math.cos(alpha) 
+                        
+                        x_pos += b
+                        y_pos += b * math.tan(alpha)
+                        
+                        arc_x.append(x_pos)
+                        arc_y.append(y_pos)
+                        
+                    # 2. Approximate a ground surface based on the total width
+                    total_width = arc_x[-1]
+                    crest_x = total_width * 0.5 # Assume crest is halfway across
+                    
+                    # Estimate ground height based on the heaviest slice
+                    max_weight = edited_df["Weight (kN)"].max()
+                    crest_y = max(arc_y) + (max_weight / 25.0) 
+                    
+                    ground_x = [-5, 0, crest_x, total_width + 5]
+                    ground_y = [0, 0, crest_y, crest_y]
+                    
+                    ax_slice.plot(ground_x, ground_y, 'k-', linewidth=2.5, label="Ground Surface")
+                    ax_slice.plot(arc_x, arc_y, 'r-', linewidth=2.5, label="Slip Surface")
+                    
+                    # 3. Draw the individual slices (vertical drops)
+                    for i in range(len(edited_df)):
+                        row = edited_df.iloc[i]
+                        slice_num = int(row['Slice'])
+                        
+                        x_left = arc_x[i]
+                        x_right = arc_x[i+1]
+                        y_bottom_left = arc_y[i]
+                        y_bottom_right = arc_y[i+1]
+                        
+                        # Interpolate top points on the ground surface so they match the slope
+                        y_top_left = np.interp(x_left, ground_x, ground_y)
+                        y_top_right = np.interp(x_right, ground_x, ground_y)
+                        
+                        # Draw the closed polygon for the slice
+                        poly = [[x_left, y_bottom_left], [x_right, y_bottom_right], 
+                                [x_right, y_top_right], [x_left, y_top_left]]
+                        
+                        slice_patch = patches.Polygon(poly, edgecolor='black', facecolor='lightgrey', alpha=0.5)
+                        ax_slice.add_patch(slice_patch)
+                        
+                        # Labels and center lines
+                        mid_x = (x_left + x_right) / 2
+                        mid_y = (y_bottom_left + y_top_left) / 2
+                        
+                        ax_slice.text(mid_x, mid_y, f"S{slice_num}", ha='center', fontweight='bold')
+                        ax_slice.plot([mid_x, mid_x], [mid_y, (y_bottom_left+y_bottom_right)/2], 'k--', linewidth=0.5)
+
+                    ax_slice.set_aspect('equal')
+                    ax_slice.set_xlim(-2, total_width + 2)
+                    ax_slice.set_ylim(min(arc_y) - 2, crest_y + 3)
+                    ax_slice.axis('off')
+                    
+                    st.pyplot(fig_slice)
+                    plt.close(fig_slice)
+                else:
+                    st.warning("Enter slice data to generate the diagram.")
                     
 
     # ---------------------------------------------------------
