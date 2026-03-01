@@ -177,7 +177,7 @@ def app():
                 R = st.number_input("Radius (R) [m]", 5.0, 50.0, 12.1, key="mass_R")
                 o_x = st.number_input("Center X-coord (o_x) [m]", -20.0, 20.0, -2.0, key="mass_ox")
                 dist_d = st.number_input("Moment Arm (d) [m]", 0.0, 20.0, 4.5, help="Horizontal distance from Center O to Centroid", key="mass_d")
-                
+                st.caption("⚠️ **Note:** This calculation currently assumes a toe failure. The circle geometry is forced to intersect the slope toe at coordinates (0,0).")
                 st.subheader("2. Soil Properties")
                 gamma_clay = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, 19.0, key="mass_gamma")
                 # Minimum cohesion set to 0.0
@@ -253,8 +253,9 @@ def app():
                                 ax_c.arrow(x_intersect - 1.5, y_force, 1.5, 0, head_width=0.3, color='blue', width=0.05)
                                 ax_c.text(x_intersect - 2.0, y_force, "Pw", color='blue', fontweight='bold')
                         
-                        theta_deg = math.degrees(theta_end - theta_start)
-                        L_calc = (theta_deg/360) * 2 * math.pi * R
+                        theta = abs(theta_end - theta_start)
+                        theta_deg = math.degrees(theta)
+                        L_calc = R * theta
                     else:
                         L_calc = 0
                         st.error("Geometry Error: Circle does not intersect the tension crack/crest elevation.")
@@ -289,7 +290,7 @@ def app():
                             gamma_w = 9.81
                             P_w = 0.5 * gamma_w * (z_c ** 2)
                             y_force = Y_crest - (2 * z_c / 3)
-                            arm_water = y_force - o_y
+                            arm_water = abs(y_force - o_y)
                             M_drv_water = P_w * arm_water
                             
                         M_drv_total = M_drv_weight + M_drv_water
