@@ -50,8 +50,6 @@ def app():
     # Apply the blueprint theme and the page icon/title
     apply_theme(page_title="MHF Civil Calc - Slope Stability")
     
-    # Render the professional header with your logo
-    render_page_header("Stability of Slopes")
 
     tab_trans, tab_rot, tab_comp = st.tabs([
         "1. Translational (Infinite)", 
