@@ -393,27 +393,6 @@ def app():
                 st.session_state.mass_water = False
                 st.session_state.mass_last_preset = "Custom"
     
-            # Apply preset only when changed
-            if preset_mass != st.session_state.mass_last_preset:
-                if preset_mass == "Typical Clay Slope":
-                    st.session_state.mass_gamma = 19.0
-                    st.session_state.mass_cu = 60.0
-                    st.session_state.mass_area = 70.0
-                    st.session_state.mass_water = False
-    
-                elif preset_mass == "High Cu (Stiffer Clay)":
-                    st.session_state.mass_gamma = 19.0
-                    st.session_state.mass_cu = 90.0
-                    st.session_state.mass_area = 70.0
-                    st.session_state.mass_water = False
-    
-                elif preset_mass == "With Water Crack (demo)":
-                    st.session_state.mass_gamma = 19.0
-                    st.session_state.mass_cu = 55.0
-                    st.session_state.mass_area = 70.0
-                    st.session_state.mass_water = True
-    
-                st.session_state.mass_last_preset = preset_mass
     
             # -----------------------------
             # INPUTS (2 columns like Tab 1)
