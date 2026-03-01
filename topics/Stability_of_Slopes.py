@@ -63,7 +63,7 @@ def app():
 # ---------------------------------------------------------
 with tab_trans:
 
-    render_page_header("Slope Stability – Infinite Slope Analysis")
+    
 
     c1, c2, c3 = st.columns([1, 1, 1])
 
