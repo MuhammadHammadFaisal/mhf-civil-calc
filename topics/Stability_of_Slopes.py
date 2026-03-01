@@ -58,7 +58,7 @@ def app():
         "2. Rotational (Circular)", 
         "3. Compound (Block)"
     ])
-    ])
+    
 
     # ---------------------------------------------------------
     # TAB 1: TRANSLATIONAL (INFINITE SLOPE)
