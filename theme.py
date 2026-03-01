@@ -120,6 +120,18 @@ def apply_theme(page_title="MHF Civil Calc"):
     .glass-table-wrapper tbody tr:hover td {
         background-color: rgba(255, 255, 255, 0.08) !important;
     }
+    /* =========================================
+       Math Rendering + Spacing Fix
+       ========================================= */
+    .katex-display {
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 6px;
+    }
+    
+    .stMarkdown {
+        line-height: 1.45;
+    }
     </style>
     """, unsafe_allow_html=True)
 
