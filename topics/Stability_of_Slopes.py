@@ -77,7 +77,7 @@ def app():
             plt.close(fig_t)
 
         # =====================================================
-        # RESULTS SECTION
+        # RESULTS SECTION — mirrors consolidation settlement style
         # =====================================================
         if calc_t:
             FS, sigma, u, tau, sigma_eff = calculate_infinite_slope_general(
@@ -89,114 +89,119 @@ def app():
             z_w    = m_ratio * z
             tau_f  = c_prime + sigma_eff * math.tan(phi_r)
 
-            # Stability colour
+            # Stability label & colour token (Streamlit colour syntax)
             if FS >= 1.5:
-                fs_color, fs_status = "#2ecc71", "Stable"
+                fs_colour_token = "green"
+                fs_status = "Stable"
             elif FS >= 1.0:
-                fs_color, fs_status = "#f39c12", "Marginally Stable"
+                fs_colour_token = "orange"
+                fs_status = "Marginally Stable"
             else:
-                fs_color, fs_status = "#e74c3c", "Unstable"
+                fs_colour_token = "red"
+                fs_status = "Unstable"
 
-            BLUE = "#60A5FA"
-
-            st.markdown("<div style='margin-top:30px;'></div>", unsafe_allow_html=True)
             st.markdown("---")
 
-            # ── Hero ─────────────────────────────────────────────
-            st.markdown(
-                f'<h2 style="font-size:2rem;font-weight:800;color:#E2E8F0;margin-bottom:16px;">'
-                f'Factor of Safety:&nbsp;<span style="color:{fs_color};">{FS:.3f}</span>'
-                f'<span style="font-size:0.9rem;font-weight:600;color:{fs_color};'
-                f'background:{fs_color}22;border:1px solid {fs_color};border-radius:20px;'
-                f'padding:3px 14px;margin-left:12px;vertical-align:middle;">{fs_status}</span></h2>',
-                unsafe_allow_html=True,
-            )
+            with st.container(border=True):
 
-            # ── Stress Table ──────────────────────────────────────
-            stress_df = pd.DataFrame({
-                "Parameter": [
-                    "Total Normal Stress (σ)",
-                    "Pore Water Pressure (u)",
-                    "Effective Normal Stress (σ')",
-                    "Shear Stress (τ)",
-                ],
-                "Value (kPa)": [f"{sigma:.2f}", f"{u:.2f}", f"{sigma_eff:.2f}", f"{tau:.2f}"],
-            })
-            glass_table(stress_df)
-
-            # ── Banners ───────────────────────────────────────────
-            if c_prime == 0 and m_ratio == 0:
-                st.info("ℹ️ Special Case: Dry Cohesionless Slope — FS = tan(ϕ') / tan(β)")
-            if c_prime == 0 and m_ratio == 1:
-                st.info("ℹ️ Special Case: Fully Saturated with Seepage — FS = (γ' / γ_sat) · tan(ϕ') / tan(β)")
-            if sigma_eff < 0:
-                st.warning("⚠️ Effective stress is negative — tension condition may exist at failure plane.")
-
-            # ── Section header ────────────────────────────────────
-            write_text("section_header", "Detailed Calculation Log")
-
-            # Build step HTML (single-line divs — no leading whitespace that triggers code blocks)
-            def step(num, title, body):
-                return (
-                    f'<div style="margin-bottom:16px;">'
-                    f'<div style="font-size:12px;font-weight:700;letter-spacing:0.08em;color:{BLUE};margin-bottom:5px;text-transform:uppercase;">Step {num} — {title}</div>'
-                    f'<div style="font-size:15px;font-weight:500;color:#CBD5E1;line-height:1.9;padding-left:14px;border-left:2px solid {BLUE}44;">{body}</div>'
-                    f'</div>'
-                    f'<hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:14px 0;">'
+                # ── Hero line ────────────────────────────────────
+                st.markdown(
+                    f"## Factor of Safety: :{fs_colour_token}[{FS:.3f}] "
+                    f"— :{fs_colour_token}[{fs_status}]"
                 )
 
-            tension_warn = f'&nbsp;<span style="color:#f39c12;">⚠ Tension condition</span>' if sigma_eff < 0 else ''
+                # ── Stress summary table ──────────────────────────
+                stress_df = pd.DataFrame({
+                    "Parameter": [
+                        "Total Normal Stress (σ)",
+                        "Pore Water Pressure (u)",
+                        "Effective Normal Stress (σ')",
+                        "Shear Stress (τ)",
+                    ],
+                    "Value (kPa)": [
+                        f"{sigma:.2f}",
+                        f"{u:.2f}",
+                        f"{sigma_eff:.2f}",
+                        f"{tau:.2f}",
+                    ],
+                })
+                glass_table(stress_df)
 
-            steps_html = (
-                step(1, "Total Normal Stress",
-                    f"Saturated depth = m · z = {m_ratio} × {z} = <strong style='color:{BLUE};'>{z_w:.2f} m</strong><br>"
-                    f"σ = [γ<sub>dry</sub>(1−m) + γ<sub>sat</sub>·m] · z · cos²β<br>"
-                    f"σ = [{gamma_dry}×{(1-m_ratio):.2f} + {gamma_sat}×{m_ratio:.2f}] × {z} × cos²({beta}°)<br>"
-                    f"σ = <strong style='color:{BLUE};'>{sigma:.2f} kPa</strong>")
-                + step(2, "Pore Water Pressure",
-                    f"u = γ<sub>w</sub> · m · z · cos²β<br>"
-                    f"u = 9.81 × {m_ratio} × {z} × cos²({beta}°)<br>"
-                    f"u = <strong style='color:{BLUE};'>{u:.2f} kPa</strong>")
-                + step(3, "Effective Normal Stress",
-                    f"σ' = σ − u = {sigma:.2f} − {u:.2f}<br>"
-                    f"σ' = <strong style='color:{BLUE};'>{sigma_eff:.2f} kPa</strong>{tension_warn}")
-                + step(4, "Shear Stress on Failure Plane",
-                    f"τ = [γ<sub>dry</sub>(1−m) + γ<sub>sat</sub>·m] · z · sinβ · cosβ<br>"
-                    f"τ = <strong style='color:{BLUE};'>{tau:.2f} kPa</strong>")
-                + step(5, "Shear Strength (Mohr-Coulomb)",
-                    f"τ<sub>f</sub> = c' + σ' · tan(ϕ')<br>"
-                    f"τ<sub>f</sub> = {c_prime} + {sigma_eff:.2f} × tan({phi_prime}°)<br>"
-                    f"τ<sub>f</sub> = {c_prime} + {sigma_eff:.2f} × {math.tan(phi_r):.4f}<br>"
-                    f"τ<sub>f</sub> = <strong style='color:{BLUE};'>{tau_f:.2f} kPa</strong>")
-                + (
-                    f'<div style="margin-bottom:4px;">'
-                    f'<div style="font-size:12px;font-weight:700;letter-spacing:0.08em;color:{BLUE};margin-bottom:5px;text-transform:uppercase;">Step 6 — Factor of Safety</div>'
-                    f'<div style="font-size:15px;font-weight:500;color:#CBD5E1;line-height:1.9;padding-left:14px;border-left:2px solid {BLUE}44;">'
-                    f'FS = τ<sub>f</sub> / τ = {tau_f:.2f} / {tau:.2f}<br>'
-                    f'FS = <span style="color:{fs_color};font-weight:800;font-size:1.3em;">{FS:.3f}</span>'
-                    f'&nbsp;→&nbsp;<span style="color:{fs_color};font-weight:600;background:{fs_color}22;border:1px solid {fs_color};border-radius:12px;padding:2px 10px;">{fs_status}</span>'
-                    f'</div></div>'
+                # ── Special case notices ──────────────────────────
+                if c_prime == 0 and m_ratio == 0:
+                    st.info("ℹ️ Special Case: Dry Cohesionless Slope — FS = tan(ϕ') / tan(β)")
+                if c_prime == 0 and m_ratio == 1:
+                    st.info("ℹ️ Special Case: Fully Saturated with Seepage — FS = (γ' / γ_sat) · tan(ϕ') / tan(β)")
+                if sigma_eff < 0:
+                    st.warning("⚠️ Effective stress is negative — tension condition may exist at failure plane.")
+
+                # ── Detailed Calculation Log ──────────────────────
+                write_text("subheader", "Detailed Calculation Log")
+
+                # Each step is a markdown string (same pattern as consolidation code)
+                # -------------------------------------------------------------------
+                step1 = (
+                    f"### Step 1 — Total Normal Stress\n\n"
+                    f"**Given:** β = {beta}°, z = {z} m, "
+                    f"γ_dry = {gamma_dry} kN/m³, γ_sat = {gamma_sat} kN/m³, m = {m_ratio}\n\n"
+                    f"Saturated depth = m · z = {m_ratio} × {z} = **{z_w:.2f} m**\n\n"
+                    r"$$\sigma = \left[\gamma_{dry}(1-m) + \gamma_{sat} \cdot m\right] \cdot z \cdot \cos^2\beta$$"
+                    "\n\n**Substitution:**\n\n"
+                    rf"$$\sigma = \left[{gamma_dry} \times {(1-m_ratio):.2f} + {gamma_sat} \times {m_ratio:.2f}\right] \times {z} \times \cos^2({beta}°)$$"
+                    "\n\n"
+                    rf"$$\sigma = {sigma:.2f} \ kPa$$"
                 )
-            )
 
-            given_html = (
-                f'<p style="font-size:13px;color:#94A3B8;margin-bottom:20px;">'
-                f'<strong style="color:#E2E8F0;">Given:</strong>&nbsp;'
-                f'β = {beta}°,&nbsp; z = {z} m,&nbsp; c\' = {c_prime} kPa,&nbsp;'
-                f'ϕ\' = {phi_prime}°,&nbsp; γ<sub>dry</sub> = {gamma_dry} kN/m³,&nbsp;'
-                f'γ<sub>sat</sub> = {gamma_sat} kN/m³,&nbsp; m = {m_ratio}'
-                f'</p>'
-            )
+                step2 = (
+                    f"### Step 2 — Pore Water Pressure\n\n"
+                    r"$$u = \gamma_w \cdot m \cdot z \cdot \cos^2\beta$$"
+                    "\n\n**Substitution:**\n\n"
+                    rf"$$u = 9.81 \times {m_ratio} \times {z} \times \cos^2({beta}°)$$"
+                    "\n\n"
+                    rf"$$u = {u:.2f} \ kPa$$"
+                )
 
-            title_html = '<h3 style="margin-top:0;font-size:1.15rem;font-weight:700;color:#E2E8F0;margin-bottom:6px;">Infinite Slope Analysis</h3>'
+                step3 = (
+                    f"### Step 3 — Effective Normal Stress\n\n"
+                    r"$$\sigma' = \sigma - u$$"
+                    "\n\n**Substitution:**\n\n"
+                    rf"$$\sigma' = {sigma:.2f} - {u:.2f}$$"
+                    "\n\n"
+                    rf"$$\sigma' = {sigma_eff:.2f} \ kPa$$"
+                    + ("\n\n⚠️ **Tension condition — effective stress is negative.**" if sigma_eff < 0 else "")
+                )
 
-            # Render as one flat HTML string — no indentation/newlines inside div that confuse Streamlit
-            st.markdown(
-                f'<div style="background-color:rgba(0,0,0,0.35);padding:24px 28px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);margin-bottom:15px;">'
-                f'{title_html}{given_html}{steps_html}'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
+                step4 = (
+                    f"### Step 4 — Shear Stress on Failure Plane\n\n"
+                    r"$$\tau = \left[\gamma_{dry}(1-m) + \gamma_{sat} \cdot m\right] \cdot z \cdot \sin\beta \cdot \cos\beta$$"
+                    "\n\n**Substitution:**\n\n"
+                    rf"$$\tau = \left[{gamma_dry} \times {(1-m_ratio):.2f} + {gamma_sat} \times {m_ratio:.2f}\right] \times {z} \times \sin({beta}°) \times \cos({beta}°)$$"
+                    "\n\n"
+                    rf"$$\tau = {tau:.2f} \ kPa$$"
+                )
+
+                step5 = (
+                    f"### Step 5 — Shear Strength (Mohr-Coulomb)\n\n"
+                    r"$$\tau_f = c' + \sigma' \cdot \tan(\phi')$$"
+                    "\n\n**Substitution:**\n\n"
+                    rf"$$\tau_f = {c_prime} + {sigma_eff:.2f} \times \tan({phi_prime}°)$$"
+                    "\n\n"
+                    rf"$$\tau_f = {c_prime} + {sigma_eff:.2f} \times {math.tan(phi_r):.4f}$$"
+                    "\n\n"
+                    rf"$$\tau_f = {tau_f:.2f} \ kPa$$"
+                )
+
+                step6 = (
+                    f"### Step 6 — Factor of Safety\n\n"
+                    r"$$FS = \frac{\tau_f}{\tau}$$"
+                    "\n\n**Substitution:**\n\n"
+                    rf"$$FS = \frac{{{tau_f:.2f}}}{{{tau:.2f}}}$$"
+                    "\n\n"
+                    rf"$$FS = {FS:.3f} \quad \rightarrow \quad \textbf{{{fs_status}}}$$"
+                )
+
+                for step in [step1, step2, step3, step4, step5, step6]:
+                    glass_box(step)
 
     # ---------------------------------------------------------
     # TAB 2: ROTATIONAL (CIRCULAR)
