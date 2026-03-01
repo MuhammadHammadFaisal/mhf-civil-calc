@@ -132,6 +132,57 @@ def apply_theme(page_title="MHF Civil Calc"):
     .stMarkdown {
         line-height: 1.45;
     }
+    /* =========================================
+       FS Badge (Blue Theme)
+       ========================================= */
+    .fs-card {
+        background-color: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(56, 189, 248, 0.35); /* sky blue border */
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-top: 10px;
+        margin-bottom: 12px;
+    }
+    
+    .fs-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .fs-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #E2E8F0;
+    }
+    
+    .fs-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-weight: 800;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.06);
+    }
+    
+    .fs-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        display: inline-block;
+    }
+    
+    .fs-stable { color: #38BDF8; }       /* sky-blue */
+    .fs-marginal { color: #FBBF24; }     /* amber */
+    .fs-unstable { color: #FB7185; }     /* rose */
+    
+    .fs-dot-stable { background: #38BDF8; }
+    .fs-dot-marginal { background: #FBBF24; }
+    .fs-dot-unstable { background: #FB7185; }
     </style>
     """, unsafe_allow_html=True)
 
