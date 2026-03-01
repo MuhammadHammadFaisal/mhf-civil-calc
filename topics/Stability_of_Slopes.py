@@ -903,7 +903,11 @@ def app():
                     alpha_deg = float(row.get("α (deg)", 0.0))
                     u_head = float(row.get("u/γ_w (m)", 0.0))
                     h_val = float(row.get("h (m)", 0.0))
-                    slice_no = int(row.get("Slice", 0))
+                    raw_slice = row.get("Slice", None)
+                    try:
+                        slice_no = int(raw_slice) if raw_slice is not None and str(raw_slice).strip() != "" else 0
+                    except Exception:
+                        slice_no = 0
         
                     alpha_rad = math.radians(alpha_deg)
                     cos_a = math.cos(alpha_rad)
