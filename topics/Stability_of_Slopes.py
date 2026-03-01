@@ -307,11 +307,89 @@ def app():
                 calc_slices = st.button("Calculate FS (Ordinary Method)", type="primary", key="btn_calc_slices")
 
             with col_s2:
+                st.subheader("Slice Representation")
+
+                fig_slice, ax_slice = plt.subplots(figsize=(7, 4))
+                
+                x_pos = 0
+                
+                for index, row in edited_df.iterrows():
+                    width = row["Base Length l (m)"]
+                    height = row["Weight (kN)"] / 100  # scaled for display
+                    
+                    rect = patches.Rectangle((x_pos, 0), width, height,
+                                             edgecolor='black',
+                                             facecolor='lightgrey',
+                                             alpha=0.6)
+                    ax_slice.add_patch(rect)
+                
+                    ax_slice.text(x_pos + width/2, height + 0.2,
+                                  f"S{int(row['Slice'])}",
+                                  ha='center')
+                
+                    ax_slice.text(x_pos + width/2, height/2,
+                                  f"α={row['Base Angle α (deg)']}°",
+                                  ha='center',
+                                  fontsize=8)
+                
+                    x_pos += width
+                
+                ax_slice.set_xlim(0, x_pos)
+                ax_slice.set_ylim(0, max(edited_df["Weight (kN)"])/80 + 2)
+                ax_slice.set_title("Method of Slices Conceptual Representation")
+                ax_slice.axis('off')
+                
+                st.pyplot(fig_slice)
+                plt.close(fig_slice)
                 if calc_slices:
                     sum_resisting = 0.0
                     sum_driving = 0.0
                     phi_rad = math.radians(phi_sl)
                     details = []
+                
+                    st.markdown("## 🔎 Slice-by-Slice Breakdown")
+                
+                    for index, row in edited_df.iterrows():
+                        W = row["Weight (kN)"]
+                        alpha_deg = row["Base Angle α (deg)"]
+                        alpha = math.radians(alpha_deg)
+                        l = row["Base Length l (m)"]
+                        u = row["u (kPa)"]
+                
+                        N_prime = (W * math.cos(alpha)) - (u * l)
+                        T_f = (c_sl * l) + (N_prime * math.tan(phi_rad))
+                        T_d = W * math.sin(alpha)
+                
+                        sum_resisting += T_f
+                        sum_driving += T_d
+                
+                        with st.expander(f"Slice {int(row['Slice'])} Details"):
+                            st.latex(r"N' = W \cos\alpha - u l")
+                            st.write(f"N' = {N_prime:.2f} kN")
+                
+                            st.latex(r"T_f = c'l + N'\tan\phi'")
+                            st.write(f"T_f = {T_f:.2f} kN")
+                
+                            st.latex(r"T_d = W \sin\alpha")
+                            st.write(f"T_d = {T_d:.2f} kN")
+                
+                        details.append({
+                            "Slice": row["Slice"],
+                            "Driving (kN)": round(T_d, 1),
+                            "Resisting (kN)": round(T_f, 1)
+                        })
+                
+                    if sum_driving != 0:
+                        FS_slices = sum_resisting / sum_driving
+                
+                        st.markdown("## 📊 Global Equilibrium")
+                        st.write(f"Σ Resisting = {sum_resisting:.2f} kN")
+                        st.write(f"Σ Driving = {sum_driving:.2f} kN")
+                
+                        st.latex(r"FS = \frac{\sum T_f}{\sum T_d}")
+                        st.metric("Factor of Safety", f"{FS_slices:.3f}")
+                
+                        st.dataframe(pd.DataFrame(details))
                     
                     for index, row in edited_df.iterrows():
                         W = row["Weight (kN)"]
