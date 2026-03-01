@@ -181,7 +181,14 @@ def app():
                 st.subheader("2. Soil Properties")
                 gamma_clay = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, 19.0, key="mass_gamma")
                 Cu = st.number_input("Undrained Shear Strength (Cu) [kPa]", 10.0, 200.0, 65.0, key="mass_cu")
+                # --- TENSION CRACK CALCULATION ---
+                st.markdown("**Tension Crack**")
+                z_c = (2 * Cu) / gamma_clay
+                st.info(f"Tension Crack Depth ($z_c$) = **{z_c:.2f} m**")
                 
+                if z_c >= H_slope:
+                    st.warning("Calculated tension crack depth exceeds the slope height. Review inputs.")
+                # ---------------------------------
                 st.caption("Weight Calculation:")
                 area_approx = st.number_input("Area of Sliding Mass [m²]", 1.0, 500.0, 70.0, key="mass_area")
                 W_calc = area_approx * gamma_clay
@@ -194,7 +201,6 @@ def app():
                 fig_c, ax_c = plt.subplots(figsize=(8, 6))
                 
                 # 1. Slope Geometry
-                # Use standard variable names X_crest and Y_crest
                 X_crest = H_slope / math.tan(math.radians(beta_slope)) if beta_slope > 0 else 10
                 Y_crest = H_slope
                 
@@ -203,18 +209,24 @@ def app():
                 
                 ax_c.plot(ground_x, ground_y, 'k-', linewidth=2.5, label="Ground Surface")
                 
+                # Tension Crack Calculation
+                z_c = (2 * Cu) / gamma_clay
+                z_c = min(z_c, H_slope) # Ensure crack isn't deeper than the slope itself
+                y_crack_bottom = Y_crest - z_c
+                
                 # 2. Failure Circle (Arc)
+                # Using the dynamic o_x if you added it, otherwise hardcoded -2.0
                 o_x = -2.0 
                 o_y = math.sqrt(R**2 - o_x**2) 
                 
-                # Calculate Intersection with Crest
-                term = R**2 - (Y_crest - o_y)**2
+                # Calculate Intersection with the BOTTOM of the tension crack
+                term = R**2 - (y_crack_bottom - o_y)**2
                 
                 if term > 0:
                     x_intersect = o_x + math.sqrt(term)
                     
                     theta_start = math.atan2(0 - o_y, 0 - o_x)
-                    theta_end = math.atan2(Y_crest - o_y, x_intersect - o_x)
+                    theta_end = math.atan2(y_crack_bottom - o_y, x_intersect - o_x)
                     
                     thetas = np.linspace(theta_start, theta_end, 50)
                     arc_x = o_x + R * np.cos(thetas)
@@ -222,19 +234,23 @@ def app():
                     
                     # 3. Create the "Wedge" Polygon (Hatched)
                     poly_verts = list(zip(arc_x, arc_y))
-                    poly_verts.append((X_crest, Y_crest)) 
-                    poly_verts.append((0, 0)) 
+                    poly_verts.append((x_intersect, Y_crest)) # Top of tension crack
+                    poly_verts.append((X_crest, Y_crest))     # Slope crest corner
+                    poly_verts.append((0, 0))                 # Slope toe
                     
                     soil_mass = patches.Polygon(poly_verts, closed=True, facecolor='none', edgecolor='black', hatch='//', alpha=0.5)
                     ax_c.add_patch(soil_mass)
                     ax_c.plot(arc_x, arc_y, 'k-', linewidth=1.5)
                     
-                    # Calculate Arc Length
+                    # Draw the actual tension crack (vertical red line)
+                    ax_c.plot([x_intersect, x_intersect], [y_crack_bottom, Y_crest], 'r-', linewidth=2, label="Tension Crack")
+                    
+                    # Calculate REDUCED Arc Length
                     theta_deg = math.degrees(theta_end - theta_start)
                     L_calc = (theta_deg/360) * 2 * math.pi * R
                 else:
                     L_calc = 0
-                    st.error("Geometry Error: Circle does not intersect crest or R is too small.")
+                    st.error("Geometry Error: Circle does not intersect the tension crack elevation.")
 
                 # Annotations
                 ax_c.plot(o_x, o_y, 'bo', label="O")
@@ -253,6 +269,7 @@ def app():
                 ax_c.set_aspect('equal')
                 ax_c.set_xlim(-5, X_crest + 10)
                 ax_c.set_ylim(-2, o_y + 5)
+                ax_c.legend(loc="upper right")
                 ax_c.axis('off')
                 st.pyplot(fig_c)
                 plt.close(fig_c)
@@ -262,10 +279,12 @@ def app():
                     M_drv = W_calc * dist_d
                 
                     st.markdown("## 🔎 Step-by-Step Calculation")
+                    st.info(f"**Tension Crack Depth ($z_c$):** {z_c:.2f} m")
                 
-                    st.markdown("### 1️⃣ Arc Length")
-                    st.latex(r"L_{arc} = R \cdot \theta")
+                    st.markdown("### 1️⃣ Arc Length (Truncated)")
+                    st.latex(r"L_{arc} = R \cdot \theta_{reduced}")
                     st.write(f"L_arc = {L_calc:.2f} m")
+                    st.caption(f"Note: Arc length is reduced because soil above z={y_crack_bottom:.2f}m is separated by the tension crack.")
                 
                     st.markdown("### 2️⃣ Resisting Moment")
                     st.latex(r"M_{res} = C_u \cdot L_{arc} \cdot R")
@@ -292,7 +311,6 @@ def app():
                             st.success("Slope is Stable")
                     else:
                         st.info("Driving moment is zero. The slope is theoretically perfectly stable against this specific failure surface.")
-
         # --- B. METHOD OF SLICES ---
         else:
             col_s1, col_s2 = st.columns([0.4, 0.6], gap="medium")
