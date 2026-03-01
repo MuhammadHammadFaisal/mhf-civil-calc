@@ -189,18 +189,20 @@ def app():
                 st.write(f"Weight (W) = {W_calc:.1f} kN/m")
                 
                 # --- TENSION CRACK & WATER ---
-                st.markdown("**Tension Crack**")
-                z_c = (2 * Cu) / gamma_clay
-                z_c = min(z_c, H_slope) # Ensure crack isn't deeper than slope
-                
-                st.info(f"Tension Crack Depth ($z_c$) = **{z_c:.2f} m**")
-                
+                z_c = 0.0
                 water_crack = False
-                if z_c > 0:
-                    water_crack = st.checkbox("Crack filled with water (Adds driving force)", value=False)
                 
-                calc_rot = st.button("Calculate FS (Mass Procedure)", type="primary", key="btn_calc_mass")
-
+                # Only calculate and display if the soil actually has cohesion
+                if Cu > 0:
+                    st.markdown("**Tension Crack**")
+                    if gamma_clay > 0:
+                        z_c = (2 * Cu) / gamma_clay
+                    z_c = min(z_c, H_slope) # Ensure crack isn't deeper than slope
+                    
+                    st.info(f"Tension Crack Depth ($z_c$) = **{z_c:.2f} m**")
+                    
+                    if z_c > 0:
+                        water_crack = st.checkbox("Crack filled with water (Adds driving force)", value=False)
             with col_r2:
                 st.subheader("Failure Diagram")
                 fig_c, ax_c = plt.subplots(figsize=(8, 6))
