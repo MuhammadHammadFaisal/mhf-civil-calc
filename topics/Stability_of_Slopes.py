@@ -64,13 +64,15 @@ def app():
     with tab_trans:
 
         
-        col_t1, col_t2 = st.columns([0.4, 0.6], gap="medium")
+        c1, c2, c3 = st.columns([1, 1, 1])
         
-        with col_t1:
+        with c1:
             st.subheader("Inputs")
             beta = st.number_input("Slope Angle (β) [deg]", 0.0, 60.0, 25.0)
             z = st.number_input("Depth Normal to Slope (z) [m]", 0.5, 20.0, 5.0)
-            
+            m_ratio = st.slider("Water Table Ratio (m = z_w / z)", 0.0, 1.0, 0.0)
+            calc_t = st.button("Calculate FS", type="primary", key="btn_calc_translational")
+        with c2:
             st.markdown("### Soil Properties")
             c_prime = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, 5.0)
             phi_prime = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 45.0, 30.0)
@@ -81,7 +83,7 @@ def app():
             m_ratio = st.slider("Water Table Ratio (m = z_w / z)", 0.0, 1.0, 0.0)
             calc_t = st.button("Calculate FS", type="primary", key="btn_calc_translational")
 
-        with col_t2:
+        with c3:
             st.subheader("Analysis")
             fig_t, ax_t = plt.subplots(figsize=(6, 4))
             x = np.linspace(0, 10, 100)
@@ -131,30 +133,30 @@ def app():
             st.pyplot(fig_t)
             plt.close(fig_t)
             
-            if calc_t:
-                FS, sigma, u, tau, sigma_eff = calculate_infinite_slope_general(beta, phi_prime, c_prime, gamma_dry, gamma_sat, z, m_ratio)
-                st.markdown("### Stress Components")
+        if calc_t:
+            FS, sigma, u, tau, sigma_eff = calculate_infinite_slope_general(beta, phi_prime, c_prime, gamma_dry, gamma_sat, z, m_ratio)
+            st.markdown("### Stress Components")
 
-                st.write(f"Total Normal Stress σ = {sigma:.2f} kPa")
-                st.write(f"Pore Pressure u = {u:.2f} kPa")
-                st.write(f"Effective Stress σ' = {sigma_eff:.2f} kPa")
-                st.write(f"Shear Stress τ = {tau:.2f} kPa")
-                
-                st.markdown("### Factor of Safety")
-                
-                if FS < 1:
-                    st.error(f"FS = {FS:.3f} (Unstable)")
-                elif FS < 1.5:
-                    st.warning(f"FS = {FS:.3f} (Marginal)")
-                else:
-                    st.success(f"FS = {FS:.3f} (Stable)")
-                if c_prime == 0 and m_ratio == 0:
-                    st.info("Special Case: Dry Cohesionless Slope")
-                
-                if c_prime == 0 and m_ratio == 1:
-                    st.info("Special Case: Fully Saturated Seepage Slope")
-                if sigma_eff < 0:
-                    st.warning("Effective stress is negative (possible tension condition).")
+            st.write(f"Total Normal Stress σ = {sigma:.2f} kPa")
+            st.write(f"Pore Pressure u = {u:.2f} kPa")
+            st.write(f"Effective Stress σ' = {sigma_eff:.2f} kPa")
+            st.write(f"Shear Stress τ = {tau:.2f} kPa")
+            
+            st.markdown("### Factor of Safety")
+            
+            if FS < 1:
+                st.error(f"FS = {FS:.3f} (Unstable)")
+            elif FS < 1.5:
+                st.warning(f"FS = {FS:.3f} (Marginal)")
+            else:
+                st.success(f"FS = {FS:.3f} (Stable)")
+            if c_prime == 0 and m_ratio == 0:
+                st.info("Special Case: Dry Cohesionless Slope")
+            
+            if c_prime == 0 and m_ratio == 1:
+                st.info("Special Case: Fully Saturated Seepage Slope")
+            if sigma_eff < 0:
+                st.warning("Effective stress is negative (possible tension condition).")
 
     # ---------------------------------------------------------
     # TAB 2: ROTATIONAL (CIRCULAR)
