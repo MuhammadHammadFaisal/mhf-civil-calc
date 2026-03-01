@@ -58,122 +58,122 @@ def app():
     ])
     
 
-# ---------------------------------------------------------
-# TAB 1: TRANSLATIONAL (INFINITE SLOPE)
-# ---------------------------------------------------------
-with tab_trans:
-    c1, c2, c3 = st.columns([1, 1, 1])
-
-    # -------------------------------
-    # COLUMN 1 → GEOMETRY
-    # -------------------------------
-    with c1:
-        write_text("subheader", "1. Geometry")
-
-        beta = st.number_input("Slope Angle (β) [deg]", 0.0, 60.0, 25.0)
-        z = st.number_input("Depth Normal to Slope (z) [m]", 0.5, 20.0, 5.0)
-
-    # -------------------------------
-    # COLUMN 2 → SOIL PROPERTIES
-    # -------------------------------
-    with c2:
-        write_text("subheader", "2. Soil Properties")
-
-        c_prime = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, 5.0)
-        phi_prime = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 45.0, 30.0)
-
-        gamma_dry = st.number_input("Dry Unit Weight (γ_dry) [kN/m³]", 15.0, 25.0, 18.0)
-        gamma_sat = st.number_input("Saturated Unit Weight (γ_sat) [kN/m³]", 15.0, 25.0, 20.0)
-
-        m_ratio = st.slider("Water Table Ratio (m = z_w / z)", 0.0, 1.0, 0.0)
-
-        calc_t = st.button("Calculate Factor of Safety", type="primary")
-
-    # -------------------------------
-    # COLUMN 3 → DIAGRAM
-    # -------------------------------
-    with c3:
-        write_text("subheader", "Slope Diagram")
-
-        fig_t, ax_t = plt.subplots(figsize=(6, 4))
-
-        x = np.linspace(0, 10, 100)
-        beta_r = math.radians(beta)
-        y_surf = x * math.tan(beta_r)
-
-        nx = math.sin(beta_r)
-        ny = -math.cos(beta_r)
-
-        x_fail = x + nx * z
-        y_fail = y_surf + ny * z
-
-        ax_t.plot(x, y_surf, 'k-', linewidth=2)
-        ax_t.plot(x, y_fail, 'r--', linewidth=2)
-
-        ax_t.fill_between(x, y_surf, y_fail,
-                          where=(y_surf >= y_fail),
-                          alpha=0.3)
-
-        if m_ratio > 0:
-            ax_t.plot(x, y_surf - 0.2, 'b--', linewidth=1)
-
-        ax_t.set_aspect('equal')
-        ax_t.axis('off')
-
-        st.pyplot(fig_t)
-        plt.close(fig_t)
-
-    # =====================================================
-    # RESULTS SECTION (OUTSIDE COLUMNS)
-    # =====================================================
-    if calc_t:
-
-        FS, sigma, u, tau, sigma_eff = calculate_infinite_slope_general(
-            beta, phi_prime, c_prime,
-            gamma_dry, gamma_sat,
-            z, m_ratio
-        )
-
-        # Stress Table
-        with glass_box("Stress Components"):
-            stress_df = pd.DataFrame({
-                "Parameter": [
-                    "Total Normal Stress (σ)",
-                    "Pore Pressure (u)",
-                    "Effective Stress (σ')",
-                    "Shear Stress (τ)"
-                ],
-                "Value (kPa)": [
-                    round(sigma, 2),
-                    round(u, 2),
-                    round(sigma_eff, 2),
-                    round(tau, 2)
-                ]
-            })
-
-            glass_table(stress_df)
-
-        #  Factor of Safety
-        with glass_box(" Factor of Safety"):
-
-            st.metric("Factor of Safety (FS)", f"{FS:.3f}")
-
-            if FS < 1:
-                st.error("Slope is UNSTABLE")
-            elif FS < 1.5:
-                st.warning("Slope is Marginally Stable")
-            else:
-                st.success("Slope is Stable")
-
-            # Special cases
-            if c_prime == 0 and m_ratio == 0:
-                st.info("Special Case: Dry Cohesionless Slope")
-
-            if c_prime == 0 and m_ratio == 1:
-                st.info("Special Case: Fully Saturated Seepage Slope")
-
-            if sigma_eff < 0:
-                st.warning("Effective stress is negative (Tension condition possible)")
+    # ---------------------------------------------------------
+    # TAB 1: TRANSLATIONAL (INFINITE SLOPE)
+    # ---------------------------------------------------------
+    with tab_trans:
+        c1, c2, c3 = st.columns([1, 1, 1])
+    
+        # -------------------------------
+        # COLUMN 1 → GEOMETRY
+        # -------------------------------
+        with c1:
+            write_text("subheader", "1. Geometry")
+    
+            beta = st.number_input("Slope Angle (β) [deg]", 0.0, 60.0, 25.0)
+            z = st.number_input("Depth Normal to Slope (z) [m]", 0.5, 20.0, 5.0)
+    
+        # -------------------------------
+        # COLUMN 2 → SOIL PROPERTIES
+        # -------------------------------
+        with c2:
+            write_text("subheader", "2. Soil Properties")
+    
+            c_prime = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, 5.0)
+            phi_prime = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 45.0, 30.0)
+    
+            gamma_dry = st.number_input("Dry Unit Weight (γ_dry) [kN/m³]", 15.0, 25.0, 18.0)
+            gamma_sat = st.number_input("Saturated Unit Weight (γ_sat) [kN/m³]", 15.0, 25.0, 20.0)
+    
+            m_ratio = st.slider("Water Table Ratio (m = z_w / z)", 0.0, 1.0, 0.0)
+    
+            calc_t = st.button("Calculate Factor of Safety", type="primary")
+    
+        # -------------------------------
+        # COLUMN 3 → DIAGRAM
+        # -------------------------------
+        with c3:
+            write_text("subheader", "Slope Diagram")
+    
+            fig_t, ax_t = plt.subplots(figsize=(6, 4))
+    
+            x = np.linspace(0, 10, 100)
+            beta_r = math.radians(beta)
+            y_surf = x * math.tan(beta_r)
+    
+            nx = math.sin(beta_r)
+            ny = -math.cos(beta_r)
+    
+            x_fail = x + nx * z
+            y_fail = y_surf + ny * z
+    
+            ax_t.plot(x, y_surf, 'k-', linewidth=2)
+            ax_t.plot(x, y_fail, 'r--', linewidth=2)
+    
+            ax_t.fill_between(x, y_surf, y_fail,
+                              where=(y_surf >= y_fail),
+                              alpha=0.3)
+    
+            if m_ratio > 0:
+                ax_t.plot(x, y_surf - 0.2, 'b--', linewidth=1)
+    
+            ax_t.set_aspect('equal')
+            ax_t.axis('off')
+    
+            st.pyplot(fig_t)
+            plt.close(fig_t)
+    
+        # =====================================================
+        # RESULTS SECTION (OUTSIDE COLUMNS)
+        # =====================================================
+        if calc_t:
+    
+            FS, sigma, u, tau, sigma_eff = calculate_infinite_slope_general(
+                beta, phi_prime, c_prime,
+                gamma_dry, gamma_sat,
+                z, m_ratio
+            )
+    
+            # Stress Table
+            with glass_box("Stress Components"):
+                stress_df = pd.DataFrame({
+                    "Parameter": [
+                        "Total Normal Stress (σ)",
+                        "Pore Pressure (u)",
+                        "Effective Stress (σ')",
+                        "Shear Stress (τ)"
+                    ],
+                    "Value (kPa)": [
+                        round(sigma, 2),
+                        round(u, 2),
+                        round(sigma_eff, 2),
+                        round(tau, 2)
+                    ]
+                })
+    
+                glass_table(stress_df)
+    
+            #  Factor of Safety
+            with glass_box(" Factor of Safety"):
+    
+                st.metric("Factor of Safety (FS)", f"{FS:.3f}")
+    
+                if FS < 1:
+                    st.error("Slope is UNSTABLE")
+                elif FS < 1.5:
+                    st.warning("Slope is Marginally Stable")
+                else:
+                    st.success("Slope is Stable")
+    
+                # Special cases
+                if c_prime == 0 and m_ratio == 0:
+                    st.info("Special Case: Dry Cohesionless Slope")
+    
+                if c_prime == 0 and m_ratio == 1:
+                    st.info("Special Case: Fully Saturated Seepage Slope")
+    
+                if sigma_eff < 0:
+                    st.warning("Effective stress is negative (Tension condition possible)")
 
     # ---------------------------------------------------------
     # TAB 2: ROTATIONAL (CIRCULAR)
