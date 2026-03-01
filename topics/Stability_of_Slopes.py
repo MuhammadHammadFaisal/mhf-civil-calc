@@ -367,43 +367,45 @@ def app():
         if "Mass Procedure" in method:
     
             
-            # Initialize session defaults
-            if "mass_initialized" not in st.session_state:
-                st.session_state.mass_initialized = True
-                st.session_state.mass_H = 8.5
-                st.session_state.mass_beta = 45.0
-                st.session_state.mass_R = 12.1
-                st.session_state.mass_ox = -2.0
-                st.session_state.mass_d = 4.5
-                st.session_state.mass_gamma = 19.0
-                st.session_state.mass_cu = 65.0
-                st.session_state.mass_area = 70.0
-                st.session_state.mass_water = False
-                st.session_state.mass_last_preset = "Custom"
-    
-    
+
+            
+            # --- Safe session defaults (never crashes, never redefines existing values)
+            st.session_state.setdefault("mass_initialized", True)
+            st.session_state.setdefault("mass_H", 8.5)
+            st.session_state.setdefault("mass_beta", 45.0)
+            st.session_state.setdefault("mass_R", 12.1)
+            st.session_state.setdefault("mass_ox", -2.0)
+            st.session_state.setdefault("mass_d", 4.5)
+            st.session_state.setdefault("mass_gamma", 19.0)
+            st.session_state.setdefault("mass_cu", 65.0)
+            st.session_state.setdefault("mass_area", 70.0)
+            st.session_state.setdefault("mass_water", False)
+            st.session_state.setdefault("mass_last_preset", "Custom")
+            
             # -----------------------------
             # INPUTS (2 columns like Tab 1)
             # -----------------------------
             with c1:
                 write_text("subheader", "1. Geometry")
-    
+            
                 H_slope = st.number_input(
                     "Slope Height (H) [m]",
-                    min_value=1.0, max_value=50.0,
-                    value=8.5,
+                    min_value=1.0,
+                    max_value=50.0,
+                    value=float(st.session_state.get("mass_H", 8.5)),
                     key="mass_H",
                 )
-    
+            
                 beta_slope = st.number_input(
                     "Slope Angle [deg]",
-                    min_value=0.0, max_value=90.0,
-                    value=45.0,
+                    min_value=0.0,
+                    max_value=90.0,
+                    value=float(st.session_state.get("mass_beta", 45.0)),
                     key="mass_beta",
                 )
-    
+            
                 write_text("caption", "This Mass Procedure assumes toe failure and uses moment equilibrium.")
-    
+            
                 with st.expander("Assumptions used in this model"):
                     st.markdown(
                         "- Circular slip surface intersects the **toe at (0,0)** (forced).\n"
@@ -411,53 +413,60 @@ def app():
                         "- Driving is from **weight moment** (+ optional water in tension crack).\n"
                         "- Results are per **meter out of plane**."
                     )
-    
+            
             with c2:
                 write_text("subheader", "2. Failure Circle & Soil")
-    
+            
                 R = st.number_input(
                     "Radius (R) [m]",
-                    min_value=5.0, max_value=50.0,
-                    value=12.1,
+                    min_value=5.0,
+                    max_value=50.0,
+                    value=float(st.session_state.get("mass_R", 12.1)),
                     key="mass_R",
                 )
-    
+            
                 o_x = st.number_input(
                     "Center X-coord (o_x) [m]",
-                    min_value=-20.0, max_value=20.0,
-                    value=float(st.session_state.mass_ox),
+                    min_value=-20.0,
+                    max_value=20.0,
+                    value=float(st.session_state.get("mass_ox", -2.0)),
                     key="mass_ox",
                 )
-    
+            
                 dist_d = st.number_input(
                     "Moment Arm (d) [m]",
-                    min_value=0.0, max_value=20.0,
-                    value=float(st.session_state.mass_d),
+                    min_value=0.0,
+                    max_value=20.0,
+                    value=float(st.session_state.get("mass_d", 4.5)),
                     help="Horizontal distance from Center O to centroid (user input).",
                     key="mass_d",
                 )
-    
+            
                 gamma_clay = st.number_input(
                     "Unit Weight (γ) [kN/m³]",
-                    min_value=10.0, max_value=25.0,
-                    value=float(st.session_state.mass_gamma),
+                    min_value=10.0,
+                    max_value=25.0,
+                    value=float(st.session_state.get("mass_gamma", 19.0)),
                     key="mass_gamma",
                 )
-    
+            
                 Cu = st.number_input(
                     "Undrained Shear Strength (Cu) [kPa]",
-                    min_value=0.0, max_value=200.0,
-                    value=float(st.session_state.mass_cu),
+                    min_value=0.0,
+                    max_value=200.0,
+                    value=float(st.session_state.get("mass_cu", 65.0)),
                     key="mass_cu",
                 )
-    
+            
                 st.markdown("**Weight (user approximation)**")
                 area_approx = st.number_input(
                     "Area of Sliding Mass [m²]",
-                    min_value=1.0, max_value=500.0,
-                    value=float(st.session_state.mass_area),
+                    min_value=1.0,
+                    max_value=500.0,
+                    value=float(st.session_state.get("mass_area", 70.0)),
                     key="mass_area",
                 )
+            
                 W_calc = area_approx * gamma_clay
                 st.write(f"Weight (W) = **{W_calc:.1f} kN/m**")
     
