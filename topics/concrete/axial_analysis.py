@@ -102,41 +102,41 @@ def app():
     if st.button("Analyze Capacity", type="primary"):
     
 
-    with st.container(border=True):
-        write_text("section_header", "Step-by-Step Calculation Report")
+        with st.container(border=True):
+            write_text("section_header", "Step-by-Step Calculation Report")
 
-        results = compute_axial(
-            fc=fc, fy=fy, Ag=Ag, Ast=Ast,
-            reinf_style=reinf_style,
-            core_diameter_input=core_diameter_input,
-            spiral_dia=spiral_dia,
-            spiral_spacing=spiral_spacing
-        )
+            results = compute_axial(
+                fc=fc, fy=fy, Ag=Ag, Ast=Ast,
+                reinf_style=reinf_style,
+                core_diameter_input=core_diameter_input,
+                spiral_dia=spiral_dia,
+                spiral_spacing=spiral_spacing
+            )
 
-        st.markdown("#### 0. Design Parameters")
-        c1, c2, _ = st.columns(3)
+            st.markdown("#### 0. Design Parameters")
+            c1, c2, _ = st.columns(3)
 
-        c1.metric("Concrete Design ($f_{cd}$)", f"{results.fcd:.2f} MPa", help=f"{fc} / {results.gamma_c}")
-        c2.metric("Steel Design ($f_{yd}$)", f"{results.fyd:.2f} MPa", help=f"{fy} / {results.gamma_s}")
+            c1.metric("Concrete Design ($f_{cd}$)", f"{results.fcd:.2f} MPa", help=f"{fc} / {results.gamma_c}")
+            c2.metric("Steel Design ($f_{yd}$)", f"{results.fyd:.2f} MPa", help=f"{fy} / {results.gamma_s}")
 
-        st.write("**Geometric Properties:**")
-        st.latex(fr"A_g = {Ag:,.0f} \text{{ mm}}^2")
-        st.latex(fr"A_{{st}} = {num_bars} \times \frac{{\pi \cdot {bar_dia}^2}}{{4}} = {Ast:,.0f} \text{{ mm}}^2")
+            st.write("**Geometric Properties:**")
+            st.latex(fr"A_g = {Ag:,.0f} \text{{ mm}}^2")
+            st.latex(fr"A_{{st}} = {num_bars} \times \frac{{\pi \cdot {bar_dia}^2}}{{4}} = {Ast:,.0f} \text{{ mm}}^2")
 
-        st.markdown("#### 1. Detailing Checks (Sanity Check)")
-        rho_percent = (Ast / Ag) * 100
-        chk_col1, chk_col2 = st.columns(2)
-        chk_col1.write(f"Reinforcement Ratio ($\\rho_l$): **{rho_percent:.2f}%**")
+            st.markdown("#### 1. Detailing Checks (Sanity Check)")
+            rho_percent = (Ast / Ag) * 100
+            chk_col1, chk_col2 = st.columns(2)
+            chk_col1.write(f"Reinforcement Ratio ($\\rho_l$): **{rho_percent:.2f}%**")
 
-        if 1.0 <= rho_percent <= 4.0:
-            chk_col2.success("✅ OK (1% $\le \rho \le$ 4%)")
-        elif rho_percent < 1.0:
-            chk_col2.warning("⚠️ Low Reinforcement! (Code Min = 1%)")
-        else:
-            chk_col2.error("❌ Too High! (Code Max = 4%)")
+            if 1.0 <= rho_percent <= 4.0:
+                chk_col2.success("✅ OK (1% $\le \rho \le$ 4%)")
+            elif rho_percent < 1.0:
+                chk_col2.warning("⚠️ Low Reinforcement! (Code Min = 1%)")
+            else:
+                chk_col2.error("❌ Too High! (Code Max = 4%)")
 
-        st.markdown("#### 2. Unconfined Axial Capacity ($N_{or}$)")
-        glass_box("The total load is shared between the concrete area and the steel bars.")
+            st.markdown("#### 2. Unconfined Axial Capacity ($N_{or}$)")
+            glass_box("The total load is shared between the concrete area and the steel bars.")
 
         
 
