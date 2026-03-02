@@ -46,7 +46,7 @@ def apply_theme(page_title="MHF Civil Calc"):
             radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px);
         background-size: 100% 100%, 100% 100%, 75px 75px, 75px 75px, 15px 15px, 15px 15px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
         background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-        background-attachment: local;
+        background-attachment: scroll;
     }
 
     /* 3. Sidebar and Global Text */
