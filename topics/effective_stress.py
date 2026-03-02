@@ -5,13 +5,7 @@ import matplotlib.patches as patches
 import numpy as np
 from theme import write_text, glass_box, glass_table
 
-# =========================================================
-# APP CONFIG
-# =========================================================
-st.set_page_config(
-    page_title="Advanced Soil Stress Analysis",
-    layout="wide",
-)
+
 
 # =========================================================
 # MAIN APP

@@ -5,10 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from theme import write_text, glass_box, glass_table
 
-# =========================================================
-# APP CONFIG
-# =========================================================
-st.set_page_config(page_title="Retaining Wall Analysis", layout="wide")
+
 
 # =========================================================
 # HELPER FUNCTIONS
