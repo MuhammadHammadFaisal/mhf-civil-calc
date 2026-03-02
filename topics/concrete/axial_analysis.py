@@ -10,8 +10,8 @@ from topics.concrete.domain.geometry import gross_area, steel_area, core_area, s
 from topics.concrete.domain.detailing import reinforcement_ratio, spiral_min_ratio
 from topics.concrete.domain.axial_capacity import unconfined_capacity
 from topics.concrete.domain.confinement import spiral_ratio, confined_strength, confined_capacity
-from topics.concrete.visualization.cross_section import draw_cross_section
-from topics.concrete.visualization.load_deformation import plot_load_deformation
+from topics.concrete.viz.cross_section import draw_cross_section
+from topics.concrete.viz.load_deformation import plot_load_deformation
 from topics.concrete.report.axial_report import render_report
 
 def app():
