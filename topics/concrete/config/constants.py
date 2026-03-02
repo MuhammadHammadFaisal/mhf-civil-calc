@@ -1,0 +1,3 @@
+GAMMA_C_TS500 = 1.5
+GAMMA_S_TS500 = 1.15
+ALPHA_CC = 0.85  # your 0.85 factor
