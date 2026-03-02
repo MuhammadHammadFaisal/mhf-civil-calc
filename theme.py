@@ -28,7 +28,7 @@ def apply_theme(page_title="MHF Civil Calc"):
     header {visibility: visible;}
 
     /* Optional: hide footer only */
-    footer {visibility: hidden;}
+
 
     /* 2. Blueprint Background */
     [data-testid="stAppViewContainer"] {
@@ -47,6 +47,7 @@ def apply_theme(page_title="MHF Civil Calc"):
         background-size: 100% 100%, 100% 100%, 75px 75px, 75px 75px, 15px 15px, 15px 15px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
         background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
         background-attachment: scroll;
+        background-position: 0 0;
     }
 
     /* 3. Sidebar and Global Text */
@@ -191,6 +192,7 @@ def apply_theme(page_title="MHF Civil Calc"):
     
             /* Critical: print engines hate local/fixed; use scroll */
             background-attachment: scroll !important;
+            background-position: 0 0;
         }
     
         /* Remove max-width framing that can create big empty areas in print */
@@ -202,6 +204,42 @@ def apply_theme(page_title="MHF Civil Calc"):
             box-shadow: none !important;
             background: transparent !important;
         }
+    }
+    /* =========================
+       PRINT: repeat background on all PDF pages
+       ========================= */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    @media print {
+      /* Print engines behave better when background is on body/html too */
+      html, body {
+        background-color: #031126 !important;
+      }
+    
+      [data-testid="stAppViewContainer"] {
+        background-attachment: scroll !important;
+        background-repeat: repeat !important;
+      }
+    
+      /* Some browsers ignore background-image on containers in print;
+         this forces it onto the root too */
+      body {
+        background-color: #031126 !important;
+        background-image:
+          linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
+          radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
+          linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+          linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        background-size: 100% 100%, 100% 100%, 75px 75px, 75px 75px, 15px 15px, 15px 15px;
+        background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat;
+        background-attachment: scroll !important;
+        background-position: 0 0;
+      }
     }
     </style>
     """, unsafe_allow_html=True)
