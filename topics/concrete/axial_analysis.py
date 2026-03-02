@@ -103,6 +103,8 @@ def app():
     
 
         with st.container(border=True):
+            
+
             write_text("section_header", "Step-by-Step Calculation Report")
 
             results = compute_axial(
@@ -113,91 +115,79 @@ def app():
                 spiral_spacing=spiral_spacing
             )
 
-            st.markdown("#### 0. Design Parameters")
-            c1, c2, _ = st.columns(3)
+            # -------------------------------------------------
+            # 1. SUMMARY (LEFT) + DETAILED MATH (RIGHT)
+            # -------------------------------------------------
 
-            c1.metric("Concrete Design ($f_{cd}$)", f"{results.fcd:.2f} MPa", help=f"{fc} / {results.gamma_c}")
-            c2.metric("Steel Design ($f_{yd}$)", f"{results.fyd:.2f} MPa", help=f"{fy} / {results.gamma_s}")
+            c_res_l, c_res_r = st.columns([1, 1.5])
 
-            st.write("**Geometric Properties:**")
-            st.latex(fr"A_g = {Ag:,.0f} \text{{ mm}}^2")
-            st.latex(fr"A_{{st}} = {num_bars} \times \frac{{\pi \cdot {bar_dia}^2}}{{4}} = {Ast:,.0f} \text{{ mm}}^2")
+            # ---------------- LEFT SIDE (RESULT SUMMARY) ----------------
+            with c_res_l:
+                st.markdown("#### Summary")
 
-            st.markdown("#### 1. Detailing Checks (Sanity Check)")
-            rho_percent = (Ast / Ag) * 100
-            chk_col1, chk_col2 = st.columns(2)
-            chk_col1.write(f"Reinforcement Ratio ($\\rho_l$): **{rho_percent:.2f}%**")
+                st.metric("Unconfined Capacity (Nor)", f"{results.Nor1/1000:,.0f} kN")
 
-            if 1.0 <= rho_percent <= 4.0:
-                chk_col2.success("✅ OK (1% $\le \rho \le$ 4%)")
-            elif rho_percent < 1.0:
-                chk_col2.warning("⚠️ Low Reinforcement! (Code Min = 1%)")
-            else:
-                chk_col2.error("❌ Too High! (Code Max = 4%)")
+                if "Spiral" in reinf_style and results.Nor2 is not None:
+                    st.metric("Confined Capacity (Nor2)", f"{results.Nor2/1000:,.0f} kN")
 
-            st.markdown("#### 2. Unconfined Axial Capacity ($N_{or}$)")
-            glass_box("The total load is shared between the concrete area and the steel bars.")
+                    delta = (results.Nor2 - results.Nor1) / 1000
+                    if delta > 0:
+                        st.success(f"Ductile (+{delta:,.0f} kN)")
+                    else:
+                        st.warning(f"Brittle ({delta:,.0f} kN)")
 
-        
+            # ---------------- RIGHT SIDE (GLASS MATH BOX) ----------------
+            with c_res_r:
+                with st.expander("Show Detailed Math", expanded=True):
 
-        Force_conc = results.Fc
-        Force_steel = results.Fs
-        Nor1 = results.Nor1
+                    math_content = f"""
+    **0. Design Strengths**
 
-        f1, f2 = st.columns(2)
-        with f1:
-            st.metric("Concrete Contribution ($F_c$)", f"{Force_conc/1000:,.0f} kN")
-            st.latex(r"F_c = 0.85 f_{cd} (A_g - A_{st})")
-            st.caption(f"$0.85 \\cdot {results.fcd:.1f} \\cdot ({Ag:.0f} - {Ast:.0f})$")
-        with f2:
-            st.metric("Steel Contribution ($F_s$)", f"{Force_steel/1000:,.0f} kN")
-            st.latex(r"F_s = A_{st} f_{yd}")
-            st.caption(f"${Ast:.0f} \\cdot {results.fyd:.1f}$")
+    $$f_{{cd}} = \\frac{{f_{{ck}}}}{{\\gamma_c}} = \\frac{{{fc:.1f}}}{{{results.gamma_c}}}
+    = \\mathbf{{{results.fcd:.2f}}}\\,\\text{{MPa}}$$
 
-        st.markdown("---")
-        st.markdown("**Total Capacity Summation:**")
-        st.latex(fr"N_{{or}} = F_c + F_s = {Force_conc/1000:.0f} + {Force_steel/1000:.0f} = \mathbf{{{Nor1/1000:.0f} \text{{ kN}}}}")
+    $$f_{{yd}} = \\frac{{f_{{yk}}}}{{\\gamma_s}} = \\frac{{{fy:.1f}}}{{{results.gamma_s}}}
+    = \\mathbf{{{results.fyd:.2f}}}\\,\\text{{MPa}}$$
 
-        graph_N1 = Nor1 / 1000
-        graph_N2 = 0
 
-        if "Spiral" in reinf_style:
-            st.markdown("#### 3. Confined Core Capacity ($N_{or2}$)")
-            glass_box("This calculates if the spiral can hold the core together after the shell spalls off.")
+    **1. Concrete Contribution**
 
-            if results.Ack is not None:
-                st.write(f"Core Diameter ($D_k$): **{core_diameter_input:.0f} mm**")
-                st.write(f"Core Area ($A_{{ck}}$): **{results.Ack:,.0f} mm²**")
+    $$F_c = 0.85 f_{{cd}} (A_g - A_{{st}})$$
 
-            if results.rho_s is None:
-                st.error("Spacing/core geometry invalid (cannot compute).")
-            else:
-                st.markdown("**B. Confinement Ratio ($\\rho_s$)**")
-                st.latex(fr"\rho_s = \mathbf{{{results.rho_s:.4f}}}")
+    $$F_c = 0.85({results.fcd:.2f})({Ag:.0f}-{Ast:.0f})
+    = \\mathbf{{{results.Fc/1000:.0f}}}\\,\\text{{kN}}$$
 
-                if results.rho_min_req is not None and results.rho_s >= results.rho_min_req:
-                    st.success(f"✅ Confinement Sufficient ($\\rho_s > {results.rho_min_req:.4f}$)")
-                    st.markdown("**C. Enhanced Concrete Strength ($f_{ccd}$)**")
-                    st.latex(fr"f_{{ccd}} = \mathbf{{{results.f_ccd:.2f} \text{{ MPa}}}}")
 
-                    if results.Nor2 is not None:
-                        st.markdown("**D. Final Confined Capacity**")
-                        st.latex(fr"N_{{or2}} = \mathbf{{{results.Nor2/1000:.0f} \text{{ kN}}}}")
-                        graph_N2 = results.Nor2 / 1000
+    **2. Steel Contribution**
 
-                        delta = graph_N2 - graph_N1
-                        if delta > 0:
-                            st.success(f"🎉 **Ductile Design Achieved!** The column gets stronger after spalling (+{delta:.0f} kN).")
-                        else:
-                            st.warning(f"⚠️ **Brittle Behavior.** The confined core is weaker than the original section (-{abs(delta):.0f} kN).")
-                else:
-                    st.error(f"❌ **Spiral Too Weak.** $\\rho_s$ ({results.rho_s:.4f}) is less than required ({results.rho_min_req:.4f}). Calculation stops.")
+    $$F_s = A_{{st}} f_{{yd}}$$
 
-        st.markdown("#### 4. Behavior Graph")
-        plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
-        fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
-        st.pyplot(fig)
-        plt.close(fig)
+    $$F_s = ({Ast:.0f})({results.fyd:.2f})
+    = \\mathbf{{{results.Fs/1000:.0f}}}\\,\\text{{kN}}$$
 
+
+    **3. Total Capacity**
+
+    $$N_{{or}} = F_c + F_s$$
+
+    $$N_{{or}} = {results.Fc/1000:.0f} + {results.Fs/1000:.0f}
+    = \\mathbf{{{results.Nor1/1000:.0f}}}\\,\\text{{kN}}$$
+    """
+                    glass_box(math_content)
+
+            # -------------------------------------------------
+            # 2. BEHAVIOR GRAPH
+            # -------------------------------------------------
+
+            st.markdown("#### Behavior Graph")
+
+            graph_N1 = results.Nor1 / 1000
+            graph_N2 = results.Nor2 / 1000 if results.Nor2 else 0
+
+            plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
+
+            fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
+            st.pyplot(fig)
+            plt.close(fig)
 if __name__ == "__main__":
     app()
