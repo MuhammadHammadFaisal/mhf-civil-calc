@@ -24,9 +24,11 @@ def apply_theme(page_title="MHF Civil Calc"):
     st.markdown("""
     <style>
     /* 1. Hide Default Streamlit Branding */
-    #MainMenu {visibility: hidden;}
+    /* Keep Streamlit header visible (sidebar toggle + settings live here) */
+    header {visibility: visible;}
+    
+    /* Optional: hide footer only */
     footer {visibility: hidden;}
-    header {visibility: hidden;}
 
     /* 2. Blueprint Background */
     [data-testid="stAppViewContainer"] {
