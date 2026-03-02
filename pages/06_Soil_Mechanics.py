@@ -9,8 +9,10 @@ from topics import lateral_earth_pressure
 from topics import Stability_of_Slopes
 
 from PIL import Image
+
 from theme import apply_theme
-apply_theme("MHF CIVIL CALC")
+apply_theme("Soil Mechanics")
+
 # Helper function to make image square and resize
 def prepare_icon(im, final_size=64):
     x, y = im.size
@@ -34,14 +36,7 @@ except:
     icon_img = ""   # fallback emoji
 
 
-# =========================================================
-# APP CONFIG
-# =========================================================
-st.set_page_config(
-    page_title="MHF Soil Mechanics",
-    layout="wide",
-    page_icon=icon_img
-)
+
 
 def app():
 # =========================================================

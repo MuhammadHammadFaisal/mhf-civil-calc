@@ -1,7 +1,8 @@
 import streamlit as st
-
+from theme import apply_theme
+apply_theme("Enignering Mechanics II")
 def app():
-    st.set_page_config(page_title="Module Under Construction", page_icon="🚧")
+    
     
     st.title("🚧 Module Under Construction")
     st.markdown("---")
