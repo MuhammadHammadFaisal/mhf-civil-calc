@@ -271,9 +271,9 @@ def app():
             df_short, log_short = calculate_profile("Short Term", surcharge)
 
             def plot_results(df, title, ax):
-                ax.plot(df["Total Stress (σ)"], df["Depth (z)"], 'b-o', label=r"Total $\\sigma$")
+                ax.plot(df["Total Stress (σ)"], df["Depth (z)"], 'b-o', label=r"Total $\sigma$")
                 ax.plot(df["Pore Pressure (u)"], df["Depth (z)"], 'r--x', label=r"Pore $u$")
-                ax.plot(df["Eff. Stress (σ')"], df["Depth (z)"], 'k-s', linewidth=2, label=r"Effective $\\sigma'$")
+                ax.plot(df["Eff. Stress (σ')"], df["Depth (z)"], 'k-s', linewidth=2, label=r"Effective $\sigma'$")
                 
                 cur_h = 0
                 for l in layers:
