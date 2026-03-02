@@ -284,7 +284,7 @@ def app():
         st.subheader("2. Visualization")
         # Ensure we pass the variables correctly
         fig1 = draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, True, cover)
-        st.pyplot(fig1, use_container_width=True)
+        st.pyplot(fig1, width="stretch")
         st.caption(f"**Section Data:** $A_g = {Ag:,.0f}$ mm², $\\rho = {(Ast/Ag)*100:.2f}\\%$")
 
     st.markdown("---")

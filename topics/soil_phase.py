@@ -347,7 +347,7 @@ def app():
             plt.close(fig_preview)
 
         
-        solve_btn = st.button("Solve Numeric Problem", type="primary", use_container_width=True)
+        solve_btn = st.button("Solve Numeric Problem", type="primary", width="stretch")
 
         # --- BOTTOM SECTION: RESULTS ---
         if solve_btn:

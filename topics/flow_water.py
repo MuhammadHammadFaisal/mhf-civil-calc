@@ -594,8 +594,8 @@ $$\\sigma' = z_A \\cdot \\gamma'_{{eff}} = {results['depth_A_soil']:.2f} \\cdot 
 #             ax3.axis('off')
             
 #             # Ensure the plot fits the Streamlit container perfectly
-#             st.pyplot(fig3, use_container_width=True)
-#             plt.close(fig3, use_container_width=True)
+#             st.pyplot(fig3, width="stretch")
+#             plt.close(fig3, width="stretch")
 # # === CRITICAL CHANGE: Indent the RESULTS block so it is inside the tab3 block ===
 #         if solve_clicked:
 #             # --- PHASE 1: MATHEMATICAL SOLVER ---

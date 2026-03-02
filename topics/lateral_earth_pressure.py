@@ -176,7 +176,7 @@ def app():
                     right_layers = render_layers_input("R", "Active Layers", def_right)
             
             st.markdown("---")
-            calc_trigger = st.button("Calculate Pressure Profile", type="primary", use_container_width=True)
+            calc_trigger = st.button("Calculate Pressure Profile", type="primary", width="stretch")
 
         with col_viz:
             write_text("subheader", "Soil Profile Preview")
@@ -454,7 +454,7 @@ def app():
             gamma_c = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, d_gam)
             
             st.markdown("---")
-            c_calc_btn = st.button("Calculate Wedge Forces", type="primary", use_container_width=True)
+            c_calc_btn = st.button("Calculate Wedge Forces", type="primary", width="stretch")
 
         with col_c_viz:
             write_text("subheader", "Failure Wedge Diagram (FBD)")

@@ -51,7 +51,7 @@ def main():
     with col_logo:
         # Assuming asset exists
         if "assets/Sticker.png" and os.path.exists("assets/Sticker.png"):
-             st.image("assets/Sticker.png", use_container_width=True)
+             st.image("assets/Sticker.png", width="stretch")
         else:
              st.write("🛠️") # Fallback if image missing
 
@@ -76,7 +76,7 @@ def main():
         cols = st.columns(4)
         for idx, (file, title) in enumerate(modules):
             with cols[idx % 4]:
-                st.page_link(f"pages/{file}", label=title, use_container_width=True)
+                st.page_link(f"pages/{file}", label=title, width="stretch")
                 st.markdown("")
 
     # ------------------------- PURPOSE -------------------------
@@ -100,7 +100,7 @@ def main():
     st.link_button(
         "Open Feedback Form",
         "https://docs.google.com/forms/d/e/1FAIpQLSfKtE2MK_2JZxEK4SzyjEhjdb8PKEC8-dN5az82MaIoPZzMsg/viewform",
-        use_container_width=True
+        width="stretch"
     )
 
     # ------------------------- ABOUT -------------------------
@@ -110,7 +110,7 @@ def main():
     st.link_button(
         "LinkedIn Profile",
         "https://www.linkedin.com/in/muhammad-hammad-20059a229",
-        use_container_width=True
+        width="stretch"
     )
 
     # ------------------------- FOOTER -------------------------
