@@ -26,12 +26,18 @@ def apply_theme(page_title="MHF Civil Calc"):
     /* 1. Hide Default Streamlit Branding */
     /* Keep Streamlit header visible (sidebar toggle + settings live here) */
     header {visibility: visible;}
-    
+
     /* Optional: hide footer only */
-    footer {visibility: hidden;}
+    html, body, .stApp {
+        height: 100%;
+    }
 
     /* 2. Blueprint Background */
+    /* Blueprint background should follow full-page scroll */
+    .stApp,
     [data-testid="stAppViewContainer"] {
+        /* keep your same background-color + background-image + sizes etc */
+
         background-color: #031126;
         background-image: 
             linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
@@ -46,7 +52,8 @@ def apply_theme(page_title="MHF Civil Calc"):
             radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px);
         background-size: 100% 100%, 100% 100%, 75px 75px, 75px 75px, 15px 15px, 15px 15px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
         background-repeat: no-repeat, no-repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-        background-attachment: local;
+        background-attachment: scroll;
+        background-position: 0 0;
     }
 
     /* 3. Sidebar and Global Text */
@@ -54,7 +61,7 @@ def apply_theme(page_title="MHF Civil Calc"):
         background-color: #031126;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
-    h1, h2, h3, h4, p, li, .stMarkdown {
+    h1, h2, h3, h4, p, li {
         color: #E2E8F0 !important;
     }
 
@@ -94,16 +101,7 @@ def apply_theme(page_title="MHF Civil Calc"):
     /* =========================================
        BULLETPROOF GLASS TABLES
        ========================================= */
-    .glass-table-wrapper table {
-        width: 100% !important;
-        background-color: rgba(0, 0, 0, 0.35) !important;
-        color: #E0E0E0 !important;
-        border-collapse: collapse !important;
-        border-radius: 8px !important;
-        overflow: hidden !important;
-        margin-bottom: 20px !important;
-        border: none !important;
-    }
+    
     .glass-table-wrapper th {
         background-color: rgba(0, 0, 0, 0.5) !important;
         font-weight: 600 !important;
@@ -122,69 +120,93 @@ def apply_theme(page_title="MHF Civil Calc"):
     .glass-table-wrapper tbody tr:hover td {
         background-color: rgba(255, 255, 255, 0.08) !important;
     }
-    /* =========================================
-       Math Rendering + Spacing Fix
-       ========================================= */
-    .katex-display {
-        overflow-x: auto;
-        overflow-y: hidden;
-        padding-bottom: 6px;
-    }
-    
-    .stMarkdown {
-        line-height: 1.45;
-    }
-    /* =========================================
-       FS Badge (Blue Theme)
-       ========================================= */
-    .fs-card {
-        background-color: rgba(0, 0, 0, 0.35);
-        border: 1px solid rgba(56, 189, 248, 0.35); /* sky blue border */
+    /* 3b. Framed Content Area (global) */
+    main > div:first-child {
+        max-width: 1200px;
+        margin: 30px auto;
+        padding: 30px 40px;
+        border: 2px solid rgba(255,255,255,0.2);
         border-radius: 12px;
-        padding: 14px 16px;
-        margin-top: 10px;
-        margin-bottom: 12px;
+        background-color: rgba(26,58,90,0.5);
+        box-shadow: 0 0 30px rgba(0,0,0,0.2);
     }
     
-    .fs-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
+    /* Optional: Standard text link styling */
+    a {
+        color: #aad4ff !important;
+        text-decoration: none;
+    }
+    a:hover {
+        text-decoration: underline;
+    }
+    /* =========================
+       PRINT FIX (Chrome multi-page PDF)
+       ========================= */
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    
+      /* Remove container backgrounds so they don't cover the print layer */
+      .stApp,
+      [data-testid="stAppViewContainer"],
+      [data-testid="stSidebar"],
+      main {
+        background: transparent !important;
+        background-color: transparent !important;
+      }
+    
+      /* Repeating background for ALL printed pages */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+    
+        background-color: #031126;
+        background-image:
+          linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
+          radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.35) 0%, transparent 70%),
+          linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+          linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+          radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+          radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
+          radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+          radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px);
+    
+        background-size:
+          100% 100%,
+          100% 100%,
+          75px 75px, 75px 75px,
+          15px 15px, 15px 15px,
+          100% 100%, 100% 100%,
+          100% 100%, 100% 100%;
+    
+        background-repeat:
+          no-repeat, no-repeat,
+          repeat, repeat,
+          repeat, repeat,
+          no-repeat, no-repeat,
+          no-repeat, no-repeat;
+    
+        background-position: 0 0;
+      }
+    
+      /* Optional: remove the framed box for print */
+      main > div:first-child {
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+      }
     }
     
-    .fs-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #E2E8F0;
-    }
-    
-    .fs-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        font-weight: 800;
-        border: 1px solid rgba(255,255,255,0.12);
-        background: rgba(255,255,255,0.06);
-    }
-    
-    .fs-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        display: inline-block;
-    }
-    
-    .fs-stable { color: #38BDF8; }       /* sky-blue */
-    .fs-marginal { color: #FBBF24; }     /* amber */
-    .fs-unstable { color: #FB7185; }     /* rose */
-    
-    .fs-dot-stable { background: #38BDF8; }
-    .fs-dot-marginal { background: #FBBF24; }
-    .fs-dot-unstable { background: #FB7185; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -242,7 +264,6 @@ def glass_box(content):
     """
     html = f"""<div style="background-color: rgba(0, 0, 0, 0.35); padding: 20px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); margin-bottom: 15px;">\n\n{content}\n\n</div>"""
     st.markdown(html, unsafe_allow_html=True)
-    return st.container()
 
 # =========================================================
 # BULLETPROOF GLASS TABLE (SCROLL FIXED)
