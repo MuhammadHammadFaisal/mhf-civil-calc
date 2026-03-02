@@ -140,48 +140,15 @@ def apply_theme(page_title="MHF Civil Calc"):
         text-decoration: underline;
     }
     /* =========================
-       PRINT FIX (PDF export)
+       PRINT FIX (Chrome multi-page PDF)
        ========================= */
-    
-    * {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    
     @media print {
-
       * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
     
-      /* Put blueprint background on BOTH html and body so it repeats per page */
-      html, body {
-        background-color: #031126 !important;
-        background-image:
-          linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
-          radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.35) 0%, transparent 70%),
-          linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
-          linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px) !important;
-    
-        background-size:
-          100% 100%,
-          100% 100%,
-          75px 75px, 75px 75px,
-          15px 15px, 15px 15px !important;
-    
-        background-repeat:
-          no-repeat, no-repeat,
-          repeat, repeat,
-          repeat, repeat !important;
-    
-        background-attachment: scroll !important;
-        background-position: 0 0 !important;
-      }
-    
-      /* Streamlit wrappers sometimes paint their own backgrounds in print */
+      /* Remove container backgrounds so they don't cover the print layer */
       .stApp,
       [data-testid="stAppViewContainer"],
       [data-testid="stSidebar"],
@@ -190,7 +157,46 @@ def apply_theme(page_title="MHF Civil Calc"):
         background-color: transparent !important;
       }
     
-      /* Remove framed container styling for print */
+      /* Repeating background for ALL printed pages */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+    
+        background-color: #031126;
+        background-image:
+          linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
+          radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.35) 0%, transparent 70%),
+          linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+          linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+          radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+          radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
+          radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+          radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px);
+    
+        background-size:
+          100% 100%,
+          100% 100%,
+          75px 75px, 75px 75px,
+          15px 15px, 15px 15px,
+          100% 100%, 100% 100%,
+          100% 100%, 100% 100%;
+    
+        background-repeat:
+          no-repeat, no-repeat,
+          repeat, repeat,
+          repeat, repeat,
+          no-repeat, no-repeat,
+          no-repeat, no-repeat;
+    
+        background-position: 0 0;
+      }
+    
+      /* Optional: remove the framed box for print */
       main > div:first-child {
         max-width: none !important;
         margin: 0 !important;
