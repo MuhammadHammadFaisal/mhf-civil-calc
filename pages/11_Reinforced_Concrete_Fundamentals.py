@@ -9,7 +9,8 @@ from topics.concrete import combined_design
 from topics.concrete import shear_design
 
 from PIL import Image
-
+from theme import apply_theme
+apply_theme("Reinforced Concrete Fundamentals")
 # Helper function to make image square and resize
 def prepare_icon(im, final_size=64):
     x, y = im.size
@@ -32,15 +33,6 @@ try:
 except:
     icon_img = ""   # fallback emoji
 
-
-# =========================================================
-# APP CONFIG
-# =========================================================
-st.set_page_config(
-    page_title="MHF Reinforced Concrete Fundamentals",
-    layout="wide",
-    page_icon=icon_img
-)
 
 
 def app():
@@ -92,7 +84,7 @@ def app():
 
     with col_logo:
         # Increased logo width slightly to make it "a little big"
-        st.image("assets/logo.png")
+        st.image("assets/Sticker.png")
 
     with col_text:
         # Font size set to 55px (Professional look: smaller than logo, but distinct)
