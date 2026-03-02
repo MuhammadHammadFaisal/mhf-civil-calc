@@ -152,65 +152,65 @@ def app():
 
                         with c_res_r:
                 with st.expander("Show Detailed Math", expanded=True):
-                    math_logs = []
 
-                    # 0. Design Strengths
-                    math_logs.append("**0. Design Strengths**")
-                    math_logs.append(f"$f_{{cd}} = \\frac{{f_{{ck}}}}{{\\gamma_c}} = \\frac{{{fc:.1f}}}{{{results.gamma_c}}} = \\mathbf{{{results.fcd:.2f}}}\\,\\text{{MPa}}$")
-                    math_logs.append(f"$f_{{yd}} = \\frac{{f_{{yk}}}}{{\\gamma_s}} = \\frac{{{fy:.1f}}}{{{results.gamma_s}}} = \\mathbf{{{results.fyd:.2f}}}\\,\\text{{MPa}}$")
-                    math_logs.append("---")
-
-                    # 1. Concrete Contribution
-                    math_logs.append("**1. Concrete Contribution**")
-                    math_logs.append("$F_c = 0.85 f_{{cd}} (A_g - A_{{st}})$")
-                    math_logs.append(f"$F_c = 0.85({results.fcd:.2f})({Ag:.0f}-{Ast:.0f}) = \\mathbf{{{results.Fc/1000:.0f}}}\\,\\text{{kN}}$")
-                    math_logs.append("---")
-
-                    # 2. Steel Contribution
-                    math_logs.append("**2. Steel Contribution**")
-                    math_logs.append("$F_s = A_{{st}} f_{{yd}}$")
-                    math_logs.append(f"$F_s = ({Ast:.0f})({results.fyd:.2f}) = \\mathbf{{{results.Fs/1000:.0f}}}\\,\\text{{kN}}$")
-                    math_logs.append("---")
-
-                    # 3. Total Capacity
-                    math_logs.append("**3. Total Capacity**")
-                    math_logs.append("$N_{{or}} = F_c + F_s$")
-                    math_logs.append(f"$N_{{or}} = {results.Fc/1000:.0f} + {results.Fs/1000:.0f} = \\mathbf{{{results.Nor1/1000:.0f}}}\\,\\text{{kN}}$")
-
-                    # Optional: Dynamically add Spiral math if applicable
-                    if "Spiral" in reinf_style and results.rho_s is not None and results.rho_min_req is not None:
-                        math_logs.append("---")
-                        math_logs.append("**4. Spiral Confinement Check**")
-                        math_logs.append(f"$\\rho_s = \\mathbf{{{results.rho_s:.4f}}}$ (Computed)")
-                        math_logs.append(f"$\\rho_{{min}} = \\mathbf{{{results.rho_min_req:.4f}}}$ (Required)")
-                        
-                        if results.rho_s >= results.rho_min_req:
-                            math_logs.append("✅ Confinement sufficient. Confined capacity applies:")
-                            math_logs.append(f"$N_{{or2}} = \\mathbf{{{results.Nor2/1000:.0f}}}\\,\\text{{kN}}$")
-                        else:
-                            math_logs.append("❌ Confinement insufficient. Only unconfined capacity applies.")
-
-                    # Join and display
-                    math_content = "\n\n".join(math_logs)
-                    glass_box(math_content)
-
-
-            # -----------------------------------------
-            # Optional Spiral Details (keep widgets normal)
-            # -----------------------------------------
-            if "Spiral" in reinf_style:
-                st.markdown("#### Spiral Check (Confined Core)")
-
-                if results.rho_s is None or results.rho_min_req is None:
-                    st.error("Spiral geometry/spacing invalid (cannot compute confinement ratio).")
-                else:
-                    st.write(f"Computed $\\rho_s$: **{results.rho_s:.4f}**")
-                    st.write(f"Required $\\rho_{{min}}$: **{results.rho_min_req:.4f}**")
-
-                    if results.rho_s >= results.rho_min_req and results.Nor2 is not None:
-                        st.success("✅ Confinement sufficient.")
-                    else:
-                        st.error("❌ Confinement not sufficient.")
+                    glass_box("### 0. Design Strengths")
+                
+                    st.latex(
+                        fr"f_{{cd}} = \frac{{f_{{ck}}}}{{\gamma_c}} = "
+                        fr"\frac{{{fc:.1f}}}{{{results.gamma_c}}} "
+                        fr"= \mathbf{{{results.fcd:.2f}}}\,\text{{MPa}}"
+                    )
+                
+                    st.latex(
+                        fr"f_{{yd}} = \frac{{f_{{yk}}}}{{\gamma_s}} = "
+                        fr"\frac{{{fy:.1f}}}{{{results.gamma_s}}} "
+                        fr"= \mathbf{{{results.fyd:.2f}}}\,\text{{MPa}}"
+                    )
+                
+                    glass_box("### 1. Concrete Contribution")
+                
+                    st.latex(r"F_c = 0.85 f_{cd} (A_g - A_{st})")
+                
+                    st.latex(
+                        fr"F_c = 0.85({results.fcd:.2f})({Ag:.0f}-{Ast:.0f}) "
+                        fr"= \mathbf{{{results.Fc/1000:.0f}}}\,\text{{kN}}"
+                    )
+                
+                    glass_box("### 2. Steel Contribution")
+                
+                    st.latex(r"F_s = A_{st} f_{yd}")
+                
+                    st.latex(
+                        fr"F_s = ({Ast:.0f})({results.fyd:.2f}) "
+                        fr"= \mathbf{{{results.Fs/1000:.0f}}}\,\text{{kN}}"
+                    )
+                
+                    glass_box("### 3. Total Capacity")
+                
+                    st.latex(r"N_{or} = F_c + F_s")
+                
+                    st.latex(
+                        fr"N_{{or}} = {results.Fc/1000:.0f} + {results.Fs/1000:.0f} "
+                        fr"= \mathbf{{{results.Nor1/1000:.0f}}}\,\text{{kN}}"
+                    )
+                
+                
+                            # -----------------------------------------
+                            # Optional Spiral Details (keep widgets normal)
+                            # -----------------------------------------
+                            if "Spiral" in reinf_style:
+                                st.markdown("#### Spiral Check (Confined Core)")
+                
+                                if results.rho_s is None or results.rho_min_req is None:
+                                    st.error("Spiral geometry/spacing invalid (cannot compute confinement ratio).")
+                                else:
+                                    st.write(f"Computed $\\rho_s$: **{results.rho_s:.4f}**")
+                                    st.write(f"Required $\\rho_{{min}}$: **{results.rho_min_req:.4f}**")
+                
+                                    if results.rho_s >= results.rho_min_req and results.Nor2 is not None:
+                                        st.success("✅ Confinement sufficient.")
+                                    else:
+                                        st.error("❌ Confinement not sufficient.")
 
             # -----------------------------------------
             # Behavior Graph
