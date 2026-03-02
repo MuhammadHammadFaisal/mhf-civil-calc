@@ -170,35 +170,50 @@ def app():
                     math_content = dedent(f"""
                     **0. Design Strengths**
 
-                    $$f_{{cd}} = \\frac{{f_{{ck}}}}{{\\gamma_c}} = \\frac{{{fc:.1f}}}{{{results.gamma_c}}}
-                    = \\mathbf{{{results.fcd:.2f}}}\\,\\text{{MPa}}$$
+                    $$
+                    f_{{cd}} = \\frac{{f_{{ck}}}}{{\\gamma_c}} 
+                    = \\frac{{{fc:.1f}}}{{{results.gamma_c}}}
+                    = \\mathbf{{{results.fcd:.2f}}}\\,\\text{{MPa}}
+                    $$
 
-                    $$f_{{yd}} = \\frac{{f_{{yk}}}}{{\\gamma_s}} = \\frac{{{fy:.1f}}}{{{results.gamma_s}}}
-                    = \\mathbf{{{results.fyd:.2f}}}\\,\\text{{MPa}}$$
-
+                    $$
+                    f_{{yd}} = \\frac{{f_{{yk}}}}{{\\gamma_s}} 
+                    = \\frac{{{fy:.1f}}}{{{results.gamma_s}}}
+                    = \\mathbf{{{results.fyd:.2f}}}\\,\\text{{MPa}}
+                    $$
 
                     **1. Concrete Contribution**
 
-                    $$F_c = 0.85 f_{{cd}} (A_g - A_{{st}})$$
+                    $$
+                    F_c = 0.85 f_{{cd}} (A_g - A_{{st}})
+                    $$
 
-                    $$F_c = 0.85({results.fcd:.2f})({Ag:.0f}-{Ast:.0f})
-                    = \\mathbf{{{results.Fc/1000:.0f}}}\\,\\text{{kN}}$$
-
+                    $$
+                    F_c = 0.85({results.fcd:.2f})({Ag:.0f}-{Ast:.0f})
+                    = \\mathbf{{{results.Fc/1000:.0f}}}\\,\\text{{kN}}
+                    $$
 
                     **2. Steel Contribution**
 
-                    $$F_s = A_{{st}} f_{{yd}}$$
+                    $$
+                    F_s = A_{{st}} f_{{yd}}
+                    $$
 
-                    $$F_s = ({Ast:.0f})({results.fyd:.2f})
-                    = \\mathbf{{{results.Fs/1000:.0f}}}\\,\\text{{kN}}$$
-
+                    $$
+                    F_s = ({Ast:.0f})({results.fyd:.2f})
+                    = \\mathbf{{{results.Fs/1000:.0f}}}\\,\\text{{kN}}
+                    $$
 
                     **3. Total Capacity**
 
-                    $$N_{{or}} = F_c + F_s$$
+                    $$
+                    N_{{or}} = F_c + F_s
+                    $$
 
-                    $$N_{{or}} = {results.Fc/1000:.0f} + {results.Fs/1000:.0f}
-                    = \\mathbf{{{results.Nor1/1000:.0f}}}\\,\\text{{kN}}$$
+                    $$
+                    N_{{or}} = {results.Fc/1000:.0f} + {results.Fs/1000:.0f}
+                    = \\mathbf{{{results.Nor1/1000:.0f}}}\\,\\text{{kN}}
+                    $$
                     """).strip()
 
                     glass_box(math_content)
