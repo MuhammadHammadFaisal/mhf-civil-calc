@@ -100,7 +100,7 @@ def app():
     st.markdown("---")
 
     if st.button("Analyze Capacity", type="primary"):
-    st.markdown("---")
+    
 
     with st.container(border=True):
         write_text("section_header", "Step-by-Step Calculation Report")
