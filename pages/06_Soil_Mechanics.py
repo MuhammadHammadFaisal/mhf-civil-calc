@@ -9,7 +9,8 @@ from topics import lateral_earth_pressure
 from topics import Stability_of_Slopes
 
 from PIL import Image
-
+from theme import apply_theme
+apply_theme("MHF CIVIL CALC")
 # Helper function to make image square and resize
 def prepare_icon(im, final_size=64):
     x, y = im.size
