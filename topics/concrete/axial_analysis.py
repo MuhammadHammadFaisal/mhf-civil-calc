@@ -1,13 +1,100 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-from textwrap import dedent
 
 from theme import write_text, glass_box
 
 from .diagrams_dynamic.section_preview import draw_cross_section
 from .diagrams_results.load_deformation_plot import plot_load_deformation
 from .calculator.axial_calculator import compute_axial
+
+
+def _build_step_by_step_markdown(results, fc, fy, Ag, Ast, reinf_style, core_diameter_input):
+    """
+    Returns ONE markdown string (with $$ $$ blocks) to be displayed inside glass_box()
+    so the whole step-by-step sits on a continuous glass background.
+    """
+    # Base (always)
+    md = f"""
+### 0. Design Strengths
+
+$$
+f_{{cd}} = \\frac{{f_{{ck}}}}{{\\gamma_c}}
+= \\frac{{{fc:.1f}}}{{{results.gamma_c}}}
+= \\mathbf{{{results.fcd:.2f}}}\\,\\text{{MPa}}
+$$
+
+$$
+f_{{yd}} = \\frac{{f_{{yk}}}}{{\\gamma_s}}
+= \\frac{{{fy:.1f}}}{{{results.gamma_s}}}
+= \\mathbf{{{results.fyd:.2f}}}\\,\\text{{MPa}}
+$$
+
+
+### 1. Concrete Contribution
+
+$$
+F_c = 0.85\\, f_{{cd}}\\, (A_g - A_{{st}})
+$$
+
+$$
+F_c = 0.85({results.fcd:.2f})({Ag:.0f}-{Ast:.0f})
+= \\mathbf{{{results.Fc/1000:.0f}}}\\,\\text{{kN}}
+$$
+
+
+### 2. Steel Contribution
+
+$$
+F_s = A_{{st}}\\, f_{{yd}}
+$$
+
+$$
+F_s = ({Ast:.0f})({results.fyd:.2f})
+= \\mathbf{{{results.Fs/1000:.0f}}}\\,\\text{{kN}}
+$$
+
+
+### 3. Total Capacity
+
+$$
+N_{{or}} = F_c + F_s
+$$
+
+$$
+N_{{or}} = {results.Fc/1000:.0f} + {results.Fs/1000:.0f}
+= \\mathbf{{{results.Nor1/1000:.0f}}}\\,\\text{{kN}}
+$$
+"""
+
+    # Spiral (optional)
+    if "Spiral" in reinf_style:
+        md += "\n\n---\n\n### 4. Spiral Check (Confined Core)\n\n"
+
+        if results.rho_s is None or results.rho_min_req is None:
+            md += "**❌ Spiral geometry/spacing invalid — cannot compute confinement ratio.**\n"
+        else:
+            md += f"""
+**Core diameter used:** **{core_diameter_input:.0f} mm**
+
+$$
+\\rho_s = \\mathbf{{{results.rho_s:.4f}}}
+\\qquad
+\\rho_{{min}} = \\mathbf{{{results.rho_min_req:.4f}}}
+$$
+"""
+            if results.rho_s >= results.rho_min_req and results.Nor2 is not None:
+                md += "\n**✅ Confinement sufficient.**\n"
+                md += f"""
+$$
+N_{{or2}} = \\mathbf{{{results.Nor2/1000:.0f}}}\\,\\text{{kN}}
+$$
+"""
+            else:
+                md += "\n**❌ Confinement NOT sufficient.**\n"
+
+    # Clean up extra leading spaces that might turn into code blocks
+    return "\n".join(line.rstrip() for line in md.strip().splitlines())
 
 
 def app():
@@ -20,8 +107,6 @@ def app():
     # =========================
     with col_input:
         write_text("section_header", "1. System Properties")
-
-        design_code = "TS 500 (Lecture Notes)"  # kept for future expansion
 
         st.markdown("**Materials**")
         c1, c2 = st.columns(2)
@@ -72,7 +157,7 @@ def app():
         num_bars = 0
         bar_dia = 0.0
 
-        # Spiral inputs (only used if spiral)
+        # Spiral inputs
         spiral_dia = 0.0
         spiral_spacing = 0.0
         core_diameter_input = 0.0
@@ -113,12 +198,14 @@ def app():
     # =========================
     with col_viz:
         write_text("section_header", "2. Visualization")
-
         fig1 = draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, True, cover)
         st.pyplot(fig1, width="stretch")
 
         if Ag > 0:
-            st.caption(f"**Section Data:** $A_g = {Ag:,.0f}$ mm², $\\rho = {(Ast/Ag)*100:.2f}\\%$")
+            st.caption(
+                f"**Section Data:** $A_g = {Ag:,.0f}$ mm², "
+                f"$\\rho = {(Ast/Ag)*100:.2f}\\%$"
+            )
 
     st.markdown("---")
 
@@ -126,105 +213,74 @@ def app():
     # CALCULATION OUTPUT
     # =========================
     if st.button("Analyze Capacity", type="primary"):
-        with st.container(border=True):
-            write_text("section_header", "Step-by-Step Calculation Report")
+        # Safety check
+        if Ag <= 0:
+            st.error("Invalid section area (Ag <= 0). Please check your geometry inputs.")
+            return
 
-            # Safety check
-            if Ag <= 0:
-                st.error("Invalid section area (Ag <= 0). Please check your geometry inputs.")
-                return
+        results = compute_axial(
+            fc=fc,
+            fy=fy,
+            Ag=Ag,
+            Ast=Ast,
+            reinf_style=reinf_style,
+            core_diameter_input=core_diameter_input,
+            spiral_dia=spiral_dia,
+            spiral_spacing=spiral_spacing,
+        )
 
-            results = compute_axial(
-                fc=fc,
-                fy=fy,
-                Ag=Ag,
-                Ast=Ast,
-                reinf_style=reinf_style,
-                core_diameter_input=core_diameter_input,
-                spiral_dia=spiral_dia,
-                spiral_spacing=spiral_spacing,
-            )
+        # -----------------------------
+        # 1) RESULT SUMMARY (FIRST)
+        # -----------------------------
+        write_text("section_header", "Result Summary")
 
-            # -----------------------------------------
-            # SUMMARY + DETAILED MATH (Effective Stress style)
-            # -----------------------------------------
-            c_res_l, c_res_r = st.columns([1, 1.5])
+        s1, s2, s3 = st.columns(3)
+        with s1:
+            st.metric("Unconfined $N_{or}$", f"{results.Nor1/1000:,.0f} kN")
+        with s2:
+            if results.Nor2 is not None:
+                st.metric("Confined $N_{or2}$", f"{results.Nor2/1000:,.0f} kN")
+            else:
+                st.metric("Confined $N_{or2}$", "—")
+        with s3:
+            if results.Nor2 is not None:
+                delta = (results.Nor2 - results.Nor1) / 1000
+                st.metric("Δ (Nor2 - Nor)", f"{delta:,.0f} kN")
+            else:
+                st.metric("Δ (Nor2 - Nor)", "—")
 
-                        with c_res_r:
-                with st.expander("Show Detailed Math", expanded=True):
+        st.markdown("---")
 
-                    glass_box("### 0. Design Strengths")
-                
-                    st.latex(
-                        fr"f_{{cd}} = \frac{{f_{{ck}}}}{{\gamma_c}} = "
-                        fr"\frac{{{fc:.1f}}}{{{results.gamma_c}}} "
-                        fr"= \mathbf{{{results.fcd:.2f}}}\,\text{{MPa}}"
-                    )
-                
-                    st.latex(
-                        fr"f_{{yd}} = \frac{{f_{{yk}}}}{{\gamma_s}} = "
-                        fr"\frac{{{fy:.1f}}}{{{results.gamma_s}}} "
-                        fr"= \mathbf{{{results.fyd:.2f}}}\,\text{{MPa}}"
-                    )
-                
-                    glass_box("### 1. Concrete Contribution")
-                
-                    st.latex(r"F_c = 0.85 f_{cd} (A_g - A_{st})")
-                
-                    st.latex(
-                        fr"F_c = 0.85({results.fcd:.2f})({Ag:.0f}-{Ast:.0f}) "
-                        fr"= \mathbf{{{results.Fc/1000:.0f}}}\,\text{{kN}}"
-                    )
-                
-                    glass_box("### 2. Steel Contribution")
-                
-                    st.latex(r"F_s = A_{st} f_{yd}")
-                
-                    st.latex(
-                        fr"F_s = ({Ast:.0f})({results.fyd:.2f}) "
-                        fr"= \mathbf{{{results.Fs/1000:.0f}}}\,\text{{kN}}"
-                    )
-                
-                    glass_box("### 3. Total Capacity")
-                
-                    st.latex(r"N_{or} = F_c + F_s")
-                
-                    st.latex(
-                        fr"N_{{or}} = {results.Fc/1000:.0f} + {results.Fs/1000:.0f} "
-                        fr"= \mathbf{{{results.Nor1/1000:.0f}}}\,\text{{kN}}"
-                    )
-                
-                
-                            # -----------------------------------------
-                            # Optional Spiral Details (keep widgets normal)
-                            # -----------------------------------------
-                            if "Spiral" in reinf_style:
-                                st.markdown("#### Spiral Check (Confined Core)")
-                
-                                if results.rho_s is None or results.rho_min_req is None:
-                                    st.error("Spiral geometry/spacing invalid (cannot compute confinement ratio).")
-                                else:
-                                    st.write(f"Computed $\\rho_s$: **{results.rho_s:.4f}**")
-                                    st.write(f"Required $\\rho_{{min}}$: **{results.rho_min_req:.4f}**")
-                
-                                    if results.rho_s >= results.rho_min_req and results.Nor2 is not None:
-                                        st.success("✅ Confinement sufficient.")
-                                    else:
-                                        st.error("❌ Confinement not sufficient.")
+        # -----------------------------
+        # 2) GRAPH (SECOND)
+        # -----------------------------
+        write_text("section_header", "Behavior Graph")
 
-            # -----------------------------------------
-            # Behavior Graph
-            # -----------------------------------------
-            st.markdown("#### Behavior Graph")
+        graph_N1 = results.Nor1 / 1000
+        graph_N2 = (results.Nor2 / 1000) if (results.Nor2 is not None) else 0
+        plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
 
-            graph_N1 = results.Nor1 / 1000
-            graph_N2 = (results.Nor2 / 1000) if (results.Nor2 is not None) else 0
+        fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
+        st.pyplot(fig)
+        plt.close(fig)
 
-            plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
-            fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
+        st.markdown("---")
 
-            st.pyplot(fig)
-            plt.close(fig)
+        # -----------------------------
+        # 3) STEP-BY-STEP (THIRD) — CONTINUOUS GLASS
+        # -----------------------------
+        write_text("section_header", "Step-by-Step Calculation")
+
+        step_md = _build_step_by_step_markdown(
+            results=results,
+            fc=fc,
+            fy=fy,
+            Ag=Ag,
+            Ast=Ast,
+            reinf_style=reinf_style,
+            core_diameter_input=core_diameter_input,
+        )
+        glass_box(step_md)
 
 
 if __name__ == "__main__":
