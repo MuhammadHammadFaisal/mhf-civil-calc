@@ -150,73 +150,50 @@ def app():
             # -----------------------------------------
             c_res_l, c_res_r = st.columns([1, 1.5])
 
-            with c_res_l:
-                st.markdown("#### Summary")
-
-                st.metric("Unconfined Capacity (Nor)", f"{results.Nor1/1000:,.0f} kN")
-
-                if "Spiral" in reinf_style and results.Nor2 is not None:
-                    st.metric("Confined Capacity (Nor2)", f"{results.Nor2/1000:,.0f} kN")
-
-                    delta = (results.Nor2 - results.Nor1) / 1000
-                    if delta > 0:
-                        st.success(f"Ductile (+{delta:,.0f} kN)")
-                    else:
-                        st.warning(f"Brittle ({delta:,.0f} kN)")
-
-            with c_res_r:
+                        with c_res_r:
                 with st.expander("Show Detailed Math", expanded=True):
-                    # IMPORTANT: dedent() prevents “code block” rendering due to indentation
-                    math_content = dedent(f"""
-                    **0. Design Strengths**
+                    math_logs = []
 
-                    $$
-                    f_{{cd}} = \\frac{{f_{{ck}}}}{{\\gamma_c}} 
-                    = \\frac{{{fc:.1f}}}{{{results.gamma_c}}}
-                    = \\mathbf{{{results.fcd:.2f}}}\\,\\text{{MPa}}
-                    $$
+                    # 0. Design Strengths
+                    math_logs.append("**0. Design Strengths**")
+                    math_logs.append(f"$f_{{cd}} = \\frac{{f_{{ck}}}}{{\\gamma_c}} = \\frac{{{fc:.1f}}}{{{results.gamma_c}}} = \\mathbf{{{results.fcd:.2f}}}\\,\\text{{MPa}}$")
+                    math_logs.append(f"$f_{{yd}} = \\frac{{f_{{yk}}}}{{\\gamma_s}} = \\frac{{{fy:.1f}}}{{{results.gamma_s}}} = \\mathbf{{{results.fyd:.2f}}}\\,\\text{{MPa}}$")
+                    math_logs.append("---")
 
-                    $$
-                    f_{{yd}} = \\frac{{f_{{yk}}}}{{\\gamma_s}} 
-                    = \\frac{{{fy:.1f}}}{{{results.gamma_s}}}
-                    = \\mathbf{{{results.fyd:.2f}}}\\,\\text{{MPa}}
-                    $$
+                    # 1. Concrete Contribution
+                    math_logs.append("**1. Concrete Contribution**")
+                    math_logs.append("$F_c = 0.85 f_{{cd}} (A_g - A_{{st}})$")
+                    math_logs.append(f"$F_c = 0.85({results.fcd:.2f})({Ag:.0f}-{Ast:.0f}) = \\mathbf{{{results.Fc/1000:.0f}}}\\,\\text{{kN}}$")
+                    math_logs.append("---")
 
-                    **1. Concrete Contribution**
+                    # 2. Steel Contribution
+                    math_logs.append("**2. Steel Contribution**")
+                    math_logs.append("$F_s = A_{{st}} f_{{yd}}$")
+                    math_logs.append(f"$F_s = ({Ast:.0f})({results.fyd:.2f}) = \\mathbf{{{results.Fs/1000:.0f}}}\\,\\text{{kN}}$")
+                    math_logs.append("---")
 
-                    $$
-                    F_c = 0.85 f_{{cd}} (A_g - A_{{st}})
-                    $$
+                    # 3. Total Capacity
+                    math_logs.append("**3. Total Capacity**")
+                    math_logs.append("$N_{{or}} = F_c + F_s$")
+                    math_logs.append(f"$N_{{or}} = {results.Fc/1000:.0f} + {results.Fs/1000:.0f} = \\mathbf{{{results.Nor1/1000:.0f}}}\\,\\text{{kN}}$")
 
-                    $$
-                    F_c = 0.85({results.fcd:.2f})({Ag:.0f}-{Ast:.0f})
-                    = \\mathbf{{{results.Fc/1000:.0f}}}\\,\\text{{kN}}
-                    $$
+                    # Optional: Dynamically add Spiral math if applicable
+                    if "Spiral" in reinf_style and results.rho_s is not None and results.rho_min_req is not None:
+                        math_logs.append("---")
+                        math_logs.append("**4. Spiral Confinement Check**")
+                        math_logs.append(f"$\\rho_s = \\mathbf{{{results.rho_s:.4f}}}$ (Computed)")
+                        math_logs.append(f"$\\rho_{{min}} = \\mathbf{{{results.rho_min_req:.4f}}}$ (Required)")
+                        
+                        if results.rho_s >= results.rho_min_req:
+                            math_logs.append("✅ Confinement sufficient. Confined capacity applies:")
+                            math_logs.append(f"$N_{{or2}} = \\mathbf{{{results.Nor2/1000:.0f}}}\\,\\text{{kN}}$")
+                        else:
+                            math_logs.append("❌ Confinement insufficient. Only unconfined capacity applies.")
 
-                    **2. Steel Contribution**
-
-                    $$
-                    F_s = A_{{st}} f_{{yd}}
-                    $$
-
-                    $$
-                    F_s = ({Ast:.0f})({results.fyd:.2f})
-                    = \\mathbf{{{results.Fs/1000:.0f}}}\\,\\text{{kN}}
-                    $$
-
-                    **3. Total Capacity**
-
-                    $$
-                    N_{{or}} = F_c + F_s
-                    $$
-
-                    $$
-                    N_{{or}} = {results.Fc/1000:.0f} + {results.Fs/1000:.0f}
-                    = \\mathbf{{{results.Nor1/1000:.0f}}}\\,\\text{{kN}}
-                    $$
-                    """).strip()
-
+                    # Join and display
+                    math_content = "\n\n".join(math_logs)
                     glass_box(math_content)
+
 
             # -----------------------------------------
             # Optional Spiral Details (keep widgets normal)
