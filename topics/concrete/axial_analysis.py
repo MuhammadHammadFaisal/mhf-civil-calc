@@ -1,18 +1,18 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-
+from theme import write_text, glass_box, glass_table
 from .diagrams_dynamic.section_preview import draw_cross_section
 from .diagrams_results.load_deformation_plot import plot_load_deformation
 from .calculator.axial_calculator import compute_axial
 
 def app():
-    st.title("RC Column Analyst")
+    write_text("page_title", "RC Column Analyst")
 
     col_input, col_viz = st.columns([1.3, 1])
 
     with col_input:
-        st.subheader("1. System Properties")
+        write_text("section_header", "1. System Properties")
 
         design_code = "TS 500 (Lecture Notes)"
 
@@ -91,7 +91,7 @@ def app():
                     )
 
     with col_viz:
-        st.subheader("2. Visualization")
+        write_text("section_header", "2. Visualization")
         fig1 = draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, True, cover)
         st.pyplot(fig1, width="stretch")
         if Ag > 0:
@@ -101,7 +101,7 @@ def app():
 
     if st.button("Analyze Capacity", type="primary"):
         st.markdown("---")
-        st.subheader("📝 Step-by-Step Calculation Report")
+        write_text("section_header", "Step-by-Step Calculation Report")
 
         results = compute_axial(
             fc=fc, fy=fy, Ag=Ag, Ast=Ast,
@@ -134,7 +134,7 @@ def app():
             chk_col2.error("❌ Too High! (Code Max = 4%)")
 
         st.markdown("#### 2. Unconfined Axial Capacity ($N_{or}$)")
-        st.info("The total load is shared between the concrete area and the steel bars.")
+        glass_box("The total load is shared between the concrete area and the steel bars.")
 
         Force_conc = results.Fc
         Force_steel = results.Fs
