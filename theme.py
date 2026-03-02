@@ -122,6 +122,25 @@ def apply_theme(page_title="MHF Civil Calc"):
     .glass-table-wrapper tbody tr:hover td {
         background-color: rgba(255, 255, 255, 0.08) !important;
     }
+    /* 3b. Framed Content Area (global) */
+    main > div:first-child {
+        max-width: 1200px;
+        margin: 30px auto;
+        padding: 30px 40px;
+        border: 2px solid rgba(255,255,255,0.2);
+        border-radius: 12px;
+        background-color: rgba(26,58,90,0.5);
+        box-shadow: 0 0 30px rgba(0,0,0,0.2);
+    }
+    
+    /* Optional: Standard text link styling */
+    a {
+        color: #aad4ff !important;
+        text-decoration: none;
+    }
+    a:hover {
+        text-decoration: underline;
+    }
     </style>
     """, unsafe_allow_html=True)
 
