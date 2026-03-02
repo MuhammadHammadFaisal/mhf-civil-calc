@@ -100,7 +100,9 @@ def app():
     st.markdown("---")
 
     if st.button("Analyze Capacity", type="primary"):
-        st.markdown("---")
+    st.markdown("---")
+
+    with st.container(border=True):
         write_text("section_header", "Step-by-Step Calculation Report")
 
         results = compute_axial(
@@ -136,6 +138,8 @@ def app():
         st.markdown("#### 2. Unconfined Axial Capacity ($N_{or}$)")
         glass_box("The total load is shared between the concrete area and the steel bars.")
 
+        
+
         Force_conc = results.Fc
         Force_steel = results.Fs
         Nor1 = results.Nor1
@@ -159,7 +163,7 @@ def app():
 
         if "Spiral" in reinf_style:
             st.markdown("#### 3. Confined Core Capacity ($N_{or2}$)")
-            st.info("This calculates if the spiral can hold the core together after the shell spalls off.")
+            glass_box("This calculates if the spiral can hold the core together after the shell spalls off.")
 
             if results.Ack is not None:
                 st.write(f"Core Diameter ($D_k$): **{core_diameter_input:.0f} mm**")

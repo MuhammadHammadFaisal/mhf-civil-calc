@@ -206,7 +206,15 @@ def apply_theme(page_title="MHF Civil Calc"):
         background: transparent !important;
       }
     }
-    
+    /* Make st.container(border=True) look like glass */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background: rgba(0, 0, 0, 0.35) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 12px !important;
+        padding: 16px 16px !important;
+        backdrop-filter: blur(6px) !important;
+    }
+        
     </style>
     """, unsafe_allow_html=True)
 
