@@ -28,10 +28,16 @@ def apply_theme(page_title="MHF Civil Calc"):
     header {visibility: visible;}
 
     /* Optional: hide footer only */
-
+    html, body, .stApp {
+        height: 100%;
+    }
 
     /* 2. Blueprint Background */
+    /* Blueprint background should follow full-page scroll */
+    .stApp,
     [data-testid="stAppViewContainer"] {
+        /* keep your same background-color + background-image + sizes etc */
+
         background-color: #031126;
         background-image: 
             linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
@@ -95,16 +101,7 @@ def apply_theme(page_title="MHF Civil Calc"):
     /* =========================================
        BULLETPROOF GLASS TABLES
        ========================================= */
-    .glass-table-wrapper table {
-        width: 100% !important;
-        background-color: rgba(0, 0, 0, 0.35) !important;
-        color: #E0E0E0 !important;
-        border-collapse: collapse !important;
-        border-radius: 8px !important;
-        overflow: hidden !important;
-        margin-bottom: 20px !important;
-        border: none !important;
-    }
+    
     .glass-table-wrapper th {
         background-color: rgba(0, 0, 0, 0.5) !important;
         font-weight: 600 !important;
@@ -152,35 +149,45 @@ def apply_theme(page_title="MHF Civil Calc"):
     }
     
     @media print {
-    
-      html, body {
-        background-color: #031126 !important;
-        height: auto !important;
+
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
     
-      /* Put blueprint background on BODY for multi-page PDF */
-      body {
+      /* Put blueprint background on BOTH html and body so it repeats per page */
+      html, body {
+        background-color: #031126 !important;
         background-image:
           linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
           radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.35) 0%, transparent 70%),
           linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
           linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
           linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+          linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px) !important;
     
         background-size:
           100% 100%,
           100% 100%,
           75px 75px, 75px 75px,
-          15px 15px, 15px 15px;
+          15px 15px, 15px 15px !important;
     
         background-repeat:
           no-repeat, no-repeat,
           repeat, repeat,
-          repeat, repeat;
+          repeat, repeat !important;
     
         background-attachment: scroll !important;
         background-position: 0 0 !important;
+      }
+    
+      /* Streamlit wrappers sometimes paint their own backgrounds in print */
+      .stApp,
+      [data-testid="stAppViewContainer"],
+      [data-testid="stSidebar"],
+      main {
+        background: transparent !important;
+        background-color: transparent !important;
       }
     
       /* Remove framed container styling for print */
