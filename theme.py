@@ -141,6 +141,68 @@ def apply_theme(page_title="MHF Civil Calc"):
     a:hover {
         text-decoration: underline;
     }
+    /* =========================
+       PRINT FIXES (PDF export)
+       ========================= */
+    
+    /* Force browsers to actually print background colors/images */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* When printing, apply the blueprint background to stApp itself,
+       and force it to repeat on each printed page */
+    @media print {
+        html, body {
+            height: auto !important;
+            background: #031126 !important;
+        }
+    
+        /* Apply background to the main app wrapper too (helps page 2+) */
+        .stApp, [data-testid="stAppViewContainer"] {
+            background-color: #031126 !important;
+            background-image:
+                linear-gradient(to bottom, #031126 0%, #031126 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 42px, transparent 42px),
+                radial-gradient(circle at 50% 40vh, rgba(20, 75, 150, 0.4) 0%, transparent 70%),
+                linear-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px),
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                radial-gradient(circle at 100% 0%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+                radial-gradient(circle at 100% 0%, transparent 220px, rgba(255,255,255,0.05) 221px, transparent 222px),
+                radial-gradient(circle at 0% 100%, transparent 250px, rgba(255,255,255,0.1) 251px, transparent 253px),
+                radial-gradient(circle at 0% 100%, transparent 50px, rgba(255,255,255,0.15) 51px, transparent 53px) !important;
+    
+            background-size:
+                100% 100%,
+                100% 100%,
+                75px 75px, 75px 75px,
+                15px 15px, 15px 15px,
+                100% 100%, 100% 100%,
+                100% 100%, 100% 100% !important;
+    
+            background-repeat:
+                no-repeat, no-repeat,
+                repeat, repeat,
+                repeat, repeat,
+                no-repeat, no-repeat,
+                no-repeat, no-repeat !important;
+    
+            /* Critical: print engines hate local/fixed; use scroll */
+            background-attachment: scroll !important;
+        }
+    
+        /* Remove max-width framing that can create big empty areas in print */
+        main > div:first-child {
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+    }
     </style>
     """, unsafe_allow_html=True)
 
