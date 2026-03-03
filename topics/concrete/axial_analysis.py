@@ -165,10 +165,10 @@ def app():
         Ast,
         reinf_style,
         core_diameter_input,
-    )
-    
-    with st.container(border=True):
-        st.markdown(step_md)
+        )
+        
+        with st.container(border=True):
+            st.markdown(step_md)
 
 if __name__ == "__main__":
     app()
