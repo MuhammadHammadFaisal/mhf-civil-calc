@@ -126,48 +126,56 @@ def app():
             strength_basis=strength_basis
         )
 
-        write_text("section_header", "Result Summary")
-
-        s1, s2, s3 = st.columns(3)
-
-        s1.metric("Unconfined $N_{or}$", f"{results.Nor1/1000:,.0f} kN")
-
-        if results.Nor2 is not None:
-            s2.metric("Confined $N_{or2}$", f"{results.Nor2/1000:,.0f} kN")
-            delta = (results.Nor2 - results.Nor1) / 1000
-            s3.metric("Δ (Nor2 - Nor)", f"{delta:,.0f} kN")
-        else:
-            s2.metric("Confined $N_{or2}$", "—")
-            s3.metric("Δ (Nor2 - Nor)", "—")
-
         st.markdown("---")
 
-        write_text("section_header", "Behavior Graph")
+        # 1. Result Summary in Glass Box
+        with glass_box():
+            write_text("section_header", "📊 Design Summary")
 
-        graph_N1 = results.Nor1 / 1000
-        graph_N2 = results.Nor2 / 1000 if results.Nor2 is not None else 0
+            s1, s2, s3 = st.columns(3)
 
-        plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
+            s1.metric("Unconfined Capacity ($N_{or}$)", f"{results.Nor1/1000:,.1f} kN")
 
-        fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
-        st.pyplot(fig)
-        plt.close(fig)
+            if results.Nor2 is not None:
+                s2.metric("Confined Capacity ($N_{or2}$)", f"{results.Nor2/1000:,.1f} kN")
+                delta = (results.Nor2 - results.Nor1) / 1000
+                s3.metric("Capacity Increase (Δ)", f"+{delta:,.1f} kN")
+            else:
+                s2.metric("Confined Capacity ($N_{or2}$)", "N/A")
+                s3.metric("Capacity Increase (Δ)", "N/A")
 
-        st.markdown("---")
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        write_text("section_header", "Step-by-Step Calculation")
+        # 2. Behavior Graph in Glass Box
+        with glass_box():
+            write_text("section_header", "📈 Load-Deformation Behavior")
 
-        step_md = build_step_by_step_markdown(
-            results,
-            fc,
-            fy_long,
-            Ag,
-            Ast,
-            reinf_style,
-            core_diameter_input,
-        )
-        
-        glass_box(step_md)
+            graph_N1 = results.Nor1 / 1000
+            graph_N2 = results.Nor2 / 1000 if results.Nor2 is not None else 0
+
+            plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
+
+            fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
+            st.pyplot(fig)
+            plt.close(fig)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # 3. Step-by-Step Calculation in Glass Box
+        with glass_box():
+            write_text("section_header", "📋 Step-by-Step Calculation")
+
+            step_md = build_step_by_step_markdown(
+                results,
+                fc,
+                fy_long,
+                Ag,
+                Ast,
+                reinf_style,
+                core_diameter_input,
+            )
+            
+            st.markdown(step_md)
 
 if __name__ == "__main__":
     app()
