@@ -2,7 +2,7 @@ import numpy as np
 from types import SimpleNamespace
 
 
-def compute_axial(fc, fy_long, fyw, Ag, Ast, reinf_style,
+def compute_axial(fc, fy_long, fywk, Ag, Ast, reinf_style,
                   core_diameter_input, spiral_dia, spiral_spacing,
                   strength_basis):
 
@@ -36,11 +36,11 @@ def compute_axial(fc, fy_long, fyw, Ag, Ast, reinf_style,
 
         rho_s_val = (4 * Asp) / (d_center * spiral_spacing)
 
-        rho_min_calc = 0.45 * (fc / fyw) * ((Ag / Ack) - 1)
-        rho_min_abs = 0.12 * (fc / fyw)
+        rho_min_calc = 0.45 * (fc / fywk) * ((Ag / Ack) - 1)
+        rho_min_abs = 0.12 * (fc / fywk)
         rho_min_req = max(rho_min_calc, rho_min_abs)
 
-        confinement_boost = (2 * rho_s_val * fyw) / 1.5
+        confinement_boost = (2 * rho_s_val * fywk) / 1.5
         fccd = fcd + confinement_boost
 
         Nor2 = fccd * Ack + Ast * fyd

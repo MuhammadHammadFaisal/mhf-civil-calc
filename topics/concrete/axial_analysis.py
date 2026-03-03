@@ -95,7 +95,8 @@ def app():
             reinf_style = confinement_options[selected_label]
 
         st.markdown("**Dimensions**")
-        cover = st.number_input("Cover [mm]", value=25.0)
+        if "Standard" in reinf_style:
+            cover = st.number_input("Cover [mm]", value=25.0)
 
         if shape == "Rectangular":
             b = st.number_input("Width (b) (mm)", value=500.0)
@@ -114,7 +115,7 @@ def app():
         spiral_dia = 0.0
         spiral_spacing = 0.0
         core_diameter_input = 0.0
-        fyw = 0.0
+        fywk = 0.0
 
         if "None" not in reinf_style:
             bar_dia = st.number_input("Bar Diameter (mm)", value=20.0)
@@ -131,8 +132,9 @@ def app():
                     value=300.0,
                     help="Diameter of confined core measured to centerline of spiral."
                 )
+            
             else:
-                fyw = 0.0
+                fywk = 0.0
                 core_diameter_input = 0.0
 
     # ================= VISUAL =================
@@ -149,7 +151,7 @@ def app():
         results = compute_axial(
             fc=fc,
             fy_long=fy_long,
-            fyw=fyw,
+            fywk=fywk,
             Ag=Ag,
             Ast=Ast,
             reinf_style=reinf_style,
