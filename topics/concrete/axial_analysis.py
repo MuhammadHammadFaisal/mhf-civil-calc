@@ -97,7 +97,8 @@ def app():
         st.markdown("**Dimensions**")
         if "Standard" in reinf_style:
             cover = st.number_input("Cover [mm]", value=25.0)
-
+        else:
+            cover = 0.0
         if shape == "Rectangular":
             b = st.number_input("Width (b) (mm)", value=500.0)
             h = st.number_input("Depth (h) (mm)", value=500.0)
