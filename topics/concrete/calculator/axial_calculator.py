@@ -26,7 +26,7 @@ class AxialResults:
     Nor2: float | None = None
     spiral_ok: bool | None = None
 
-def compute_axial(fc, fy, Ag, Ast, reinf_style, core_diameter_input, spiral_dia, spiral_spacing):
+def compute_axial(fc, fy, fywk, Ag, Ast, reinf_style, core_diameter_input, spiral_dia, spiral_spacing, use_design_values=True):
     gamma_c, gamma_s = GAMMA_C_TS500, GAMMA_S_TS500
     fcd_val = fcd(fc, gamma_c)
     fyd_val = fyd(fy, gamma_s)

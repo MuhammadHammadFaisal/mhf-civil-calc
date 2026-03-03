@@ -113,20 +113,28 @@ def app():
         with c1:
             fc = st.number_input("Concrete ($f_{ck}$) [MPa]", value=20.0, step=5.0)
         with c2:
-            fy = st.number_input("Steel ($f_{yk}$) [MPa]", value=420.0, step=10.0)
+            fy = st.number_input("Steel ($f_{yk}$) [MPa]", value=220.0, step=10.0)
 
         with st.expander("Geometry & Configuration", expanded=True):
-            shape = st.selectbox("Column Shape", ["Rectangular", "Square", "Circular"])
+            shape = st.selectbox("Column Shape", ["Rectangular", "Circular"])
 
             confinement_options = {
-                "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
                 "Spiral (Continuous Helix)": "Spiral / Circular",
+                "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
                 "Unconfined (Longitudinal Bars Only)": "Longitudinal Only (No Ties)",
                 "Plain Concrete (No Reinforcement)": "None (Plain Concrete)",
             }
             selected_label = st.selectbox("Confinement Type", list(confinement_options.keys()))
+        
             reinf_style = confinement_options[selected_label]
-
+        st.markdown("**Strength Basis**")
+        strength_basis = st.radio(
+            "Use which strengths for capacity calculation?",
+            ["Design values (fcd, fyd)", "Characteristic values (fck, fyk)"],
+            index=0,
+            horizontal=True,
+        )
+        use_design_values = (strength_basis == "Design values (fcd, fyd)")
         st.markdown("**Dimensions**")
         cover = st.number_input("Cover [mm]", value=25.0)
 
@@ -136,19 +144,14 @@ def app():
         if shape == "Rectangular":
             cc1, cc2 = st.columns(2)
             with cc1:
-                b = st.number_input("Width (b)", value=300.0)
+                b = st.number_input("Width (b) (mm)", value=300.0)
             with cc2:
-                h = st.number_input("Depth (h)", value=400.0)
+                h = st.number_input("Depth (h) (mm)", value=400.0)
             Ag = b * h
             dims = (b, h)
 
-        elif shape == "Square":
-            a = st.number_input("Side (a)", value=350.0)
-            Ag = a**2
-            dims = (a, a)
-
         else:
-            D = st.number_input("Diameter (D)", value=300.0)
+            D = st.number_input("Diameter (D) (mm)", value=300.0)
             Ag = np.pi * D**2 / 4
             dims = (D,)
 
@@ -161,12 +164,12 @@ def app():
         spiral_dia = 0.0
         spiral_spacing = 0.0
         core_diameter_input = 0.0
-
+        fywk = 0.0
         if "None" not in reinf_style:
             st.markdown("##### Longitudinal Reinforcement")
             rc1, rc2 = st.columns(2)
             with rc1:
-                bar_dia = st.number_input("Bar Diameter ($d_b$)", value=16.0)
+                bar_dia = st.number_input("Bar Diameter ($d_b$) (mm)", value=20.0)
             with rc2:
                 num_bars = st.number_input("Number of Bars", value=8, min_value=4)
 
@@ -174,25 +177,29 @@ def app():
 
             if "Spiral" in reinf_style:
                 st.markdown("##### Spiral Confinement Settings")
-                st.info("🌀 Hybrid/Spiral Mode Active")
+                st.info("Hybrid/Spiral Mode Active")
 
-                sc1, sc2, sc3 = st.columns(3)
+                sc1, sc2, sc3, sc4 = st.columns(4)
+
                 with sc1:
-                    spiral_dia = st.number_input("Spiral Bar $\phi$", value=10.0)
+                    spiral_dia = st.number_input("Spiral Bar φ (mm)", value=10.0)
+
                 with sc2:
-                    spiral_spacing = st.number_input("Spiral Spacing $s$", value=50.0)
+                    spiral_spacing = st.number_input("Spiral Spacing s (mm)", value=50.0)
+
                 with sc3:
+                    fywk = st.number_input("Spiral Steel $f_{ywk}$ (MPa)", value=220.0)
+
+                with sc4:
                     if shape == "Circular":
                         default_core = dims[0] - 2 * cover
                     else:
                         default_core = min(dims[0], dims[1]) - 2 * cover
 
                     core_diameter_input = st.number_input(
-                        "Core Diam ($D_{k}$)",
+                        "Core Diam ($D_k$)",
                         value=float(default_core),
-                        help="Outer diameter of the spiral ring. Usually Column Width - 2*Cover.",
                     )
-
     # =========================
     # VISUALIZATION (RIGHT)
     # =========================
@@ -219,15 +226,17 @@ def app():
             return
 
         results = compute_axial(
-            fc=fc,
-            fy=fy,
-            Ag=Ag,
-            Ast=Ast,
-            reinf_style=reinf_style,
-            core_diameter_input=core_diameter_input,
-            spiral_dia=spiral_dia,
-            spiral_spacing=spiral_spacing,
-        )
+        fc=fc,
+        fy=fy,
+        fywk=fywk,
+        Ag=Ag,
+        Ast=Ast,
+        reinf_style=reinf_style,
+        core_diameter_input=core_diameter_input,
+        spiral_dia=spiral_dia,
+        spiral_spacing=spiral_spacing,
+        use_design_values=use_design_values,
+    )
 
         # -----------------------------
         # 1) RESULT SUMMARY (FIRST)
