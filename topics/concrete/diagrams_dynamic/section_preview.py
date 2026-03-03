@@ -74,7 +74,11 @@ def draw_cross_section(
     fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
 
     bar_r = bar_dia / 2
-
+    # Safety check
+    if num_bars <= 0 or bar_dia <= 0:
+        ax.set_aspect("equal")
+        ax.axis("off")
+        return fig
     fig.patch.set_alpha(0)
     ax.patch.set_alpha(0)
 
