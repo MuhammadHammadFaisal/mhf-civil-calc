@@ -122,14 +122,20 @@ def app():
             Ast = num_bars * np.pi * (bar_dia / 2) ** 2
 
             if "Spiral" in reinf_style:
+
                 spiral_dia = st.number_input("Spiral Bar φ (mm)", value=10.0)
                 spiral_spacing = st.number_input("Spiral Spacing s (mm)", value=50.0)
                 fyw = st.number_input("Spiral Steel ($f_{ywh}$) [MPa]", value=220.0)
-
-                if shape == "Circular":
-                    core_diameter_input = D - 2 * cover
-                else:
-                    core_diameter_input = min(b, h) - 2 * cover
+            
+                # 🔴 ADD THIS (Manual Core Diameter Input)
+                core_diameter_input = st.number_input(
+                    "Core Diameter $D_k$ (mm)",
+                    value=250.0,
+                    help="Diameter of confined core measured to centerline of spiral."
+                )
+            else:
+                fyw = 0.0
+                core_diameter_input = 0.0
 
     # ================= VISUAL =================
     with col_viz:
