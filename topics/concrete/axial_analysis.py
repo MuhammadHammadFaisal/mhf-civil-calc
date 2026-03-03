@@ -141,7 +141,7 @@ def app():
     # ================= VISUAL =================
     with col_viz:
         write_text("section_header", "2. Visualization")
-        fig1 = def draw_cross_section(
+        fig1 = draw_cross_section(
         shape,
         dims,
         num_bars,
