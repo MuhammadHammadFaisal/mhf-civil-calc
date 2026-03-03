@@ -83,7 +83,7 @@ def app():
 
                 spiral_dia = st.number_input("Spiral Bar φ (mm)", value=10.0)
                 spiral_spacing = st.number_input("Spiral Spacing s (mm)", value=50.0)
-                fywk = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=420.0)
+                fywk = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=220.0)
                 core_diameter_input = st.number_input(
                     "Core Diameter $D_k$ (mm)",
                     value=300.0,
