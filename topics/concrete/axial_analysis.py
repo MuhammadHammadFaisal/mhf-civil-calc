@@ -107,7 +107,7 @@ def app():
         cover,
         core_diameter_input,
     )
-        st.pyplot(fig1, width="stretch")
+        st.pyplot(fig1, width="stretch", clear_figure=True)
         plt.close(fig1)
 
     st.markdown("---")
