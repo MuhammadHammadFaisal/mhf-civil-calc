@@ -234,4 +234,4 @@ def draw_cross_section(
     ax.set_aspect("equal")
     ax.axis("off")
 
-    return figs
+    return fig
