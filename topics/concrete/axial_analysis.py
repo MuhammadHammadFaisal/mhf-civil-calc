@@ -128,28 +128,25 @@ def app():
 
         st.markdown("---")
 
-        # 1. Result Summary in Glass Box
-        with glass_box():
-            write_text("section_header", "📊 Design Summary")
-
-            s1, s2, s3 = st.columns(3)
-
-            s1.metric("Unconfined Capacity ($N_{or}$)", f"{results.Nor1/1000:,.1f} kN")
-
-            if results.Nor2 is not None:
-                s2.metric("Confined Capacity ($N_{or2}$)", f"{results.Nor2/1000:,.1f} kN")
-                delta = (results.Nor2 - results.Nor1) / 1000
-                s3.metric("Capacity Increase (Δ)", f"+{delta:,.1f} kN")
-            else:
-                s2.metric("Confined Capacity ($N_{or2}$)", "N/A")
-                s3.metric("Capacity Increase (Δ)", "N/A")
+        # 1. Result Summary in Glass Box (Converted to a Markdown string)
+        write_text("section_header", "📊 Design Summary")
+        
+        unconfined = f"{results.Nor1/1000:,.1f}"
+        
+        if results.Nor2 is not None:
+            confined = f"{results.Nor2/1000:,.1f}"
+            delta = f"+{(results.Nor2 - results.Nor1) / 1000:,.1f}"
+            summary_text = f"**Unconfined Capacity (N_or):** {unconfined} kN  \n**Confined Capacity (N_or2):** {confined} kN  \n**Capacity Increase (Δ):** {delta} kN"
+        else:
+            summary_text = f"**Unconfined Capacity (N_or):** {unconfined} kN  \n**Confined Capacity (N_or2):** N/A  \n**Capacity Increase (Δ):** N/A"
+            
+        glass_box(summary_text)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 2. Behavior Graph in Glass Box
-        with glass_box():
-            write_text("section_header", "📈 Load-Deformation Behavior")
-
+        # 2. Behavior Graph (Uses standard container since charts aren't text)
+        write_text("section_header", "📈 Load-Deformation Behavior")
+        with st.container(border=True):
             graph_N1 = results.Nor1 / 1000
             graph_N2 = results.Nor2 / 1000 if results.Nor2 is not None else 0
 
@@ -162,20 +159,20 @@ def app():
         st.markdown("<br>", unsafe_allow_html=True)
 
         # 3. Step-by-Step Calculation in Glass Box
-        with glass_box():
-            write_text("section_header", "📋 Step-by-Step Calculation")
+        write_text("section_header", "📋 Step-by-Step Calculation")
 
-            step_md = build_step_by_step_markdown(
-                results,
-                fc,
-                fy_long,
-                Ag,
-                Ast,
-                reinf_style,
-                core_diameter_input,
-            )
-            
-            st.markdown(step_md)
+        step_md = build_step_by_step_markdown(
+            results,
+            fc,
+            fy_long,
+            Ag,
+            Ast,
+            reinf_style,
+            core_diameter_input,
+        )
+        
+        # Pass the markdown text directly into the function
+        glass_box(step_md)
 
 if __name__ == "__main__":
     app()
