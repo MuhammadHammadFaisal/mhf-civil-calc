@@ -108,6 +108,7 @@ def app():
         core_diameter_input,
     )
         st.pyplot(fig1, width="stretch")
+        plt.close(fig1)
 
     st.markdown("---")
 
