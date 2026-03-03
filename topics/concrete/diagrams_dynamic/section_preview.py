@@ -2,12 +2,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
+
+# ==========================================================
+# RECTANGULAR BAR DISTRIBUTION
+# ==========================================================
 def distribute_bars_rectangular(b, h, cover, num_bars):
     eff_cover = cover
+
     xL, xR = eff_cover, b - eff_cover
     yB, yT = eff_cover, h - eff_cover
 
     positions = [(xL, yB), (xR, yB), (xR, yT), (xL, yT)]
+
     remaining = num_bars - 4
     if remaining <= 0:
         return positions[:num_bars]
@@ -34,9 +40,14 @@ def distribute_bars_rectangular(b, h, cover, num_bars):
     for i, count in enumerate(face_counts):
         if count == 0:
             continue
+
         face_name, fixed, start, end = faces[i]
         spacing = (end - start) / (count + 1)
-        internal_points = [start + spacing * (j + 1) for j in range(count)]
+
+        internal_points = [
+            start + spacing * (j + 1) for j in range(count)
+        ]
+
         for p in internal_points:
             if face_name in ["left", "right"]:
                 positions.append((fixed, p))
@@ -46,36 +57,76 @@ def distribute_bars_rectangular(b, h, cover, num_bars):
     return positions
 
 
-def draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, show_ties, cover, core_diameter):
+# ==========================================================
+# MAIN DRAW FUNCTION
+# ==========================================================
+def draw_cross_section(
+    shape,
+    dims,
+    num_bars,
+    bar_dia,
+    reinf_style,
+    show_ties,
+    cover,
+    core_diameter=0.0,   # SAFE DEFAULT
+):
+
     fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
+
     bar_r = bar_dia / 2
+
     fig.patch.set_alpha(0)
     ax.patch.set_alpha(0)
 
-    # Concrete shape
+    # ======================================================
+    # DRAW CONCRETE SHAPE
+    # ======================================================
     if shape in ["Rectangular", "Square"]:
+
         b, h = dims
+        cx, cy = b / 2, h / 2
+
         ax.add_patch(
-            patches.Rectangle((0, 0), b, h, fill=True, facecolor="#e0e0e0", edgecolor="black", linewidth=2)
+            patches.Rectangle(
+                (0, 0),
+                b,
+                h,
+                fill=True,
+                facecolor="#e0e0e0",
+                edgecolor="black",
+                linewidth=2,
+            )
         )
+
         ax.set_xlim(-50, b + 50)
         ax.set_ylim(-50, h + 50)
-        cx, cy = b / 2, h / 2
-        min_dim = min(b, h)
-    else:
+
+    else:  # Circular
+
         D = dims[0]
         cx, cy = D / 2, D / 2
+
         ax.add_patch(
-            patches.Circle((cx, cy), D / 2, fill=True, facecolor="#e0e0e0", edgecolor="black", linewidth=2)
+            patches.Circle(
+                (cx, cy),
+                D / 2,
+                fill=True,
+                facecolor="#e0e0e0",
+                edgecolor="black",
+                linewidth=2,
+            )
         )
+
         ax.set_xlim(-50, D + 50)
         ax.set_ylim(-50, D + 50)
-        min_dim = D
 
-    # Draw ties logic
-    draw_ties_logic = False
-    if show_ties and ("Standard" in reinf_style or "Spiral" in reinf_style):
-        draw_ties_logic = True
+    # ======================================================
+    # TIE LOGIC
+    # ======================================================
+    draw_ties_logic = (
+        show_ties and
+        ("Standard" in reinf_style or "Spiral" in reinf_style)
+    )
 
     if "None" in reinf_style:
         ax.set_aspect("equal")
@@ -84,20 +135,28 @@ def draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, show_ties, c
 
     positions = []
 
-    # Spiral or circular arrangement
-    # =============================
+    # ======================================================
     # SPIRAL ARRANGEMENT
-    # =============================
+    # ======================================================
     if "Spiral" in reinf_style:
 
-        cage_D = core_diameter
+        # Use manual core diameter if provided
+        if core_diameter > 0:
+            cage_D = core_diameter
+        else:
+            # fallback safety
+            if shape == "Circular":
+                cage_D = dims[0] - 2 * cover
+            else:
+                cage_D = min(dims[0], dims[1]) - 2 * cover
 
         r_bars = cage_D / 2 - bar_r
 
         angles = np.linspace(0, 2 * np.pi, num_bars, endpoint=False)
 
         positions = [
-            (cx + r_bars * np.cos(a), cy + r_bars * np.sin(a))
+            (cx + r_bars * np.cos(a),
+             cy + r_bars * np.sin(a))
             for a in angles
         ]
 
@@ -113,9 +172,9 @@ def draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, show_ties, c
                 )
             )
 
-    # =============================
+    # ======================================================
     # CIRCULAR (NON-SPIRAL)
-    # =============================
+    # ======================================================
     elif shape == "Circular":
 
         cage_D = dims[0] - 2 * cover
@@ -125,17 +184,21 @@ def draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, show_ties, c
         angles = np.linspace(0, 2 * np.pi, num_bars, endpoint=False)
 
         positions = [
-            (cx + r_bars * np.cos(a), cy + r_bars * np.sin(a))
+            (cx + r_bars * np.cos(a),
+             cy + r_bars * np.sin(a))
             for a in angles
         ]
 
-    # =============================
+    # ======================================================
     # RECTANGULAR ARRANGEMENT
-    # =============================
+    # ======================================================
     else:
 
         positions = distribute_bars_rectangular(
-            dims[0], dims[1], cover + bar_r, num_bars
+            dims[0],
+            dims[1],
+            cover + bar_r,
+            num_bars,
         )
 
         if draw_ties_logic:
@@ -155,10 +218,20 @@ def draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, show_ties, c
                 )
             )
 
-    # Bars
+    # ======================================================
+    # DRAW BARS
+    # ======================================================
     for x, y in positions:
-        ax.add_patch(patches.Circle((x, y), bar_r, color="#d32f2f", zorder=10))
+        ax.add_patch(
+            patches.Circle(
+                (x, y),
+                bar_r,
+                color="#d32f2f",
+                zorder=10,
+            )
+        )
 
     ax.set_aspect("equal")
     ax.axis("off")
-    return fig
+
+    return figs
