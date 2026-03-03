@@ -85,39 +85,74 @@ def draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, show_ties, c
     positions = []
 
     # Spiral or circular arrangement
-    if "Spiral" in reinf_style or shape == "Circular":
+    # =============================
+    # SPIRAL ARRANGEMENT
+    # =============================
+    if "Spiral" in reinf_style:
 
-    cage_D = core_diameter
+        cage_D = core_diameter
 
-    r_bars = cage_D / 2 - bar_r
+        r_bars = cage_D / 2 - bar_r
 
-    angles = np.linspace(0, 2 * np.pi, num_bars, endpoint=False)
+        angles = np.linspace(0, 2 * np.pi, num_bars, endpoint=False)
 
-    if shape != "Circular":
-        angles += np.pi / 4
+        positions = [
+            (cx + r_bars * np.cos(a), cy + r_bars * np.sin(a))
+            for a in angles
+        ]
 
-    positions = [(cx + r_bars * np.cos(a), cy + r_bars * np.sin(a)) for a in angles]
+        if draw_ties_logic:
+            ax.add_patch(
+                patches.Circle(
+                    (cx, cy),
+                    cage_D / 2,
+                    fill=False,
+                    edgecolor="#555",
+                    linewidth=1.5,
+                    linestyle="-",
+                )
+            )
 
-    if draw_ties_logic:
-        linestyle = "-" if "Spiral" in reinf_style else "--"
-        r_tie = cage_D / 2
-        ax.add_patch(
-            patches.Circle((cx, cy), r_tie,
-                           fill=False,
-                           edgecolor="#555",
-                           linewidth=1.5,
-                           linestyle=linestyle)
-        )
-    # Rectangular arrangement
+    # =============================
+    # CIRCULAR (NON-SPIRAL)
+    # =============================
+    elif shape == "Circular":
+
+        cage_D = dims[0] - 2 * cover
+
+        r_bars = cage_D / 2 - bar_r
+
+        angles = np.linspace(0, 2 * np.pi, num_bars, endpoint=False)
+
+        positions = [
+            (cx + r_bars * np.cos(a), cy + r_bars * np.sin(a))
+            for a in angles
+        ]
+
+    # =============================
+    # RECTANGULAR ARRANGEMENT
+    # =============================
     else:
-        positions = distribute_bars_rectangular(dims[0], dims[1], cover + bar_r, num_bars)
+
+        positions = distribute_bars_rectangular(
+            dims[0], dims[1], cover + bar_r, num_bars
+        )
 
         if draw_ties_logic:
             tie_inset = cover
             w_tie = dims[0] - 2 * tie_inset
             h_tie = dims[1] - 2 * tie_inset
+
             ax.add_patch(
-                patches.Rectangle((tie_inset, tie_inset), w_tie, h_tie, fill=False, edgecolor="#555", linewidth=1.5, linestyle="--")
+                patches.Rectangle(
+                    (tie_inset, tie_inset),
+                    w_tie,
+                    h_tie,
+                    fill=False,
+                    edgecolor="#555",
+                    linewidth=1.5,
+                    linestyle="--",
+                )
             )
 
     # Bars
