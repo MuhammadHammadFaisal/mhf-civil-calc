@@ -1,4 +1,4 @@
-def _build_step_by_step_markdown(results, fc, fy_long, Ag, Ast, reinf_style, core_diameter_input):
+def build_step_by_step_markdown(results, fc, fy_long, Ag, Ast, reinf_style, core_diameter_input):
     md = f"""
 ### 0. Design Strengths
 $$
