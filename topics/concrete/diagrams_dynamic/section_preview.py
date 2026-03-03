@@ -87,7 +87,7 @@ def draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, show_ties, c
     # Spiral or circular arrangement
     if "Spiral" in reinf_style or shape == "Circular":
         if shape == "Circular":
-        cage_D = core_diameter
+            cage_D = core_diameter
 
         r_bars = cage_D / 2 - bar_r
         angles = np.linspace(0, 2 * np.pi, num_bars, endpoint=False)
