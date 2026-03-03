@@ -110,7 +110,7 @@ def app():
 
     st.markdown("---")
 
-    # ================= CALC =================
+# ================= CALC =================
     if st.button("Analyze Capacity", type="primary"):
 
         results = compute_axial(
@@ -158,17 +158,17 @@ def app():
         write_text("section_header", "Step-by-Step Calculation")
 
         step_md = build_step_by_step_markdown(
-        results,
-        fc,
-        fy_long,
-        Ag,
-        Ast,
-        reinf_style,
-        core_diameter_input,
+            results,
+            fc,
+            fy_long,
+            Ag,
+            Ast,
+            reinf_style,
+            core_diameter_input,
         )
         
-            with st.container(border=True):
-                st.markdown(step_md)
+        with st.container(border=True):
+            st.markdown(step_md)
 
 if __name__ == "__main__":
     app()
