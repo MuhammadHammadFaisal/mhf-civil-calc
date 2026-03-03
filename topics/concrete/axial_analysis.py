@@ -147,9 +147,9 @@ def app():
         num_bars,
         bar_dia,
         reinf_style,
-        show_ties,
+        True,          # ← FIXED
         cover,
-        core_diameter=0.0,   # SAFE DEFAULT
+        core_diameter_input,
     )
         st.pyplot(fig1, width="stretch")
 
