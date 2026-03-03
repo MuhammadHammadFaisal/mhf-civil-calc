@@ -17,7 +17,7 @@ def compute_axial(fc, fy_long, fyw, Ag, Ast, reinf_style,
         fcd = fc
         fyd = fy_long
 
-    Fc = ALPHA_CC * fcd * (Ag - Ast)
+    Fc = ALPHA_CC * fcd * Ag 
     Fs = Ast * fyd
     Nor1 = Fc + Fs
 
