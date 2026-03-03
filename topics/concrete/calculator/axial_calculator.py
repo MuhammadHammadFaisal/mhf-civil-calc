@@ -49,24 +49,26 @@ def compute_axial(fc, fy, Ag, Ast, reinf_style, core_diameter_input, spiral_dia,
         res.Ack = Ack
         res.Asp = Asp
 
-        if spiral_spacing > 0 and d_center > 0:
-            rs = rho_s(Asp, d_center, spiral_spacing)
-            req, calc_req, abs_req = rho_min_req(fc, fy, Ag, Ack)
-            res.rho_s = rs
-            res.rho_min_req = req
-            res.rho_min_calc = calc_req
-            res.rho_min_abs = abs_req
-
-            if rs >= req:
-                res.spiral_ok = True
-                fccd = f_ccd(ALPHA_CC, fc, gamma_c, rs, fy)
-                res.f_ccd = fccd
-                res.Nor2 = confined_capacity(fccd, Ack, Ast, fyd_val)
-            else:
-                res.spiral_ok = False
-                res.Nor2 = None
-        else:
+        # Only stop if geometry is invalid
+        if spiral_spacing <= 0 or d_center <= 0 or Ack <= 0:
             res.spiral_ok = False
             res.Nor2 = None
+            return res
+
+        # Compute confinement ratio + requirement
+        rs = rho_s(Asp, d_center, spiral_spacing)
+        req, calc_req, abs_req = rho_min_req(fc, fy, Ag, Ack)
+
+        res.rho_s = rs
+        res.rho_min_req = req
+        res.rho_min_calc = calc_req
+        res.rho_min_abs = abs_req
+
+        # IMPORTANT: always compute Nor2 if spiral geometry is valid
+        res.spiral_ok = (rs >= req)
+
+        fccd = f_ccd(ALPHA_CC, fc, gamma_c, rs, fy)
+        res.f_ccd = fccd
+        res.Nor2 = confined_capacity(fccd, Ack, Ast, fyd_val)
 
     return res
