@@ -98,8 +98,8 @@ def app():
         cover = st.number_input("Cover [mm]", value=25.0)
 
         if shape == "Rectangular":
-            b = st.number_input("Width (b) (mm)", value=300.0)
-            h = st.number_input("Depth (h) (mm)", value=400.0)
+            b = st.number_input("Width (b) (mm)", value=500.0)
+            h = st.number_input("Depth (h) (mm)", value=500.0)
             Ag = b * h
             dims = (b, h)
         else:
@@ -125,12 +125,10 @@ def app():
 
                 spiral_dia = st.number_input("Spiral Bar φ (mm)", value=10.0)
                 spiral_spacing = st.number_input("Spiral Spacing s (mm)", value=50.0)
-                fyw = st.number_input("Spiral Steel ($f_{ywh}$) [MPa]", value=220.0)
-            
-                # 🔴 ADD THIS (Manual Core Diameter Input)
+                fywk = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=220.0)
                 core_diameter_input = st.number_input(
                     "Core Diameter $D_k$ (mm)",
-                    value=250.0,
+                    value=300.0,
                     help="Diameter of confined core measured to centerline of spiral."
                 )
             else:
