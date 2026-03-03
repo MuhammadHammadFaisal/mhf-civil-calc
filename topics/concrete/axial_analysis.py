@@ -130,7 +130,7 @@ def app():
         st.markdown("---")
 
         # 1. Result Summary in Glass Box (Using a Markdown Table String)
-        write_text("section_header", "📊 Design Summary")
+        write_text("section_header", "Design Summary")
         
         unconfined = f"{results.Nor1/1000:,.1f} kN"
         if results.Nor2 is not None:
@@ -152,7 +152,7 @@ def app():
         st.markdown("<br>", unsafe_allow_html=True)
 
         # 2. Behavior Graph in Glass Box (Using Base64 HTML Image String)
-        write_text("section_header", "📈 Load-Deformation Behavior")
+        write_text("section_header", "Load-Deformation Behavior")
         
         graph_N1 = results.Nor1 / 1000
         graph_N2 = results.Nor2 / 1000 if results.Nor2 is not None else 0
@@ -175,7 +175,7 @@ def app():
         st.markdown("<br>", unsafe_allow_html=True)
 
         # 3. Step-by-Step Calculation in Glass Box
-        write_text("section_header", "📋 Step-by-Step Calculation")
+        write_text("section_header", "Step-by-Step Calculation")
 
         step_md = build_step_by_step_markdown(
             results,
