@@ -7,7 +7,8 @@ from theme import write_text, glass_box
 from .diagrams_dynamic.section_preview import draw_cross_section
 from .diagrams_results.load_deformation_plot import plot_load_deformation
 from .calculator.axial_calculator import compute_axial
-
+import base64
+from io import BytesIO
 
 from .reports.axial_report import build_step_by_step_markdown
 
@@ -128,33 +129,48 @@ def app():
 
         st.markdown("---")
 
-        # 1. Result Summary in Glass Box (Converted to a Markdown string)
+        # 1. Result Summary in Glass Box (Using a Markdown Table String)
         write_text("section_header", "📊 Design Summary")
         
-        unconfined = f"{results.Nor1/1000:,.1f}"
-        
+        unconfined = f"{results.Nor1/1000:,.1f} kN"
         if results.Nor2 is not None:
-            confined = f"{results.Nor2/1000:,.1f}"
-            delta = f"+{(results.Nor2 - results.Nor1) / 1000:,.1f}"
-            summary_text = f"**Unconfined Capacity (N_or):** {unconfined} kN  \n**Confined Capacity (N_or2):** {confined} kN  \n**Capacity Increase (Δ):** {delta} kN"
+            confined = f"{results.Nor2/1000:,.1f} kN"
+            delta = f"+{(results.Nor2 - results.Nor1) / 1000:,.1f} kN"
         else:
-            summary_text = f"**Unconfined Capacity (N_or):** {unconfined} kN  \n**Confined Capacity (N_or2):** N/A  \n**Capacity Increase (Δ):** N/A"
-            
-        glass_box(summary_text)
+            confined = "N/A"
+            delta = "N/A"
+
+        summary_md = f"""
+| Parameter | Value |
+| :--- | :--- |
+| **Unconfined Capacity ($N_{{or}}$)** | {unconfined} |
+| **Confined Capacity ($N_{{or2}}$)** | {confined} |
+| **Capacity Increase (Δ)** | {delta} |
+"""
+        glass_box(summary_md)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 2. Behavior Graph (Uses standard container since charts aren't text)
+        # 2. Behavior Graph in Glass Box (Using Base64 HTML Image String)
         write_text("section_header", "📈 Load-Deformation Behavior")
-        with st.container(border=True):
-            graph_N1 = results.Nor1 / 1000
-            graph_N2 = results.Nor2 / 1000 if results.Nor2 is not None else 0
+        
+        graph_N1 = results.Nor1 / 1000
+        graph_N2 = results.Nor2 / 1000 if results.Nor2 is not None else 0
+        plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
 
-            plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
-
-            fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
-            st.pyplot(fig)
-            plt.close(fig)
+        fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
+        
+        # Convert the plot to a base64 HTML string
+        buf = BytesIO()
+        fig.savefig(buf, format="png", bbox_inches="tight", transparent=True)
+        buf.seek(0)
+        img_base64 = base64.b64encode(buf.read()).decode("utf-8")
+        plt.close(fig)
+        
+        graph_md = f'<img src="data:image/png;base64,{img_base64}" style="width:100%; max-width:700px; border-radius:8px;">'
+        
+        # Pass the HTML image string into your custom component
+        glass_box(graph_md)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -171,7 +187,6 @@ def app():
             core_diameter_input,
         )
         
-        # Pass the markdown text directly into the function
         glass_box(step_md)
 
 if __name__ == "__main__":
