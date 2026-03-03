@@ -141,7 +141,16 @@ def app():
     # ================= VISUAL =================
     with col_viz:
         write_text("section_header", "2. Visualization")
-        fig1 = draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, True, cover)
+        fig1 = draw_cross_section(
+        shape,
+        dims,
+        num_bars,
+        bar_dia,
+        reinf_style,
+        True,
+        cover,
+        core_diameter_input
+    )
         st.pyplot(fig1, width="stretch")
 
     st.markdown("---")

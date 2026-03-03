@@ -46,7 +46,7 @@ def distribute_bars_rectangular(b, h, cover, num_bars):
     return positions
 
 
-def draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, show_ties, cover):
+def draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, show_ties, cover, core_diameter):
     fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
     bar_r = bar_dia / 2
     fig.patch.set_alpha(0)
@@ -87,9 +87,7 @@ def draw_cross_section(shape, dims, num_bars, bar_dia, reinf_style, show_ties, c
     # Spiral or circular arrangement
     if "Spiral" in reinf_style or shape == "Circular":
         if shape == "Circular":
-            cage_D = dims[0] - 2 * cover
-        else:
-            cage_D = min_dim - 2 * cover
+        cage_D = core_diameter
 
         r_bars = cage_D / 2 - bar_r
         angles = np.linspace(0, 2 * np.pi, num_bars, endpoint=False)
