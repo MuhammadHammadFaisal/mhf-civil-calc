@@ -53,21 +53,8 @@ def app():
             selected_label = st.selectbox("Confinement Type", list(confinement_options.keys()))
             reinf_style = confinement_options[selected_label]
 
-        st.markdown("**Dimensions**")
-        if "Standard" in reinf_style:
-            cover = st.number_input("Cover [mm]", value=25.0)
-        else:
-            cover = 0.0
-        if shape == "Rectangular":
-            b = st.number_input("Width (b) (mm)", value=500.0)
-            h = st.number_input("Depth (h) (mm)", value=500.0)
-            Ag = b * h
-            dims = (b, h)
-        else:
-            D = st.number_input("Diameter (D) (mm)", value=300.0)
-            Ag = np.pi * D**2 / 4
-            dims = (D,)
-
+        write_text("subheader", "Dimensions")
+        c5, c6 = st.columns(2)
         Ast = 0.0
         num_bars = 0
         bar_dia = 0.0
@@ -77,25 +64,41 @@ def app():
         core_diameter_input = 0.0
         fywk = 0.0
 
-        if "None" not in reinf_style:
-            bar_dia = st.number_input("Bar Diameter (mm)", value=20.0)
-            num_bars = st.number_input("Number of Bars", value=8, min_value=4)
-            Ast = num_bars * np.pi * (bar_dia / 2) ** 2
-
-            if "Spiral" in reinf_style:
-
-                spiral_dia = st.number_input("Spiral Bar φ (mm)", value=10.0)
-                spiral_spacing = st.number_input("Spiral Spacing s (mm)", value=50.0)
-                fywk = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=220.0)
-                core_diameter_input = st.number_input(
-                    "Core Diameter $D_k$ (mm)",
-                    value=300.0,
-                    help="Diameter of confined core measured to centerline of spiral."
-                )
-            
+            with c5
+            if "Standard" in reinf_style:
+                cover = st.number_input("Cover [mm]", value=25.0)
             else:
-                fywk = 0.0
-                core_diameter_input = 0.0
+                cover = 0.0
+            if shape == "Rectangular":
+                b = st.number_input("Width (b) (mm)", value=500.0)
+                h = st.number_input("Depth (h) (mm)", value=500.0)
+                Ag = b * h
+                dims = (b, h)
+            else:
+                D = st.number_input("Diameter (D) (mm)", value=300.0)
+                Ag = np.pi * D**2 / 4
+                dims = (D,)
+        with c6
+        
+            if "None" not in reinf_style:
+                bar_dia = st.number_input("Bar Diameter (mm)", value=20.0)
+                num_bars = st.number_input("Number of Bars", value=8, min_value=4)
+                Ast = num_bars * np.pi * (bar_dia / 2) ** 2
+    
+                if "Spiral" in reinf_style:
+    
+                    spiral_dia = st.number_input("Spiral Bar φ (mm)", value=10.0)
+                    spiral_spacing = st.number_input("Spiral Spacing s (mm)", value=50.0)
+                    fywk = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=220.0)
+                    core_diameter_input = st.number_input(
+                        "Core Diameter $D_k$ (mm)",
+                        value=300.0,
+                        help="Diameter of confined core measured to centerline of spiral."
+                    )
+                
+                else:
+                    fywk = 0.0
+                    core_diameter_input = 0.0
 
     # ================= VISUAL =================
     with col_viz:
