@@ -39,10 +39,7 @@ def build_step_by_step_markdown(
     fyd = results.fyd
 
     # ---- Basic areas
-    Ac = max(Ag - Ast, 0.0)  # concrete net area
-    # Forces
-    # IMPORTANT: This matches the intended standard formula: 0.85*fcd*(Ag-Ast) + Ast*fyd
-    Fc = ALPHA_CC * fcd * Ac
+    Fc = ALPHA_CC * fcd * Ag
     Fs = Ast * fyd
     Nor1 = Fc + Fs
 
