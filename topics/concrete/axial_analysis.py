@@ -15,15 +15,15 @@ from .reports.axial_report import build_step_by_step_markdown
 
 
 def app():
-    write_text("page_title", "RC Column Analyst")
+    
 
     col_input, col_viz = st.columns([1.3, 1])
 
     # ================= INPUT =================
     with col_input:
         write_text("section_header", "1. System Properties")
+        write_text("subheader", "Materials")
 
-        st.markdown("**Materials**")
         c1, c2 = st.columns(2)
 
         with c1:
@@ -38,7 +38,7 @@ def app():
             horizontal=True
         )
         
-        st.markdown("**Geometry & Configuration**")
+        write_text("subheader", "Geometry & Configuration")
         c3, c4 = st.columns(2)
         with c3:    
             shape = st.selectbox("Column Shape", ["Rectangular", "Circular"])
