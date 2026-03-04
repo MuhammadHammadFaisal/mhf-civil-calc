@@ -2,7 +2,8 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from types import SimpleNamespace
-
+import pandas as pd
+from theme import glass_table
 from theme import write_text, glass_box
 from .diagrams_dynamic.section_preview import draw_cross_section
 from .diagrams_results.load_deformation_plot import plot_load_deformation
@@ -79,7 +80,6 @@ def app():
                 Ag = np.pi * D**2 / 4
                 dims = (D,)
         with c6:
-        
             if "None" not in reinf_style:
                 bar_dia = st.number_input("Bar Diameter (mm)", value=20.0)
                 num_bars = st.number_input("Number of Bars", value=8, min_value=4)
@@ -138,24 +138,20 @@ def app():
 
         # 1. Result Summary in Glass Box (Using a Markdown Table String)
         write_text("section_header", "Design Summary")
+
+        results_data = []
+        results_data.append(["Unconfined Capacity ($N_{or}$)", f"{results.Nor1/1000:,.1f} kN"])
         
-        unconfined = f"{results.Nor1/1000:,.1f} kN"
         if results.Nor2 is not None:
-            confined = f"{results.Nor2/1000:,.1f} kN"
-            delta = f"+{(results.Nor2 - results.Nor1) / 1000:,.1f} kN"
+            results_data.append(["Confined Capacity ($N_{or2}$)", f"{results.Nor2/1000:,.1f} kN"])
+            results_data.append(["Capacity Increase (Δ)", f"{(results.Nor2 - results.Nor1)/1000:,.1f} kN"])
         else:
-            confined = "N/A"
-            delta = "N/A"
-
-        summary_md = f"""
-| Parameter | Value |
-| :--- | :--- |
-| **Unconfined Capacity ($N_{{or}}$)** | {unconfined} |
-| **Confined Capacity ($N_{{or2}}$)** | {confined} |
-| **Capacity Increase (Δ)** | {delta} |
-"""
-        glass_box(summary_md)
-
+            results_data.append(["Confined Capacity ($N_{or2}$)", "N/A"])
+            results_data.append(["Capacity Increase (Δ)", "N/A"])
+        
+        df_summary = pd.DataFrame(results_data, columns=["Parameter", "Value"])
+        glass_table(df_summary)
+        
         st.markdown("<br>", unsafe_allow_html=True)
 
         # 2. Behavior Graph in Glass Box (Using Base64 HTML Image String)
