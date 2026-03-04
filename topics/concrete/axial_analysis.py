@@ -64,7 +64,7 @@ def app():
         core_diameter_input = 0.0
         fywk = 0.0
 
-        with c5
+        with c5:
             if "Standard" in reinf_style:
                 cover = st.number_input("Cover [mm]", value=25.0)
             else:
@@ -78,7 +78,7 @@ def app():
                 D = st.number_input("Diameter (D) (mm)", value=300.0)
                 Ag = np.pi * D**2 / 4
                 dims = (D,)
-        with c6
+        with c6:
         
             if "None" not in reinf_style:
                 bar_dia = st.number_input("Bar Diameter (mm)", value=20.0)
