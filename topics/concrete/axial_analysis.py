@@ -188,6 +188,10 @@ def app():
             Ast,
             reinf_style,
             core_diameter_input,
+            fywk=fywk,
+            spiral_dia=spiral_dia,
+            spiral_spacing=spiral_spacing,
+            strength_basis=strength_basis
         )
         
         glass_box(step_md)
