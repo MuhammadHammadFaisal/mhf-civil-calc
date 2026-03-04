@@ -37,10 +37,9 @@ def app():
             ["Design Values (fcd, fyd)", "Characteristic Values (fck, fyk)"],
             horizontal=True
         )
-
-        with st.expander("Geometry & Configuration", expanded=True):
+        
+        st.markdown("**Geometry & Configuration**")
             c1, c2 = st.columns(2)
-    
             with c1:    
                 shape = st.selectbox("Column Shape", ["Rectangular", "Circular"])
                 
