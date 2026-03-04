@@ -39,19 +39,19 @@ def app():
         )
         
         st.markdown("**Geometry & Configuration**")
-            c1, c2 = st.columns(2)
-            with c1:    
-                shape = st.selectbox("Column Shape", ["Rectangular", "Circular"])
-                
-            with c2:
-                confinement_options = {
-                    "Spiral (Continuous Helix)": "Spiral / Circular",
-                    "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
-                    "Plain Concrete (No Reinforcement)": "None (Plain Concrete)",
-                }
+        c1, c2 = st.columns(2)
+        with c1:    
+            shape = st.selectbox("Column Shape", ["Rectangular", "Circular"])
+            
+        with c2:
+            confinement_options = {
+                "Spiral (Continuous Helix)": "Spiral / Circular",
+                "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
+                "Plain Concrete (No Reinforcement)": "None (Plain Concrete)",
+            }
 
-            selected_label = st.selectbox("Confinement Type", list(confinement_options.keys()))
-            reinf_style = confinement_options[selected_label]
+        selected_label = st.selectbox("Confinement Type", list(confinement_options.keys()))
+        reinf_style = confinement_options[selected_label]
 
         st.markdown("**Dimensions**")
         if "Standard" in reinf_style:
