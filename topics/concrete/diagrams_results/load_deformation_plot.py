@@ -122,15 +122,16 @@ def plot_load_deformation(N1, N2, trans_type):
                 color=text_color,
             )
             ax.annotate(
-                "Second Peak\n(Confined Core)",
-                xy=(x_at_r(3.5), N2),
-                xytext=(0, 28),
+                "Second Peak",
+                xy=(x_at_r(3.5), N2),        # r=3.5 is where you placed N2 in your y array
+                xytext=(0, 35),
                 textcoords="offset points",
                 arrowprops=dict(color=text_color, arrowstyle="->"),
                 ha="center",
                 va="bottom",
                 color=text_color,
             )
+            
             ax.annotate(
                 "Ductile Plateau",
                 xy=(x_at_r(5.5), N2),
