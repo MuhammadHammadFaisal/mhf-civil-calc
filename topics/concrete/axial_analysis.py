@@ -39,11 +39,11 @@ def app():
         )
         
         st.markdown("**Geometry & Configuration**")
-        c1, c2 = st.columns(2)
-        with c1:    
+        c3, c4 = st.columns(2)
+        with c3:    
             shape = st.selectbox("Column Shape", ["Rectangular", "Circular"])
             
-        with c2:
+        with c4:
             confinement_options = {
                 "Spiral (Continuous Helix)": "Spiral / Circular",
                 "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
