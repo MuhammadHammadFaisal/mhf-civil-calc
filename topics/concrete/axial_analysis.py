@@ -43,6 +43,7 @@ def app():
     
             with c1:    
                 shape = st.selectbox("Column Shape", ["Rectangular", "Circular"])
+                
             with c2:
                 confinement_options = {
                     "Spiral (Continuous Helix)": "Spiral / Circular",
