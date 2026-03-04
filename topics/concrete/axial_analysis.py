@@ -64,7 +64,7 @@ def app():
         core_diameter_input = 0.0
         fywk = 0.0
 
-            with c5
+        with c5
             if "Standard" in reinf_style:
                 cover = st.number_input("Cover [mm]", value=25.0)
             else:
