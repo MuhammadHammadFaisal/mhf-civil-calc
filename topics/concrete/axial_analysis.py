@@ -134,48 +134,48 @@ def app():
             strength_basis=strength_basis
         )
 
-        st.markdown("---")
-
-        # 1. Result Summary in Glass Box (Using a Markdown Table String)
-        write_text("section_header", "Design Summary")
-
-        results_data = []
-        results_data.append(["Unconfined Capacity ($N_{or}$)", f"{results.Nor1/1000:,.1f} kN"])
-        
-        if results.Nor2 is not None:
-            results_data.append(["Confined Capacity ($N_{or2}$)", f"{results.Nor2/1000:,.1f} kN"])
-            results_data.append(["Capacity Increase (Δ)", f"{(results.Nor2 - results.Nor1)/1000:,.1f} kN"])
-        else:
-            results_data.append(["Confined Capacity ($N_{or2}$)", "N/A"])
-            results_data.append(["Capacity Increase (Δ)", "N/A"])
-        
-        df_summary = pd.DataFrame(results_data, columns=["Parameter", "Value"])
-        glass_table(df_summary)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # 2. Behavior Graph in Glass Box (Using Base64 HTML Image String)
-        write_text("section_header", "Load-Deformation Behavior")
-        
-        graph_N1 = results.Nor1 / 1000
-        graph_N2 = results.Nor2 / 1000 if results.Nor2 is not None else 0
-        plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
-
-        fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
-        
-        # Convert the plot to a base64 HTML string
-        buf = BytesIO()
-        fig.savefig(buf, format="png", bbox_inches="tight", transparent=True)
-        buf.seek(0)
-        img_base64 = base64.b64encode(buf.read()).decode("utf-8")
-        plt.close(fig)
-        
-        graph_md = f'<img src="data:image/png;base64,{img_base64}" style="width:100%; max-width:700px; border-radius:8px;">'
-        
-        # Pass the HTML image string into your custom component
-        glass_box(graph_md)
-
-        st.markdown("<br>", unsafe_allow_html=True)
+        c7, c8 = st.columns(2)
+        with c7:
+            # 1. Result Summary in Glass Box (Using a Markdown Table String)
+            write_text("section_header", "Design Summary")
+    
+            results_data = []
+            results_data.append(["Unconfined Capacity (N_or)", f"{results.Nor1/1000:,.1f} kN"])
+            
+            if results.Nor2 is not None:
+                results_data.append(["Confined Capacity (N_or2)", f"{results.Nor2/1000:,.1f} kN"])
+                results_data.append(["Capacity Increase (Δ)", f"{(results.Nor2 - results.Nor1)/1000:,.1f} kN"])
+            else:
+                results_data.append(["Confined Capacity (N_or2)", "N/A"])
+                results_data.append(["Capacity Increase (Δ)", "N/A"])
+            
+            df_summary = pd.DataFrame(results_data, columns=["Parameter", "Value"])
+            glass_table(df_summary)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+        with c8:
+            # 2. Behavior Graph in Glass Box (Using Base64 HTML Image String)
+            write_text("section_header", "Load-Deformation Behavior")
+            
+            graph_N1 = results.Nor1 / 1000
+            graph_N2 = results.Nor2 / 1000 if results.Nor2 is not None else 0
+            plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
+    
+            fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
+            
+            # Convert the plot to a base64 HTML string
+            buf = BytesIO()
+            fig.savefig(buf, format="png", bbox_inches="tight", transparent=True)
+            buf.seek(0)
+            img_base64 = base64.b64encode(buf.read()).decode("utf-8")
+            plt.close(fig)
+            
+            graph_md = f'<img src="data:image/png;base64,{img_base64}" style="width:100%; max-width:700px; border-radius:8px;">'
+            
+            # Pass the HTML image string into your custom component
+            glass_box(graph_md)
+    
+            st.markdown("<br>", unsafe_allow_html=True)
 
         # 3. Step-by-Step Calculation in Glass Box
         write_text("section_header", "Step-by-Step Calculation")
