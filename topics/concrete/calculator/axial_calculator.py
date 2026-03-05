@@ -48,15 +48,16 @@ def compute_axial(fc, fy_long, fywk, Ag, Ast, reinf_style,
         spiral_ok = rho_s_val >= rho_min_req
 
     return SimpleNamespace(
-        gamma_c=gamma_c,
-        gamma_s=gamma_s,
-        fcd=fcd,
-        fyd=fyd,
-        Fc=Fc,
-        Fs=Fs,
-        Nor1=Nor1,
-        Nor2=Nor2,
-        rho_s=rho_s_val,
-        rho_min_req=rho_min_req,
-        spiral_ok=spiral_ok
-    )
+    gamma_c=gamma_c,
+    gamma_s=gamma_s,
+    ALPHA_CC=ALPHA_CC,   # ✅ add this
+    fcd=fcd,
+    fyd=fyd,
+    Fc=Fc,
+    Fs=Fs,
+    Nor1=Nor1,
+    Nor2=Nor2,
+    rho_s=rho_s_val,
+    rho_min_req=rho_min_req,
+    spiral_ok=spiral_ok
+  )
