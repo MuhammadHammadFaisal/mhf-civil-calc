@@ -16,8 +16,13 @@ from .reports.axial_report import build_step_by_step_markdown
 
 
 def app():
-    tab1, tab2 = st.tabs(["Axial Capacity", "Required Steel (As)"])
-    with tab1:
+    tab_cap, tab_As, tab_reinf, tab_conc = st.tabs([
+    "Axial Capacity",
+    "Required Steel (As)",
+    "Required Reinforcement (Details)",
+    "Required Concrete (Capacity Check)"
+])
+    with tab_cap:
         col_input, col_viz = st.columns([1.3, 1])
     
         # ================= INPUT =================
@@ -195,7 +200,7 @@ def app():
             )
             
             glass_box(step_md)
-    with tab2:
+    with tab_As:
         write_text("section_header", "Required Steel (As) — Skeleton")
     
         st.info(
@@ -257,7 +262,146 @@ def app():
                 glass_box("✅ Concrete alone can carry Nu (As required = 0 by this simplified equation).")
             else:
                 glass_box("✅ As computed from Nu = Fc + As·fy.")
-        
+        # =========================================================
+    # TAB 3: REQUIRED REINFORCEMENT (DETAILS) — INPUTS ONLY
+    # =========================================================
+    with tab_reinf:
+        col_input, col_viz = st.columns([1.3, 1])
+
+        with col_input:
+            write_text("section_header", "1. Inputs (Reinforcement Details)")
+
+            write_text("subheader", "Applied Load")
+            cL1, cL2 = st.columns(2)
+            with cL1:
+                Nu_kN_r = st.number_input("Applied axial load Nu [kN]", value=2000.0, key="reinf_Nu")
+            with cL2:
+                strength_basis_r = st.radio(
+                    "Strength Basis",
+                    ["Design Values (fcd, fyd)", "Characteristic Values (fck, fyk)"],
+                    horizontal=True,
+                    key="reinf_strength_basis",
+                )
+
+            write_text("subheader", "Materials")
+            cM1, cM2 = st.columns(2)
+            with cM1:
+                fc_r = st.number_input("Concrete (fck) [MPa]", value=20.0, key="reinf_fc")
+                fy_long_r = st.number_input("Longitudinal Steel (fyk) [MPa]", value=420.0, key="reinf_fy_long")
+            with cM2:
+                fywk_r = st.number_input("Transverse/Spiral Steel (fywk) [MPa]", value=220.0, key="reinf_fywk")
+                cover_r = st.number_input("Cover [mm]", value=25.0, key="reinf_cover")
+
+            write_text("subheader", "Geometry & Confinement Type")
+            cG1, cG2 = st.columns(2)
+            with cG1:
+                shape_r = st.selectbox("Column Shape", ["Rectangular", "Circular"], key="reinf_shape")
+            with cG2:
+                confinement_options = {
+                    "Spiral (Continuous Helix)": "Spiral / Circular",
+                    "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
+                }
+                selected_label_r = st.selectbox(
+                    "Confinement Type",
+                    list(confinement_options.keys()),
+                    key="reinf_confinement_label"
+                )
+                reinf_style_r = confinement_options[selected_label_r]
+
+            write_text("subheader", "Dimensions")
+            cD1, cD2 = st.columns(2)
+            with cD1:
+                if shape_r == "Rectangular":
+                    b_r = st.number_input("Width (b) [mm]", value=500.0, key="reinf_b")
+                    h_r = st.number_input("Depth (h) [mm]", value=500.0, key="reinf_h")
+                else:
+                    D_r = st.number_input("Diameter (D) [mm]", value=300.0, key="reinf_D")
+
+            with cD2:
+                # Longitudinal
+                bar_dia_r = st.number_input("Longitudinal Bar Diameter (mm)", value=20.0, key="reinf_bar_dia")
+                num_bars_r = st.number_input("Number of Longitudinal Bars", value=8, min_value=4, key="reinf_num_bars")
+
+            write_text("subheader", "Transverse Reinforcement Inputs")
+            cT1, cT2 = st.columns(2)
+            with cT1:
+                if "Spiral" in reinf_style_r:
+                    spiral_dia_r = st.number_input("Spiral Bar φ (mm)", value=10.0, key="reinf_spiral_dia")
+                    spiral_spacing_r = st.number_input("Spiral Spacing s (mm)", value=50.0, key="reinf_spiral_s")
+                else:
+                    tie_dia_r = st.number_input("Tie Bar φ (mm)", value=10.0, key="reinf_tie_dia")
+                    tie_spacing_r = st.number_input("Tie Spacing s (mm)", value=150.0, key="reinf_tie_s")
+
+            with cT2:
+                core_diameter_r = st.number_input(
+                    "Core Diameter Dk (mm)",
+                    value=300.0,
+                    help="Confined core measured to centerline of spiral/ties.",
+                    key="reinf_core_d"
+                )
+                st.number_input(
+                    "Target confinement peak check (placeholder)",
+                    value=1.0,
+                    help="Later we’ll enforce: if Spiral, 2nd peak > 1st (your requirement).",
+                    key="reinf_peak_placeholder"
+                )
+
+        # --- Visualization placeholder (keep empty space like Tab 1) ---
+        with col_viz:
+            write_text("section_header", "2. Visualization")
+            glass_box("Visualization will be added here (section sketch / confinement layout).")
+
+        st.markdown("---")
+        glass_box("✅ Inputs only for now — calculations will be connected later.")
+
+
+    # =========================================================
+    # TAB 4: REQUIRED CONCRETE — INPUTS ONLY
+    # =========================================================
+    with tab_conc:
+        col_input, col_viz = st.columns([1.3, 1])
+
+        with col_input:
+            write_text("section_header", "1. Inputs (Required Concrete Check)")
+
+            write_text("subheader", "Applied Load")
+            c1, c2 = st.columns(2)
+            with c1:
+                Nu_kN_c = st.number_input("Applied axial load Nu [kN]", value=2000.0, key="conc_Nu")
+            with c2:
+                strength_basis_c = st.radio(
+                    "Strength Basis",
+                    ["Design Values (fcd, fyd)", "Characteristic Values (fck, fyk)"],
+                    horizontal=True,
+                    key="conc_strength_basis",
+                )
+
+            write_text("subheader", "Provided Reinforcement (Given)")
+            c3, c4 = st.columns(2)
+            with c3:
+                Ast_prov = st.number_input("Provided As [mm²]", value=2500.0, key="conc_Ast")
+                fy_c = st.number_input("Steel (fyk) [MPa]", value=420.0, key="conc_fy")
+            with c4:
+                shape_c = st.selectbox("Column Shape", ["Rectangular", "Circular"], key="conc_shape")
+                cover_c = st.number_input("Cover [mm]", value=25.0, key="conc_cover")
+
+            write_text("subheader", "Concrete / Section Size (Unknown later — for now input)")
+            c5, c6 = st.columns(2)
+            with c5:
+                fc_c = st.number_input("Concrete (fck) [MPa]", value=20.0, key="conc_fc")
+            with c6:
+                if shape_c == "Rectangular":
+                    b_c = st.number_input("Width (b) [mm]", value=500.0, key="conc_b")
+                    h_c = st.number_input("Depth (h) [mm]", value=500.0, key="conc_h")
+                else:
+                    D_c = st.number_input("Diameter (D) [mm]", value=300.0, key="conc_D")
+
+        with col_viz:
+            write_text("section_header", "2. Visualization")
+            glass_box("Visualization will be added here (required size / capacity preview).")
+
+        st.markdown("---")
+        glass_box("✅ Inputs only for now — next step: compute required concrete size/strength to resist Nu.")
 
 if __name__ == "__main__":
     app()
