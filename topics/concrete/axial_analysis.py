@@ -244,7 +244,6 @@ def app():
                 confinement_options_as = {
                     "Spiral (Continuous Helix)": "Spiral / Circular",
                     "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
-                    "Plain Concrete (No Reinforcement)": "None (Plain Concrete)",
                 }
                 selected_label_as = st.selectbox(
                     "Confinement Type",
