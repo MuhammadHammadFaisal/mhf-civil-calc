@@ -2,7 +2,7 @@ import streamlit as st
 
 # IMPORT MODULES
 from topics.concrete import axial_analysis
-from topics.concrete import axial_design
+
 from topics.concrete import bending_analysis
 from topics.concrete import bending_design
 from topics.concrete import combined_analysis
@@ -25,7 +25,6 @@ def app():
         label="",
         options=[
             "Analysis of Axial Load",
-            "Design of Axial Members",
             "Analysis of Bending (Flexure)",
             "Design of Bending (Flexure)",
             "Analysis of Combined Loading",
@@ -38,9 +37,6 @@ def app():
     # --- ROUTING LOGIC ---
     if topic == "Analysis of Axial Load":
         axial_analysis.app()
-
-    elif topic == "Design of Axial Members":
-        axial_design.app()
 
     elif topic == "Analysis of Bending (Flexure)":
         bending_analysis.app()
