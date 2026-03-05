@@ -201,66 +201,66 @@ def app():
             
             glass_box(step_md)
     # =========================================================
-# TAB 2: REQUIRED STEEL (As) — INPUTS ONLY
-# =========================================================
-with tab_As:
-    col_input, col_viz = st.columns([1.3, 1])
+    # TAB 2: REQUIRED STEEL (As) — INPUTS ONLY
+    # =========================================================
+    with tab_As:
+        col_input, col_viz = st.columns([1.3, 1])
 
-    with col_input:
-        write_text("section_header", "1. Inputs (Required Steel Area)")
+        with col_input:
+            write_text("section_header", "1. Inputs (Required Steel Area)")
 
-        write_text("subheader", "Applied Load")
-        cL1, cL2 = st.columns(2)
-        with cL1:
-            Nu_kN_req = st.number_input("Applied axial load Nu [kN]", value=2000.0, key="as_Nu")
-        with cL2:
-            strength_basis_as = st.radio(
-                "Strength Basis",
-                ["Design Values (fcd, fyd)", "Characteristic Values (fck, fyk)"],
-                horizontal=True,
-                key="as_strength_basis",
-            )
+            write_text("subheader", "Applied Load")
+            cL1, cL2 = st.columns(2)
+            with cL1:
+                Nu_kN_req = st.number_input("Applied axial load Nu [kN]", value=2000.0, key="as_Nu")
+            with cL2:
+                strength_basis_as = st.radio(
+                    "Strength Basis",
+                    ["Design Values (fcd, fyd)", "Characteristic Values (fck, fyk)"],
+                    horizontal=True,
+                    key="as_strength_basis",
+                )
 
-        write_text("subheader", "Materials")
-        cM1, cM2 = st.columns(2)
-        with cM1:
-            fc_as = st.number_input("Concrete (fck) [MPa]", value=20.0, key="as_fc")
-            fy_as = st.number_input("Steel (fyk) [MPa]", value=420.0, key="as_fy")
-        with cM2:
-            confinement_type_as = st.selectbox(
-                "Confinement Type",
-                ["Tied", "Spiral"],
-                key="as_confinement_type"
-            )
-            cover_as = st.number_input("Cover [mm]", value=25.0, key="as_cover")
+            write_text("subheader", "Materials")
+            cM1, cM2 = st.columns(2)
+            with cM1:
+                fc_as = st.number_input("Concrete (fck) [MPa]", value=20.0, key="as_fc")
+                fy_as = st.number_input("Steel (fyk) [MPa]", value=420.0, key="as_fy")
+            with cM2:
+                confinement_type_as = st.selectbox(
+                    "Confinement Type",
+                    ["Tied", "Spiral"],
+                    key="as_confinement_type"
+                )
+                cover_as = st.number_input("Cover [mm]", value=25.0, key="as_cover")
 
-        write_text("subheader", "Geometry (Given)")
-        cG1, cG2 = st.columns(2)
-        with cG1:
-            shape_as = st.selectbox("Column Shape", ["Rectangular", "Circular"], key="as_shape")
-        with cG2:
-            if shape_as == "Rectangular":
-                b_as = st.number_input("Width (b) [mm]", value=500.0, key="as_b")
-                h_as = st.number_input("Depth (h) [mm]", value=500.0, key="as_h")
-            else:
-                D_as = st.number_input("Diameter (D) [mm]", value=300.0, key="as_D")
+            write_text("subheader", "Geometry (Given)")
+            cG1, cG2 = st.columns(2)
+            with cG1:
+                shape_as = st.selectbox("Column Shape", ["Rectangular", "Circular"], key="as_shape")
+            with cG2:
+                if shape_as == "Rectangular":
+                    b_as = st.number_input("Width (b) [mm]", value=500.0, key="as_b")
+                    h_as = st.number_input("Depth (h) [mm]", value=500.0, key="as_h")
+                else:
+                    D_as = st.number_input("Diameter (D) [mm]", value=300.0, key="as_D")
 
-        write_text("subheader", "Optional Detailing Inputs (for later)")
-        cD1, cD2 = st.columns(2)
-        with cD1:
-            bar_dia_as = st.number_input("Trial bar diameter (mm)", value=20.0, key="as_bar_dia")
-            min_bars_as = st.number_input("Minimum # bars (trial)", value=4, min_value=4, key="as_min_bars")
-        with cD2:
-            tie_or_spiral_dia_as = st.number_input("Tie/Spiral bar φ (mm)", value=10.0, key="as_trans_dia")
-            tie_or_spiral_s_as = st.number_input("Tie/Spiral spacing s (mm)", value=150.0, key="as_trans_s")
+            write_text("subheader", "Optional Detailing Inputs (for later)")
+            cD1, cD2 = st.columns(2)
+            with cD1:
+                bar_dia_as = st.number_input("Trial bar diameter (mm)", value=20.0, key="as_bar_dia")
+                min_bars_as = st.number_input("Minimum # bars (trial)", value=4, min_value=4, key="as_min_bars")
+            with cD2:
+                tie_or_spiral_dia_as = st.number_input("Tie/Spiral bar φ (mm)", value=10.0, key="as_trans_dia")
+                tie_or_spiral_s_as = st.number_input("Tie/Spiral spacing s (mm)", value=150.0, key="as_trans_s")
 
-    # --- Visualization placeholder (keep empty space like Tab 1) ---
-    with col_viz:
-        write_text("section_header", "2. Visualization")
-        glass_box("Visualization will be added here (interaction diagram / section preview).")
+        # --- Visualization placeholder (keep empty space like Tab 1) ---
+        with col_viz:
+            write_text("section_header", "2. Visualization")
+            glass_box("Visualization will be added here (interaction diagram / section preview).")
 
-    st.markdown("---")
-    glass_box("✅ Inputs only for now — next step: compute required As for given Nu.")
+        st.markdown("---")
+        glass_box("✅ Inputs only for now — next step: compute required As for given Nu.")
         # =========================================================
     # TAB 3: REQUIRED REINFORCEMENT (DETAILS) — INPUTS ONLY
     # =========================================================
