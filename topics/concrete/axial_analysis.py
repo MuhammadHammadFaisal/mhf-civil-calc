@@ -224,17 +224,17 @@ def app():
             write_text("subheader", "Geometry & Configuration")
             c3, c4 = st.columns(2)
             with c3:    
-                shape = st.selectbox("Column Shape", ["Rectangular", "Circular"])
+                shape_as = st.selectbox("Column Shape", ["Rectangular", "Circular"])
                 
             with c4:
-                confinement_options = {
+                confinement_options_as = {
                     "Spiral (Continuous Helix)": "Spiral / Circular",
                     "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
                     "Plain Concrete (No Reinforcement)": "None (Plain Concrete)",
                 }
     
-                selected_label = st.selectbox("Confinement Type", list(confinement_options.keys()))
-                reinf_style = confinement_options[selected_label]
+                selected_label = st.selectbox("Confinement Type", list(confinement_options_as.keys()))
+                reinf_style = confinement_options_as[selected_label]
             
             write_text("subheader", "Materials")
             cM1, cM2 = st.columns(2)
