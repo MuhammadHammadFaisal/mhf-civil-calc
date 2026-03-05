@@ -220,30 +220,41 @@ def app():
                     horizontal=True,
                     key="as_strength_basis",
                 )
-
+            
+            write_text("subheader", "Geometry & Configuration")
+            c3, c4 = st.columns(2)
+            with c3:    
+                shape = st.selectbox("Column Shape", ["Rectangular", "Circular"])
+                
+            with c4:
+                confinement_options = {
+                    "Spiral (Continuous Helix)": "Spiral / Circular",
+                    "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
+                    "Plain Concrete (No Reinforcement)": "None (Plain Concrete)",
+                }
+    
+                selected_label = st.selectbox("Confinement Type", list(confinement_options.keys()))
+                reinf_style = confinement_options[selected_label]
+            
             write_text("subheader", "Materials")
             cM1, cM2 = st.columns(2)
             with cM1:
                 fc_as = st.number_input("Concrete (fck) [MPa]", value=20.0, key="as_fc")
-                fy_as = st.number_input("Steel (fyk) [MPa]", value=420.0, key="as_fy")
+
             with cM2:
-                confinement_type_as = st.selectbox(
-                    "Confinement Type",
-                    ["Tied", "Spiral"],
-                    key="as_confinement_type"
-                )
-                cover_as = st.number_input("Cover [mm]", value=25.0, key="as_cover")
+                fy_as = st.number_input("Steel (fyk) [MPa]", value=420.0, key="as_fy")
+                if "Spiral" in reinf_style:
+                        fywk = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=220.0)
 
             write_text("subheader", "Geometry (Given)")
             cG1, cG2 = st.columns(2)
-            with cG1:
-                shape_as = st.selectbox("Column Shape", ["Rectangular", "Circular"], key="as_shape")
+            if shape_as == "Rectangular":
+                    b_as = st.number_input("Width (b) [mm]", value=500.0, key="as_b")
+            else:
+                    D_as = st.number_input("Diameter (D) [mm]", value=300.0, key="as_D")
             with cG2:
                 if shape_as == "Rectangular":
-                    b_as = st.number_input("Width (b) [mm]", value=500.0, key="as_b")
                     h_as = st.number_input("Depth (h) [mm]", value=500.0, key="as_h")
-                else:
-                    D_as = st.number_input("Diameter (D) [mm]", value=300.0, key="as_D")
 
             write_text("subheader", "Optional Detailing Inputs (for later)")
             cD1, cD2 = st.columns(2)
