@@ -209,10 +209,17 @@ def app():
         with col_input:
             write_text("section_header", "1. Inputs (Required Steel Area)")
 
+            # -------------------------
+            # Applied Load
+            # -------------------------
             write_text("subheader", "Applied Load")
             cL1, cL2 = st.columns(2)
             with cL1:
-                Nu_kN_req = st.number_input("Applied axial load Nu [kN]", value=2000.0, key="as_Nu")
+                Nu_kN_req = st.number_input(
+                    "Applied axial load Nu [kN]",
+                    value=2000.0,
+                    key="as_Nu"
+                )
             with cL2:
                 strength_basis_as = st.radio(
                     "Strength Basis",
@@ -220,52 +227,89 @@ def app():
                     horizontal=True,
                     key="as_strength_basis",
                 )
-            
+
+            # -------------------------
+            # Geometry & Configuration
+            # -------------------------
             write_text("subheader", "Geometry & Configuration")
             c3, c4 = st.columns(2)
-            with c3:    
-                shape_as = st.selectbox("Column Shape", ["Rectangular", "Circular"])
-                
+            with c3:
+                shape_as = st.selectbox(
+                    "Column Shape",
+                    ["Rectangular", "Circular"],
+                    key="as_shape"
+                )
+
             with c4:
                 confinement_options_as = {
                     "Spiral (Continuous Helix)": "Spiral / Circular",
                     "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
                     "Plain Concrete (No Reinforcement)": "None (Plain Concrete)",
                 }
-    
-                selected_label = st.selectbox("Confinement Type", list(confinement_options_as.keys()))
-                reinf_style = confinement_options_as[selected_label]
-            
+                selected_label_as = st.selectbox(
+                    "Confinement Type",
+                    list(confinement_options_as.keys()),
+                    key="as_conf_label"
+                )
+                reinf_style_as = confinement_options_as[selected_label_as]
+
+            is_plain = "Plain Concrete" in selected_label_as
+            is_spiral = "Spiral" in reinf_style_as
+
+            # -------------------------
+            # Materials
+            # -------------------------
             write_text("subheader", "Materials")
             cM1, cM2 = st.columns(2)
             with cM1:
                 fc_as = st.number_input("Concrete (fck) [MPa]", value=20.0, key="as_fc")
 
             with cM2:
-                fy_as = st.number_input("Steel (fyk) [MPa]", value=420.0, key="as_fy")
-                if "Spiral" in reinf_style:
-                        fywk = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=220.0)
+                if not is_plain:
+                    fy_as = st.number_input("Steel (fyk) [MPa]", value=420.0, key="as_fy")
+                    if is_spiral:
+                        fywk = st.number_input(
+                            "Spiral Steel ($f_{ywk}$) [MPa]",
+                            value=220.0,
+                            key="as_fywk"
+                        )
+                else:
+                    glass_box("Plain Concrete selected: steel inputs hidden.")
 
-            write_text("subheader", "Geometry (Given)")
+            # -------------------------
+            # Dimensions
+            # -------------------------
+            write_text("subheader", "Dimensions (Given)")
             cG1, cG2 = st.columns(2)
-            if shape_as == "Rectangular":
+            with cG1:
+                if shape_as == "Rectangular":
                     b_as = st.number_input("Width (b) [mm]", value=500.0, key="as_b")
-            else:
+                else:
                     D_as = st.number_input("Diameter (D) [mm]", value=300.0, key="as_D")
+
             with cG2:
                 if shape_as == "Rectangular":
                     h_as = st.number_input("Depth (h) [mm]", value=500.0, key="as_h")
+                else:
+                    cover_as = st.number_input("Cover [mm]", value=25.0, key="as_cover")
 
-            write_text("subheader", "Optional Detailing Inputs (for later)")
-            cD1, cD2 = st.columns(2)
-            with cD1:
-                bar_dia_as = st.number_input("Trial bar diameter (mm)", value=20.0, key="as_bar_dia")
-                min_bars_as = st.number_input("Minimum # bars (trial)", value=4, min_value=4, key="as_min_bars")
-            with cD2:
-                tie_or_spiral_dia_as = st.number_input("Tie/Spiral bar φ (mm)", value=10.0, key="as_trans_dia")
-                tie_or_spiral_s_as = st.number_input("Tie/Spiral spacing s (mm)", value=150.0, key="as_trans_s")
+            # -------------------------
+            # Optional detailing inputs (later)
+            # -------------------------
+            if not is_plain:
+                write_text("subheader", "Optional Detailing Inputs (for later)")
+                cD1, cD2 = st.columns(2)
+                with cD1:
+                    bar_dia_as = st.number_input("Trial bar diameter (mm)", value=20.0, key="as_bar_dia")
+                    min_bars_as = st.number_input("Minimum # bars (trial)", value=4, min_value=4, key="as_min_bars")
+                with cD2:
+                    tie_or_spiral_dia_as = st.number_input("Tie/Spiral bar φ (mm)", value=10.0, key="as_trans_dia")
+                    tie_or_spiral_s_as = st.number_input("Tie/Spiral spacing s (mm)", value=150.0, key="as_trans_s")
+            else:
+                st.markdown("---")
+                glass_box("No reinforcement detailing required for Plain Concrete input mode (for now).")
 
-        # --- Visualization placeholder (keep empty space like Tab 1) ---
+        # --- Visualization placeholder ---
         with col_viz:
             write_text("section_header", "2. Visualization")
             glass_box("Visualization will be added here (interaction diagram / section preview).")
