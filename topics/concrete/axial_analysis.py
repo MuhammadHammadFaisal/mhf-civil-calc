@@ -10,7 +10,7 @@ from .diagrams_results.load_deformation_plot import plot_load_deformation
 from .calculator.axial_calculator import compute_axial
 import base64
 from io import BytesIO
-
+from .calculator.axial_design_helpers import required_Ast_for_load
 from .reports.axial_report import build_step_by_step_markdown
 
 
