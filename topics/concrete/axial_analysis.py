@@ -102,9 +102,9 @@ def app():
         c7, c8 = st.columns(2)
         with c7:
             if "None" not in reinf_style:
-            bar_dia = st.number_input("Bar Diameter (mm)", value=20.0, key="cap_bar_dia")
-            num_bars = st.number_input("Number of Bars", value=8, min_value=4, key="cap_num_bars")
-            Ast = num_bars * np.pi * (bar_dia / 2) ** 2
+                bar_dia = st.number_input("Bar Diameter (mm)", value=20.0, key="cap_bar_dia")
+                num_bars = st.number_input("Number of Bars", value=8, min_value=4, key="cap_num_bars")
+                Ast = num_bars * np.pi * (bar_dia / 2) ** 2
         with c8:
             if "Spiral" in reinf_style:
                 spiral_dia = st.number_input("Spiral Bar φ (mm)", value=10.0, key="cap_spiral_dia")
