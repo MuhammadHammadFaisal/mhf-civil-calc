@@ -271,7 +271,7 @@ def app():
             # -------------------------
             # Dimensions (Given)
             # -------------------------
-            write_text("subheader", "Dimensions (Given)")
+            write_text("subheader", "Dimensions")
             cG1, cG2 = st.columns(2)
             with cG1:
                 if shape_as == "Rectangular":
@@ -282,8 +282,6 @@ def app():
             with cG2:
                 if shape_as == "Rectangular":
                     h_as = st.number_input("Depth (h) [mm]", value=500.0, key="as_h")
-                else:
-                    cover_as = st.number_input("Cover [mm]", value=25.0, key="as_cover")
 
             # -------------------------
             # Spiral confinement core (needed later for confinement / peak checks)
@@ -293,17 +291,15 @@ def app():
                 cS1, cS2 = st.columns(2)
                 with cS1:
                     Dk_as = st.number_input(
-                        "Core Diameter to Spiral Centerline Dk [mm]",
+                        "Core Diameter[mm]",
                         value=250.0,
-                        help="Confined core measured to centerline of spiral (used later for confinement/peak check).",
+                        help="Confined core measured",
                         key="as_Dk"
                     )
                 with cS2:
-                    cover_spiral_as = st.number_input(
-                        "Clear cover to spiral [mm]",
-                        value=25.0,
-                        key="as_cover_spiral"
-                    )
+                    tie_bar_dia_r = st.number_input("Tie bar diameter (mm)", value=10.0, key="reinf_tie_dia")
+
+                
 
         # --- Visualization placeholder ---
         with col_viz:
@@ -391,42 +387,6 @@ def app():
                 tie_bar_dia_r = st.number_input("Tie bar diameter (mm)", value=10.0, key="reinf_tie_dia")
 
             # -------------------------
-            # Confined Core / Confinement Area Inputs
-            # -------------------------
-            write_text("subheader", "Confined Core (Confinement Area)")
-            cK1, cK2 = st.columns(2)
-            with cK1:
-                if shape_r == "Rectangular":
-                    st.number_input(
-                        "Core width to tie centerline bk [mm]",
-                        value=400.0,
-                        help="For now input directly. Later we can auto-calc from b, cover, tie dia.",
-                        key="reinf_bk"
-                    )
-                else:
-                    st.number_input(
-                        "Core diameter to tie centerline Dk [mm]",
-                        value=250.0,
-                        help="For circular tied columns, core diameter to centerline of hoop.",
-                        key="reinf_Dk"
-                    )
-            with cK2:
-                if shape_r == "Rectangular":
-                    st.number_input(
-                        "Core depth to tie centerline hk [mm]",
-                        value=400.0,
-                        help="For now input directly. Later we can auto-calc from h, cover, tie dia.",
-                        key="reinf_hk"
-                    )
-                else:
-                    st.number_input(
-                        "Confined core area Ach [mm²] (optional)",
-                        value=0.0,
-                        help="Optional: leave 0 for now. Later we compute Ach from Dk.",
-                        key="reinf_Ach_opt"
-                    )
-
-            # -------------------------
             # Longitudinal Reinforcement (affects confinement checks)
             # -------------------------
             write_text("subheader", "Longitudinal Reinforcement (Given)")
@@ -441,26 +401,6 @@ def app():
                     value=0.0,
                     help="Optional. Later we can compute from bar diameter & count.",
                     key="reinf_Ast_opt"
-                )
-
-            # -------------------------
-            # Design Targets / Limits (inputs only)
-            # -------------------------
-            write_text("subheader", "Design Targets / Limits (for later)")
-            cT1, cT2 = st.columns(2)
-            with cT1:
-                st.number_input(
-                    "Target confinement level (placeholder)",
-                    value=1.0,
-                    help="Later: you can set required confinement ratio / code parameter.",
-                    key="reinf_target_conf"
-                )
-            with cT2:
-                st.number_input(
-                    "Max tie spacing limit (placeholder) [mm]",
-                    value=150.0,
-                    help="Later: enforce code spacing limits based on dimensions/bar dia.",
-                    key="reinf_smax_placeholder"
                 )
 
         # --- Visualization placeholder ---
