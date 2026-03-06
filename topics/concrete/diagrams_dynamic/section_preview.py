@@ -4,24 +4,23 @@ import matplotlib.patches as patches
 
 
 # ==========================================================
-# RECTANGULAR BAR DISTRIBUTION
+# RECTANGULAR BAR DISTRIBUTION (TIED RECTANGULAR)
 # ==========================================================
 def distribute_bars_rectangular(b, h, inset, num_bars):
     """
     Distribute bars around a rectangular perimeter with a given inset.
-    inset is the distance from concrete face to bar centerline.
+    inset = distance from concrete face to bar centerline.
     """
     xL, xR = inset, b - inset
     yB, yT = inset, h - inset
 
-    # corners first
     positions = [(xL, yB), (xR, yB), (xR, yT), (xL, yT)]
 
     remaining = num_bars - 4
     if remaining <= 0:
         return positions[: max(0, num_bars)]
 
-    # prioritize long faces
+    # Prioritize longer faces first
     if h >= b:
         faces = [
             ("left", xL, yB, yT),
@@ -47,8 +46,8 @@ def distribute_bars_rectangular(b, h, inset, num_bars):
 
         face_name, fixed, start, end = faces[i]
         spacing = (end - start) / (count + 1)
-
         internal_points = [start + spacing * (j + 1) for j in range(count)]
+
         for p in internal_points:
             if face_name in ["left", "right"]:
                 positions.append((fixed, p))
@@ -59,7 +58,7 @@ def distribute_bars_rectangular(b, h, inset, num_bars):
 
 
 # ==========================================================
-# SMALL HELPERS FOR LABELS
+# HELPERS (DIMENSIONS + LABEL BOX)
 # ==========================================================
 def _fmt_mm(x):
     try:
@@ -69,9 +68,6 @@ def _fmt_mm(x):
 
 
 def _dim_arrow(ax, xy1, xy2, text, text_offset=(0, 0), lw=1.2):
-    """
-    Draw a simple double arrow dimension line with centered label.
-    """
     ax.annotate(
         "",
         xy=xy2,
@@ -84,9 +80,6 @@ def _dim_arrow(ax, xy1, xy2, text, text_offset=(0, 0), lw=1.2):
 
 
 def _info_box(ax, lines, x, y):
-    """
-    Draw a small info text box at (x, y) in data coordinates.
-    """
     text = "\n".join(lines)
     ax.text(
         x,
@@ -96,13 +89,18 @@ def _info_box(ax, lines, x, y):
         va="top",
         fontsize=10,
         color="#111",
-        bbox=dict(boxstyle="round,pad=0.35", facecolor="white", edgecolor="#777", alpha=0.9),
-        zorder=50,
+        bbox=dict(
+            boxstyle="round,pad=0.35",
+            facecolor="white",
+            edgecolor="#777",
+            alpha=0.95,
+        ),
+        zorder=100,
     )
 
 
 # ==========================================================
-# MAIN DRAW FUNCTION
+# MAIN DRAW
 # ==========================================================
 def draw_cross_section(
     shape,
@@ -113,67 +111,71 @@ def draw_cross_section(
     show_ties,
     cover,
     core_diameter=0.0,
+    # optional extras (if you want to pass them later)
+    fc_label=None,              # e.g. "C20"
+    fywk=None,                  # e.g. 220
+    spiral_dia=None,            # e.g. 10
+    spiral_spacing=None,        # e.g. 50
 ):
     """
-    Dynamic section sketch:
-    - Does NOT rely on user-provided cover for stability. If cover <= 0, uses a visual-only default.
-    - Spiral uses core_diameter if provided; otherwise falls back to (outer - 2*cover_eff).
-    - Adds dimension labels (b/h or D) and reinforcement label (n, φ).
+    Sketch-style cross section:
+    - Rectangular/circular concrete boundary
+    - Bars
+    - Spiral cage circle for spiral case (even inside rectangular like your sketch)
+    - Dimension arrows: b/h or D and Dk (if spiral)
+    - Labels: nØdia, As, Concrete, Spiral info
     """
 
-    fig, ax = plt.subplots(figsize=(4.6, 4.6), dpi=110)
+    fig, ax = plt.subplots(figsize=(5.2, 5.2), dpi=110)
     fig.patch.set_alpha(0)
     ax.patch.set_alpha(0)
 
-    # -------------------------
-    # Defaults / safety
-    # -------------------------
-    VIS_COVER_DEFAULT = 25.0  # visual-only default if cover not provided
+    # ---------- sanitize ----------
+    reinf_style = str(reinf_style or "")
+    shape = str(shape or "")
+
+    # If user doesn't provide cover, use a visual default (so diagram never collapses)
+    VIS_COVER_DEFAULT = 25.0
     cover_eff = cover if (cover is not None and cover > 0) else VIS_COVER_DEFAULT
 
-    unknown_bars = (num_bars is None) or (num_bars <= 0)
-    unknown_dia = (bar_dia is None) or (bar_dia <= 0)
+    # Make sure bars are valid ints
+    try:
+        n_bars = int(num_bars)
+    except Exception:
+        n_bars = 0
 
-    # If bar dia unknown, still draw shape and label n=?
-    bar_r = (bar_dia / 2.0) if not unknown_dia else 0.0
+    try:
+        bar_d = float(bar_dia)
+    except Exception:
+        bar_d = 0.0
 
-    # Decide whether ties/spiral outline should be drawn
-    draw_ties_logic = (
-        show_ties and (("Standard" in str(reinf_style)) or ("Spiral" in str(reinf_style)))
-    )
+    unknown_bars = (n_bars <= 0)
+    unknown_dia = (bar_d <= 0)
 
-    # Plain concrete: draw only shape + dimensions + note
-    if "None" in str(reinf_style):
-        unknown_bars = True  # reinforce label: n=0 / none
-        unknown_dia = True
+    bar_r = bar_d / 2.0 if not unknown_dia else 0.0
 
-    # -------------------------
-    # Draw concrete shape
-    # -------------------------
+    draw_ties_logic = show_ties and (("Standard" in reinf_style) or ("Spiral" in reinf_style))
+
+    # ---------- draw concrete ----------
     if shape in ["Rectangular", "Square"]:
         b, h = dims
         cx, cy = b / 2.0, h / 2.0
 
         ax.add_patch(
             patches.Rectangle(
-                (0, 0),
-                b,
-                h,
-                fill=True,
+                (0, 0), b, h,
                 facecolor="#e0e0e0",
                 edgecolor="black",
                 linewidth=2,
             )
         )
 
-        pad = max(60, 0.12 * max(b, h))
+        pad = max(70, 0.14 * max(b, h))
         ax.set_xlim(-pad, b + pad)
         ax.set_ylim(-pad, h + pad)
 
-        # Dimension labels
-        # b at bottom
+        # Dimension arrows like your sketch
         _dim_arrow(ax, (0, -0.55 * pad), (b, -0.55 * pad), f"b = {_fmt_mm(b)}", text_offset=(0, 0.18 * pad))
-        # h at left
         _dim_arrow(ax, (-0.55 * pad, 0), (-0.55 * pad, h), f"h = {_fmt_mm(h)}", text_offset=(0.18 * pad, 0))
 
     else:
@@ -184,104 +186,97 @@ def draw_cross_section(
             patches.Circle(
                 (cx, cy),
                 D / 2.0,
-                fill=True,
                 facecolor="#e0e0e0",
                 edgecolor="black",
                 linewidth=2,
             )
         )
 
-        pad = max(60, 0.18 * D)
+        pad = max(70, 0.20 * D)
         ax.set_xlim(-pad, D + pad)
         ax.set_ylim(-pad, D + pad)
 
-        # Dimension label (diameter)
-        _dim_arrow(
-            ax,
-            (0, -0.55 * pad),
-            (D, -0.55 * pad),
-            f"D = {_fmt_mm(D)}",
-            text_offset=(0, 0.18 * pad),
-        )
+        _dim_arrow(ax, (0, -0.55 * pad), (D, -0.55 * pad), f"D = {_fmt_mm(D)}", text_offset=(0, 0.18 * pad))
 
-    # -------------------------
-    # If no reinforcement info, show labels only
-    # -------------------------
-    if ("None" in str(reinf_style)) or unknown_bars or unknown_dia:
-        lines = []
-        if "None" in str(reinf_style):
-            lines.append("Reinf: Plain Concrete")
-        else:
-            n_text = "?" if unknown_bars else str(num_bars)
-            phi_text = "?" if unknown_dia else f"{bar_dia:.0f} mm"
-            lines.append(f"Bars: n = {n_text}")
-            lines.append(f"Bar dia: φ = {phi_text}")
-
-        # Put box near top-left inside plotting window
+    # Plain concrete: show only dims + label
+    if "None" in reinf_style:
         x0, x1 = ax.get_xlim()
         y0, y1 = ax.get_ylim()
-        _info_box(ax, lines, x0 + 0.05 * (x1 - x0), y1 - 0.05 * (y1 - y0))
-
+        _info_box(ax, ["Plain Concrete"], x0 + 0.05 * (x1 - x0), y1 - 0.05 * (y1 - y0))
         ax.set_aspect("equal", adjustable="box")
         ax.axis("off")
         return fig
 
-    # -------------------------
-    # Compute bar positions
-    # -------------------------
+    # If bars unknown, show label only
+    if unknown_bars or unknown_dia:
+        n_txt = "?" if unknown_bars else str(n_bars)
+        phi_txt = "?" if unknown_dia else f"{bar_d:.0f} mm"
+        x0, x1 = ax.get_xlim()
+        y0, y1 = ax.get_ylim()
+        _info_box(ax, [f"Bars: n = {n_txt}", f"Bar dia: φ = {phi_txt}"], x0 + 0.05 * (x1 - x0), y1 - 0.05 * (y1 - y0))
+        ax.set_aspect("equal", adjustable="box")
+        ax.axis("off")
+        return fig
+
+    # ---------- compute and draw reinforcement ----------
     positions = []
 
-    # Spiral arrangement (uses core_diameter if provided)
-    if "Spiral" in str(reinf_style):
-        if core_diameter and core_diameter > 0:
-            cage_D = float(core_diameter)
-        else:
-            # fallback to something safe
+    # ======================================================
+    # SPIRAL CASE (matches your sketch: circle cage inside square)
+    # ======================================================
+    if "Spiral" in reinf_style:
+        # Determine cage diameter (Dk)
+        # If provided, use it. Otherwise fallback from section size and cover_eff.
+        try:
+            Dk = float(core_diameter) if core_diameter is not None else 0.0
+        except Exception:
+            Dk = 0.0
+
+        if Dk <= 0:
             if shape == "Circular":
-                cage_D = dims[0] - 2.0 * cover_eff
+                Dk = dims[0] - 2.0 * cover_eff
             else:
-                cage_D = min(dims[0], dims[1]) - 2.0 * cover_eff
+                # spiral cage circle inside rectangle
+                Dk = min(dims[0], dims[1]) - 2.0 * cover_eff
 
-        # Clamp cage diameter so it can't go negative/silly
-        cage_D = max(cage_D, 2.0 * bar_r + 10.0)
+        # Clamp so it can't be silly small
+        Dk = max(Dk, 2.0 * bar_r + 20.0)
 
-        r_bars = cage_D / 2.0 - bar_r
-        r_bars = max(r_bars, 1.0)
-
-        angles = np.linspace(0, 2 * np.pi, int(num_bars), endpoint=False)
-        positions = [(cx + r_bars * np.cos(a), cy + r_bars * np.sin(a)) for a in angles]
-
+        # Draw cage circle
         if draw_ties_logic:
             ax.add_patch(
                 patches.Circle(
                     (cx, cy),
-                    cage_D / 2.0,
+                    Dk / 2.0,
                     fill=False,
-                    edgecolor="#555",
-                    linewidth=1.6,
-                    linestyle="-",
+                    edgecolor="#5b3cc4",   # purple-ish like your sketch
+                    linewidth=2.0,
                 )
             )
 
-            # label Dk if given
-            dk_label = cage_D
-            _info_box(
-                ax,
-                [f"Spiral core: Dk = {_fmt_mm(dk_label)}"],
-                ax.get_xlim()[0] + 0.05 * (ax.get_xlim()[1] - ax.get_xlim()[0]),
-                ax.get_ylim()[1] - 0.22 * (ax.get_ylim()[1] - ax.get_ylim()[0]),
-            )
-
-    # Circular (non-spiral): tied circular hoop (visual)
-    elif shape == "Circular":
-        cage_D = dims[0] - 2.0 * cover_eff
-        cage_D = max(cage_D, 2.0 * bar_r + 10.0)
-
-        r_bars = cage_D / 2.0 - bar_r
+        # Bars on the cage circle (bar centers)
+        r_bars = Dk / 2.0 - bar_r
         r_bars = max(r_bars, 1.0)
 
-        angles = np.linspace(0, 2 * np.pi, int(num_bars), endpoint=False)
+        angles = np.linspace(0, 2 * np.pi, n_bars, endpoint=False)
         positions = [(cx + r_bars * np.cos(a), cy + r_bars * np.sin(a)) for a in angles]
+
+        # Add Dk dimension label (vertical on right like your sketch)
+        # Only if rectangular (since circular already has D)
+        if shape in ["Rectangular", "Square"]:
+            x_right = ax.get_xlim()[1]
+            # place Dk arrow near right side inside pad area
+            x_dim = (dims[0] + 0.25 * (x_right - dims[0])) if len(dims) >= 2 else (cx + 0.55 * Dk)
+            y1 = cy - Dk / 2.0
+            y2 = cy + Dk / 2.0
+            _dim_arrow(ax, (x_dim, y1), (x_dim, y2), f"Dk = {_fmt_mm(Dk)}", text_offset=(0.12 * (x_right - dims[0]), 0))
+
+    # ======================================================
+    # TIED CIRCULAR (non-spiral)
+    # ======================================================
+    elif shape == "Circular":
+        cage_D = dims[0] - 2.0 * cover_eff
+        cage_D = max(cage_D, 2.0 * bar_r + 20.0)
 
         if draw_ties_logic:
             ax.add_patch(
@@ -290,27 +285,31 @@ def draw_cross_section(
                     cage_D / 2.0,
                     fill=False,
                     edgecolor="#555",
-                    linewidth=1.6,
+                    linewidth=1.8,
                     linestyle="--",
                 )
             )
 
-    # Rectangular arrangement (tied)
+        r_bars = cage_D / 2.0 - bar_r
+        r_bars = max(r_bars, 1.0)
+
+        angles = np.linspace(0, 2 * np.pi, n_bars, endpoint=False)
+        positions = [(cx + r_bars * np.cos(a), cy + r_bars * np.sin(a)) for a in angles]
+
+    # ======================================================
+    # TIED RECTANGULAR
+    # ======================================================
     else:
         b, h = dims
         inset_to_bar_center = cover_eff + bar_r
-        inset_to_bar_center = max(inset_to_bar_center, bar_r + 2.0)
+        inset_to_bar_center = max(inset_to_bar_center, bar_r + 4.0)
 
-        positions = distribute_bars_rectangular(b, h, inset_to_bar_center, int(num_bars))
+        positions = distribute_bars_rectangular(b, h, inset_to_bar_center, n_bars)
 
         if draw_ties_logic:
             tie_inset = cover_eff
-            w_tie = b - 2.0 * tie_inset
-            h_tie = h - 2.0 * tie_inset
-
-            # Clamp so rectangle tie doesn't invert
-            w_tie = max(w_tie, 10.0)
-            h_tie = max(h_tie, 10.0)
+            w_tie = max(b - 2.0 * tie_inset, 10.0)
+            h_tie = max(h - 2.0 * tie_inset, 10.0)
 
             ax.add_patch(
                 patches.Rectangle(
@@ -319,37 +318,58 @@ def draw_cross_section(
                     h_tie,
                     fill=False,
                     edgecolor="#555",
-                    linewidth=1.6,
+                    linewidth=1.8,
                     linestyle="--",
                 )
             )
 
-    # -------------------------
-    # Draw bars
-    # -------------------------
+    # ---------- draw bars ----------
     for x, y in positions:
         ax.add_patch(
             patches.Circle(
                 (x, y),
                 bar_r,
                 color="#d32f2f",
-                zorder=10,
+                zorder=20,
             )
         )
 
-    # -------------------------
-    # Reinforcement label box (like "normal diagram")
-    # -------------------------
-    info_lines = [
-        f"Bars: n = {int(num_bars)}",
-        f"Bar dia: φ = {_fmt_mm(bar_dia)}",
-    ]
-    if "Spiral" in str(reinf_style) and core_diameter and core_diameter > 0:
-        info_lines.append(f"Core: Dk = {_fmt_mm(core_diameter)}")
+    # ---------- labels like your sketch ----------
+    # As label
+    As = n_bars * np.pi * (bar_d / 2.0) ** 2
+    as_line = f"{n_bars}Ø{bar_d:.0f}, As={As:.0f} mm²"
 
+    # Concrete label
+    conc_line = f"Concrete: {fc_label}" if fc_label else ""
+
+    # Spiral label
+    spiral_line = ""
+    if "Spiral" in reinf_style:
+        parts = []
+        if fywk is not None:
+            parts.append(f"fywk={float(fywk):.0f} MPa")
+        if spiral_dia is not None:
+            parts.append(f"Ø{float(spiral_dia):.0f}")
+        if spiral_spacing is not None:
+            parts.append(f"@{float(spiral_spacing):.0f} mm")
+        if parts:
+            spiral_line = "Spiral: " + ", ".join(parts)
+
+    # Put labels in two boxes (top left and bottom)
     x0, x1 = ax.get_xlim()
     y0, y1 = ax.get_ylim()
-    _info_box(ax, info_lines, x0 + 0.05 * (x1 - x0), y1 - 0.05 * (y1 - y0))
+
+    top_lines = [f"Bars: n = {n_bars}", f"Bar dia: φ = {bar_d:.0f} mm", as_line]
+    _info_box(ax, top_lines, x0 + 0.05 * (x1 - x0), y1 - 0.05 * (y1 - y0))
+
+    bottom_lines = []
+    if conc_line:
+        bottom_lines.append(conc_line)
+    if spiral_line:
+        bottom_lines.append(spiral_line)
+
+    if bottom_lines:
+        _info_box(ax, bottom_lines, x0 + 0.05 * (x1 - x0), y0 + 0.20 * (y1 - y0))
 
     ax.set_aspect("equal", adjustable="box")
     ax.axis("off")
