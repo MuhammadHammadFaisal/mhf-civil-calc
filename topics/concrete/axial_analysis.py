@@ -315,7 +315,7 @@ def app():
 
         st.markdown("---")
         glass_box("✅ Inputs only for now — next step: compute required As for given Nu.")
-        # =========================================================
+    # =========================================================
     # TAB 3: REQUIRED REINFORCEMENT (DETAILS) — INPUTS ONLY
     # =========================================================
     with tab_reinf:
@@ -324,6 +324,9 @@ def app():
         with col_input:
             write_text("section_header", "1. Inputs (Reinforcement Details)")
 
+            # -------------------------
+            # Applied Load
+            # -------------------------
             write_text("subheader", "Applied Load")
             cL1, cL2 = st.columns(2)
             with cL1:
@@ -336,46 +339,72 @@ def app():
                     key="reinf_strength_basis",
                 )
 
+            # -------------------------
+            # Geometry & Configuration
+            # -------------------------
+            write_text("subheader", "Geometry & Configuration")
+            c3, c4 = st.columns(2)
+            with c3:
+                shape_r = st.selectbox(
+                    "Column Shape",
+                    ["Rectangular", "Circular"],
+                    key="reinf_shape"
+                )
+            with c4:
+                confinement_options_r = {
+                    "Spiral (Continuous Helix)": "Spiral / Circular",
+                    "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
+                }
+                selected_label_r = st.selectbox(
+                    "Confinement Type",
+                    list(confinement_options_r.keys()),
+                    key="reinf_conf_label"
+                )
+                reinf_style_r = confinement_options_r[selected_label_r]
+
+            # -------------------------
+            # Materials
+            # -------------------------
             write_text("subheader", "Materials")
             cM1, cM2 = st.columns(2)
             with cM1:
                 fc_r = st.number_input("Concrete (fck) [MPa]", value=20.0, key="reinf_fc")
                 fy_long_r = st.number_input("Longitudinal Steel (fyk) [MPa]", value=420.0, key="reinf_fy_long")
             with cM2:
-                fywk_r = st.number_input("Transverse/Spiral Steel (fywk) [MPa]", value=220.0, key="reinf_fywk")
                 cover_r = st.number_input("Cover [mm]", value=25.0, key="reinf_cover")
+                if "Spiral" in reinf_style_r:
+                    fywk_r = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=220.0, key="reinf_fywk")
+                else:
+                    fywk_r = st.number_input("Tie Steel ($f_{ywk}$) [MPa]", value=220.0, key="reinf_fywk_tie")
 
-            write_text("subheader", "Geometry & Confinement Type")
+            # -------------------------
+            # Dimensions
+            # -------------------------
+            write_text("subheader", "Dimensions (Given)")
             cG1, cG2 = st.columns(2)
             with cG1:
-                shape_r = st.selectbox("Column Shape", ["Rectangular", "Circular"], key="reinf_shape")
-            with cG2:
-                confinement_options = {
-                    "Spiral (Continuous Helix)": "Spiral / Circular",
-                    "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
-                }
-                selected_label_r = st.selectbox(
-                    "Confinement Type",
-                    list(confinement_options.keys()),
-                    key="reinf_confinement_label"
-                )
-                reinf_style_r = confinement_options[selected_label_r]
-
-            write_text("subheader", "Dimensions")
-            cD1, cD2 = st.columns(2)
-            with cD1:
                 if shape_r == "Rectangular":
                     b_r = st.number_input("Width (b) [mm]", value=500.0, key="reinf_b")
-                    h_r = st.number_input("Depth (h) [mm]", value=500.0, key="reinf_h")
                 else:
                     D_r = st.number_input("Diameter (D) [mm]", value=300.0, key="reinf_D")
+            with cG2:
+                if shape_r == "Rectangular":
+                    h_r = st.number_input("Depth (h) [mm]", value=500.0, key="reinf_h")
 
-            with cD2:
-                # Longitudinal
+            # -------------------------
+            # Longitudinal Reinforcement Inputs
+            # -------------------------
+            write_text("subheader", "Longitudinal Reinforcement")
+            cR1, cR2 = st.columns(2)
+            with cR1:
                 bar_dia_r = st.number_input("Longitudinal Bar Diameter (mm)", value=20.0, key="reinf_bar_dia")
+            with cR2:
                 num_bars_r = st.number_input("Number of Longitudinal Bars", value=8, min_value=4, key="reinf_num_bars")
 
-            write_text("subheader", "Transverse Reinforcement Inputs")
+            # -------------------------
+            # Transverse Reinforcement Inputs
+            # -------------------------
+            write_text("subheader", "Transverse Reinforcement")
             cT1, cT2 = st.columns(2)
             with cT1:
                 if "Spiral" in reinf_style_r:
@@ -393,68 +422,19 @@ def app():
                     key="reinf_core_d"
                 )
                 st.number_input(
-                    "Target confinement peak check (placeholder)",
+                    "Peak check placeholder (Spiral requirement later)",
                     value=1.0,
-                    help="Later we’ll enforce: if Spiral, 2nd peak > 1st (your requirement).",
+                    help="Later: enforce that for spiral the 2nd peak > 1st peak (your requirement).",
                     key="reinf_peak_placeholder"
                 )
 
-        # --- Visualization placeholder (keep empty space like Tab 1) ---
+        # --- Visualization placeholder ---
         with col_viz:
             write_text("section_header", "2. Visualization")
-            glass_box("Visualization will be added here (section sketch / confinement layout).")
+            glass_box("Visualization will be added here (section sketch / reinforcement layout).")
 
         st.markdown("---")
         glass_box("✅ Inputs only for now — calculations will be connected later.")
-
-
-    # =========================================================
-    # TAB 4: REQUIRED CONCRETE — INPUTS ONLY
-    # =========================================================
-    with tab_conc:
-        col_input, col_viz = st.columns([1.3, 1])
-
-        with col_input:
-            write_text("section_header", "1. Inputs (Required Concrete Check)")
-
-            write_text("subheader", "Applied Load")
-            c1, c2 = st.columns(2)
-            with c1:
-                Nu_kN_c = st.number_input("Applied axial load Nu [kN]", value=2000.0, key="conc_Nu")
-            with c2:
-                strength_basis_c = st.radio(
-                    "Strength Basis",
-                    ["Design Values (fcd, fyd)", "Characteristic Values (fck, fyk)"],
-                    horizontal=True,
-                    key="conc_strength_basis",
-                )
-
-            write_text("subheader", "Provided Reinforcement (Given)")
-            c3, c4 = st.columns(2)
-            with c3:
-                Ast_prov = st.number_input("Provided As [mm²]", value=2500.0, key="conc_Ast")
-                fy_c = st.number_input("Steel (fyk) [MPa]", value=420.0, key="conc_fy")
-            with c4:
-                shape_c = st.selectbox("Column Shape", ["Rectangular", "Circular"], key="conc_shape")
-                cover_c = st.number_input("Cover [mm]", value=25.0, key="conc_cover")
-
-            write_text("subheader", "Concrete / Section Size (Unknown later — for now input)")
-            c5, c6 = st.columns(2)
-            with c5:
-                fc_c = st.number_input("Concrete (fck) [MPa]", value=20.0, key="conc_fc")
-            with c6:
-                if shape_c == "Rectangular":
-                    b_c = st.number_input("Width (b) [mm]", value=500.0, key="conc_b")
-                    h_c = st.number_input("Depth (h) [mm]", value=500.0, key="conc_h")
-                else:
-                    D_c = st.number_input("Diameter (D) [mm]", value=300.0, key="conc_D")
-
-        with col_viz:
-            write_text("section_header", "2. Visualization")
-            glass_box("Visualization will be added here (required size / capacity preview).")
-
-        st.markdown("---")
-        glass_box("✅ Inputs only for now — next step: compute required concrete size/strength to resist Nu.")
 
 if __name__ == "__main__":
     app()
