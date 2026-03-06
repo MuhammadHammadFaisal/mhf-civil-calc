@@ -25,85 +25,93 @@ def app():
     with tab_cap:
         col_input, col_viz = st.columns([1.3, 1])
     
-        # ================= INPUT =================
-        with col_input:
-            write_text("section_header", "1. System Properties")
-            write_text("subheader", "Materials")
-    
-            c1, c2 = st.columns(2)
-    
-            with c1:
-                fc = st.number_input("Concrete ($f_{ck}$) [MPa]", value=20.0)
-    
-            with c2:
-                fy_long = st.number_input("Longitudinal Steel ($f_{yk}$) [MPa]", value=420.0)
-    
-            strength_basis = st.radio(
-                "Strength Basis",
-                ["Design Values (fcd, fyd)", "Characteristic Values (fck, fyk)"],
-                horizontal=True
+    # ================= INPUT =================
+    with col_input:
+        write_text("section_header", "1. System Properties")
+        write_text("subheader", "Materials")
+
+        c1, c2 = st.columns(2)
+        with c1:
+            fc = st.number_input("Concrete ($f_{ck}$) [MPa]", value=20.0, key="cap_fc")
+        with c2:
+            fy_long = st.number_input("Longitudinal Steel ($f_{yk}$) [MPa]", value=420.0, key="cap_fy_long")
+
+        strength_basis = st.radio(
+            "Strength Basis",
+            ["Design Values (fcd, fyd)", "Characteristic Values (fck, fyk)"],
+            horizontal=True,
+            key="cap_strength_basis"
+        )
+
+        write_text("subheader", "Geometry & Configuration")
+        c3, c4 = st.columns(2)
+        with c3:
+            shape = st.selectbox("Column Shape", ["Rectangular", "Circular"], key="cap_shape")
+
+        with c4:
+            confinement_options = {
+                "Spiral (Continuous Helix)": "Spiral / Circular",
+                "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
+                "Plain Concrete (No Reinforcement)": "None (Plain Concrete)",
+            }
+            selected_label = st.selectbox(
+                "Confinement Type",
+                list(confinement_options.keys()),
+                key="cap_conf_label"
             )
-            
-            write_text("subheader", "Geometry & Configuration")
-            c3, c4 = st.columns(2)
-            with c3:    
-                shape = st.selectbox("Column Shape", ["Rectangular", "Circular"])
-                
-            with c4:
-                confinement_options = {
-                    "Spiral (Continuous Helix)": "Spiral / Circular",
-                    "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
-                    "Plain Concrete (No Reinforcement)": "None (Plain Concrete)",
-                }
-    
-                selected_label = st.selectbox("Confinement Type", list(confinement_options.keys()))
-                reinf_style = confinement_options[selected_label]
-    
-            write_text("subheader", "Dimensions")
-            c5, c6 = st.columns(2)
-            Ast = 0.0
-            num_bars = 0
-            bar_dia = 0.0
-    
-            spiral_dia = 0.0
-            spiral_spacing = 0.0
-            core_diameter_input = 0.0
-            fywk = 0.0
-    
-            with c5:
-                if "Standard" in reinf_style:
-                    cover = st.number_input("Cover [mm]", value=25.0)
+            reinf_style = confinement_options[selected_label]
+
+        # --- Internal default cover (not shown to user) ---
+        # Keep this so diagrams/calcs that expect cover won't crash.
+        cover = 25.0 if "None" not in reinf_style else 0.0
+
+        write_text("subheader", "Dimensions")
+        c5, c6 = st.columns(2)
+
+        # Defaults (so nothing crashes)
+        Ast = 0.0
+        num_bars = 0
+        bar_dia = 0.0
+
+        spiral_dia = 0.0
+        spiral_spacing = 0.0
+        core_diameter_input = 0.0
+        fywk = 0.0
+
+        with c5:
+            if shape == "Rectangular":
+                b = st.number_input("Width (b) (mm)", value=500.0, key="cap_b")
+                h = st.number_input("Depth (h) (mm)", value=500.0, key="cap_h")
+                Ag = b * h
+                dims = (b, h)
+            else:
+                D = st.number_input("Diameter (D) (mm)", value=300.0, key="cap_D")
+                Ag = np.pi * D**2 / 4
+                dims = (D,)
+
+        with c6:
+            if "None" not in reinf_style:
+                bar_dia = st.number_input("Bar Diameter (mm)", value=20.0, key="cap_bar_dia")
+                num_bars = st.number_input("Number of Bars", value=8, min_value=4, key="cap_num_bars")
+                Ast = num_bars * np.pi * (bar_dia / 2) ** 2
+
+                if "Spiral" in reinf_style:
+                    spiral_dia = st.number_input("Spiral Bar φ (mm)", value=10.0, key="cap_spiral_dia")
+                    spiral_spacing = st.number_input("Spiral Spacing s (mm)", value=50.0, key="cap_spiral_s")
+                    fywk = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=220.0, key="cap_fywk")
+                    core_diameter_input = st.number_input(
+                        "Core Diameter $D_k$ (mm)",
+                        value=300.0,
+                        help="Diameter of confined core measured to centerline of spiral.",
+                        key="cap_Dk"
+                    )
                 else:
-                    cover = 0.0
-                if shape == "Rectangular":
-                    b = st.number_input("Width (b) (mm)", value=500.0)
-                    h = st.number_input("Depth (h) (mm)", value=500.0)
-                    Ag = b * h
-                    dims = (b, h)
-                else:
-                    D = st.number_input("Diameter (D) (mm)", value=300.0)
-                    Ag = np.pi * D**2 / 4
-                    dims = (D,)
-            with c6:
-                if "None" not in reinf_style:
-                    bar_dia = st.number_input("Bar Diameter (mm)", value=20.0)
-                    num_bars = st.number_input("Number of Bars", value=8, min_value=4)
-                    Ast = num_bars * np.pi * (bar_dia / 2) ** 2
-        
-                    if "Spiral" in reinf_style:
-        
-                        spiral_dia = st.number_input("Spiral Bar φ (mm)", value=10.0)
-                        spiral_spacing = st.number_input("Spiral Spacing s (mm)", value=50.0)
-                        fywk = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=220.0)
-                        core_diameter_input = st.number_input(
-                            "Core Diameter $D_k$ (mm)",
-                            value=300.0,
-                            help="Diameter of confined core measured to centerline of spiral."
-                        )
-                    
-                    else:
-                        fywk = 0.0
-                        core_diameter_input = 0.0
+                    fywk = 0.0
+                    core_diameter_input = 0.0
+            else:
+                # Plain concrete: no reinforcement inputs
+                fywk = 0.0
+                core_diameter_input = 0.0
     
         # ================= VISUAL =================
         with col_viz:
@@ -115,7 +123,6 @@ def app():
             bar_dia,
             reinf_style,
             True,          # ← FIXED
-            cover,
             core_diameter_input,
         )
             st.pyplot(fig1, width="stretch", clear_figure=True)
