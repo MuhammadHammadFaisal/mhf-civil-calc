@@ -168,7 +168,7 @@ def app():
 
         with col_input:
             write_text("subheader", "Materials")
-            c1, c2 = st.columns([2])
+            c1, c2 = st.columns(2)
             with c1:
                 fc = input_materials_concrete("as")
                 fy_long = input_materials_steel_fyk("as")
@@ -189,11 +189,11 @@ def app():
             fywk = 0.0
             core_diameter_input = 0.0
             if "Spiral" in reinf_style:
-                c1, c2 = st.columns(2)
-                with c1:
+                c3, c4 = st.columns(2)
+                with c3:
                     spiral_dia = input_spiral_bar_dia("as")
                     fywk = input_materials_steel_fywk("as")  # fywk input
-                with c2:
+                with c4:
                     spiral_spacing = input_spiral_spacing("as")
                     if shape == "Circular":
                         core_diameter_input = input_core_diameter("as")
