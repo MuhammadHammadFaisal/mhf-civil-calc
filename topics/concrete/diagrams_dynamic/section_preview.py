@@ -409,11 +409,11 @@ def draw_cross_section(
         ax.text(0.02, 0.98, note1, transform=ax.transAxes, va="top", ha="left",
                 fontsize=11, color="#444", zorder=30)
     if note2:
-    ax.text(
-        0.02, 0.92, note2,
-        transform=ax.transAxes,
-        va="top", ha="left",
-        fontsize=10, color="#444",
-        zorder=30
-    )
+        ax.text(
+            0.02, 0.92, note2,
+            transform=ax.transAxes,
+            va="top", ha="left",
+            fontsize=10, color="#444",
+            zorder=30
+        )
     return fig
