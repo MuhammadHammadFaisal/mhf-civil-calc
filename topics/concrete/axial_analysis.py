@@ -85,14 +85,15 @@ def app():
         with col_viz:
             write_text("section_header", "2. Visualization")
             fig1 = draw_cross_section(
-                shape,
-                dims,
-                num_bars,
-                bar_dia,
-                reinf_style,
-                True,
-                core_diameter_input,
-            )
+            shape,
+            dims,
+            num_bars,
+            bar_dia,
+            reinf_style,
+            True,
+            0.0,                 # cover_unused dummy
+            core_diameter_input  # Ack/Dk
+        )
             st.pyplot(fig1, width="stretch", clear_figure=True)
             plt.close(fig1)
 

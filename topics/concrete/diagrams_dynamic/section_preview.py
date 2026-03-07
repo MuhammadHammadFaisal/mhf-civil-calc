@@ -111,6 +111,58 @@ def distribute_bars_rectangular(b, h, inset_to_bar_center, num_bars):
 
 
 # ==========================================================
+# INTERNAL: DRAW CONCRETE AND RETURN CENTER + OUTER SIZE
+# ==========================================================
+def _draw_concrete(ax, shape, dims):
+    """
+    Draw the concrete section and return:
+    (cx, cy, outer_w, outer_h)
+    """
+    if str(shape).lower() in ["rectangular", "square"]:
+        b, h = float(dims[0]), float(dims[1])
+        cx, cy = b / 2.0, h / 2.0
+
+        ax.add_patch(
+            patches.Rectangle(
+                (0, 0),
+                b,
+                h,
+                fill=True,
+                facecolor="#e0e0e0",
+                edgecolor="black",
+                linewidth=2.0,
+                zorder=1,
+            )
+        )
+
+        pad = max(0.1 * min(b, h), 50.0)
+        ax.set_xlim(-pad, b + pad)
+        ax.set_ylim(-pad, h + pad)
+        return cx, cy, b, h
+
+    else:
+        D = float(dims[0])
+        cx, cy = D / 2.0, D / 2.0
+
+        ax.add_patch(
+            patches.Circle(
+                (cx, cy),
+                D / 2.0,
+                fill=True,
+                facecolor="#e0e0e0",
+                edgecolor="black",
+                linewidth=2.0,
+                zorder=1,
+            )
+        )
+
+        pad = max(0.1 * D, 50.0)
+        ax.set_xlim(-pad, D + pad)
+        ax.set_ylim(-pad, D + pad)
+        return cx, cy, D, D
+
+
+# ==========================================================
 # MAIN DRAW FUNCTION
 # ==========================================================
 def draw_cross_section(
@@ -120,8 +172,8 @@ def draw_cross_section(
     bar_dia,
     reinf_style,
     show_ties,
-    cover_unused,          # kept for backward compatibility, NOT USED
-    core_diameter=0.0,     # for spiral: Dk to spiral centerline
+    cover_unused=0.0,      # kept for backward compatibility, NOT USED
+    core_diameter=0.0,     # for spiral: Ack/Dk to spiral centerline (works for rectangular too)
 ):
     """
     Draw RC cross-section with longitudinal bars and (optional) ties/spiral.
@@ -130,7 +182,7 @@ def draw_cross_section(
     - No clear cover input is required.
     - cover_unused is ignored (kept so your existing call signature doesn't break).
     - A visual inset is auto-computed from bar diameter.
-    - For spiral: core_diameter (Dk) is used if provided (>0).
+    - For spiral: core_diameter (Ack/Dk) is used if provided (>0), even for rectangular sections.
     """
 
     # ---- sanitize ----
@@ -162,17 +214,22 @@ def draw_cross_section(
     positions = []
 
     # ======================================================
-    # SPIRAL (use core_diameter if provided)
+    # SPIRAL (use core_diameter if provided; clamp to section)
     # ======================================================
     if _is_spiral(reinf_style):
-        # Dk to spiral centerline (preferred)
+        # Dk/Ack to spiral centerline (preferred)
         if core_diameter and float(core_diameter) > 0:
             cage_D = float(core_diameter)
         else:
             # fallback: derive a reasonable cage diameter from outer size and inset
             cage_D = min(outer_w, outer_h) - 2.0 * inset
 
-        # keep cage_D feasible
+        # clamp so spiral stays inside concrete
+        max_D = min(outer_w, outer_h) - 2.0 * inset
+        if max_D > 0:
+            cage_D = min(cage_D, max_D)
+
+        # keep cage_D feasible vs bar size
         cage_D = max(cage_D, 2.0 * bar_r + 10.0)
 
         r_bars = cage_D / 2.0 - bar_r
@@ -200,6 +257,8 @@ def draw_cross_section(
     elif str(shape).lower() == "circular":
         # tie hoop diameter (to centerline) based on inset
         cage_D = outer_w - 2.0 * inset  # outer_w == D for circular
+
+        # keep cage_D feasible vs bar size
         cage_D = max(cage_D, 2.0 * bar_r + 10.0)
 
         r_bars = cage_D / 2.0 - bar_r
@@ -267,55 +326,3 @@ def draw_cross_section(
     ax.axis("off")
     fig.tight_layout(pad=0.2)
     return fig
-
-
-# ==========================================================
-# INTERNAL: DRAW CONCRETE AND RETURN CENTER + OUTER SIZE
-# ==========================================================
-def _draw_concrete(ax, shape, dims):
-    """
-    Draw the concrete section and return:
-    (cx, cy, outer_w, outer_h)
-    """
-    if str(shape).lower() in ["rectangular", "square"]:
-        b, h = float(dims[0]), float(dims[1])
-        cx, cy = b / 2.0, h / 2.0
-
-        ax.add_patch(
-            patches.Rectangle(
-                (0, 0),
-                b,
-                h,
-                fill=True,
-                facecolor="#e0e0e0",
-                edgecolor="black",
-                linewidth=2.0,
-                zorder=1,
-            )
-        )
-
-        pad = max(0.1 * min(b, h), 50.0)
-        ax.set_xlim(-pad, b + pad)
-        ax.set_ylim(-pad, h + pad)
-        return cx, cy, b, h
-
-    else:
-        D = float(dims[0])
-        cx, cy = D / 2.0, D / 2.0
-
-        ax.add_patch(
-            patches.Circle(
-                (cx, cy),
-                D / 2.0,
-                fill=True,
-                facecolor="#e0e0e0",
-                edgecolor="black",
-                linewidth=2.0,
-                zorder=1,
-            )
-        )
-
-        pad = max(0.1 * D, 50.0)
-        ax.set_xlim(-pad, D + pad)
-        ax.set_ylim(-pad, D + pad)
-        return cx, cy, D, D
