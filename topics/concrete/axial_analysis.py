@@ -81,8 +81,7 @@ def app():
                     fywk = input_materials_steel_fywk("cap")  # fywk input
                 with c2:
                     spiral_spacing = input_spiral_spacing("cap")
-                    if shape == "Circular":
-                        core_diameter_input = input_core_diameter("cap")
+                    core_diameter_input = input_core_diameter("cap")
             
         with col_viz:
             write_text("section_header", "2. Visualization")
@@ -205,8 +204,7 @@ def app():
                     fywk = input_materials_steel_fywk("as")  # fywk input
                 with c4:
                     spiral_spacing = input_spiral_spacing("as")
-                    if shape == "Circular":
-                        core_diameter_input = input_core_diameter("as")
+                    core_diameter_input = input_core_diameter("as")
         with col_viz:
             write_text("section_header", "2. Visualization")
             glass_box("Visualization will be added here (interaction diagram / section preview).")
@@ -252,8 +250,7 @@ def app():
                     fywk = input_materials_steel_fywk("reinf")  # fywk input
                 with c4:
                     spiral_spacing = input_spiral_spacing("reinf")
-                    if shape == "Circular":
-                        core_diameter_input = input_core_diameter("reinf")
+                    core_diameter_input = input_core_diameter("reinf")
         with col_viz:
             write_text("section_header", "2. Visualization")
             glass_box("Visualization will be added here (confined core / tie layout preview).")
@@ -312,8 +309,8 @@ def app():
                     fywk = input_materials_steel_fywk("ac")  # fywk input
                 with c4:
                     spiral_spacing = input_spiral_spacing("ac")
-                    if shape == "Circular":
-                        core_diameter_input = input_core_diameter("ac")
+
+                    core_diameter_input = input_core_diameter("ac")
         with col_viz:
             write_text("section_header", "2. Visualization")
             glass_box("Visualization will be added here (required size / capacity preview).")
@@ -358,8 +355,7 @@ def app():
                     fywk = input_materials_steel_fywk("ack")  # fywk input
                 with c4:
                     spiral_spacing = input_spiral_spacing("ack")
-                    if shape == "Circular":
-                        core_diameter_input = input_core_diameter("ack")
+                    core_diameter_input = input_core_diameter("ack")
         with col_viz:
             write_text("section_header", "2. Visualization")
             glass_box("Visualization will be added here (required size / capacity preview).")
