@@ -138,7 +138,7 @@ def _draw_concrete(ax, shape, dims):
         pad = max(0.1 * min(b, h), 50.0)
         ax.set_xlim(-pad, b + pad)
         ax.set_ylim(-pad, h + pad)
-        return cx, cy, b, h
+        return cx, cy, b, h, pad
 
     else:
         D = float(dims[0])
@@ -159,9 +159,75 @@ def _draw_concrete(ax, shape, dims):
         pad = max(0.1 * D, 50.0)
         ax.set_xlim(-pad, D + pad)
         ax.set_ylim(-pad, D + pad)
-        return cx, cy, D, D
+        return cx, cy, D, D, pad
+
+def _mm_to_cm_str(x_mm: float) -> str:
+    # 500 mm -> "50 cm"
+    return f"{x_mm/10:.0f} cm"
 
 
+def _add_dim_line(ax, x1, y1, x2, y2, text, text_offset=(0, 0), lw=1.2):
+    """
+    Draw a dimension line with double arrow and centered label.
+    """
+    ax.annotate(
+        "",
+        xy=(x2, y2),
+        xytext=(x1, y1),
+        arrowprops=dict(arrowstyle="<->", linewidth=lw, color="#777"),
+        zorder=20,
+    )
+    tx = (x1 + x2) / 2.0 + text_offset[0]
+    ty = (y1 + y2) / 2.0 + text_offset[1]
+    ax.text(tx, ty, text, ha="center", va="center", color="#777", fontsize=11, zorder=21)
+
+
+def _add_section_dimensions(ax, shape, dims, pad):
+    """
+    Adds outer dimension labels (b/h for rectangle, D for circle).
+    dims are in mm. pad is the plotting pad used in _draw_concrete().
+    """
+    if str(shape).lower() in ["rectangular", "square"]:
+        b, h = float(dims[0]), float(dims[1])
+
+        # Right-side vertical dimension (h)
+        x_dim = b + pad * 0.45
+        _add_dim_line(
+            ax,
+            x_dim,
+            0,
+            x_dim,
+            h,
+            _mm_to_cm_str(h),
+            text_offset=(pad * 0.15, 0),
+        )
+
+        # Bottom horizontal dimension (b)
+        y_dim = -pad * 0.45
+        _add_dim_line(
+            ax,
+            0,
+            y_dim,
+            b,
+            y_dim,
+            _mm_to_cm_str(b),
+            text_offset=(0, -pad * 0.15),
+        )
+
+    else:
+        D = float(dims[0])
+
+        # Right-side vertical dimension (D)
+        x_dim = D + pad * 0.45
+        _add_dim_line(
+            ax,
+            x_dim,
+            0,
+            x_dim,
+            D,
+            _mm_to_cm_str(D),
+            text_offset=(pad * 0.15, 0),
+        )
 # ==========================================================
 # MAIN DRAW FUNCTION
 # ==========================================================
@@ -203,7 +269,8 @@ def draw_cross_section(
         return fig
 
     # ---- draw concrete + get center and outer size ----
-    cx, cy, outer_w, outer_h = _draw_concrete(ax, shape, dims)
+    cx, cy, outer_w, outer_h, pad = _draw_concrete(ax, shape, dims)
+    _add_section_dimensions(ax, shape, dims, pad)
 
     # Auto inset (no cover input)
     inset = _auto_inset(bar_dia)
@@ -325,4 +392,28 @@ def draw_cross_section(
     ax.set_aspect("equal", adjustable="box")
     ax.axis("off")
     fig.tight_layout(pad=0.2)
+    # Example note labels (top-left)
+    try:
+        note1 = f"{int(num_bars)}Ø{bar_dia:.0f}"
+    except Exception:
+        note1 = ""
+
+    note2 = ""
+    if _is_spiral(reinf_style):
+        if core_diameter and float(core_diameter) > 0:
+            note2 = f"Spiral, Ack={core_diameter:.0f} mm"
+        else:
+            note2 = "Spiral"
+
+    if note1:
+        ax.text(0.02, 0.98, note1, transform=ax.transAxes, va="top", ha="left",
+                fontsize=11, color="#444", zorder=30)
+    if note2:
+    ax.text(
+        0.02, 0.92, note2,
+        transform=ax.transAxes,
+        va="top", ha="left",
+        fontsize=10, color="#444",
+        zorder=30
+    )
     return fig
