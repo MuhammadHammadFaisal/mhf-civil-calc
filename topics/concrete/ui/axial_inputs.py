@@ -69,10 +69,11 @@ def input_section_dimensions(prefix: str, shape: str):
             D = st.number_input("Diameter (D) [mm]", value=300.0, step=10.0, key=f"{prefix}_D")
             Ack = st.number_input("Core concrete diameter (D) [mm]", value=300.0, step=10.0, key=f"{prefix}_Ack")
         with c2:
+            Ack = st.number_input("Core concrete diameter (D) [mm]", value=300.0, step=10.0, key=f"{prefix}_Ack")
         dims = (D,)
         Ag = np.pi * D**2 / 4
 
-    return dims, Ag
+    return dims, Ag, Ack
 
 def input_bar_diameter(prefix: str, default: float = 20.0) -> float:
     bar_dia = st.number_input(
