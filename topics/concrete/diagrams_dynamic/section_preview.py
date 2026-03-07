@@ -2,7 +2,33 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
+import matplotlib.patheffects as pe
 
+def _label_style():
+    # White text with dark outline so it stays visible on any background
+    return dict(
+        color="white",
+        fontsize=12,
+        path_effects=[pe.withStroke(linewidth=3, foreground="black")],
+        zorder=50
+    )
+def _add_core_diameter_dim(ax, cx, cy, cage_D, pad):
+    """
+    Draw a horizontal diameter dimension across the core circle.
+    """
+    r = cage_D / 2.0
+    y = cy  # horizontal diameter at center
+    x1, x2 = cx - r, cx + r
+
+    # Slightly offset text upward so it doesn’t sit on the line
+    _add_dim_line(
+        ax,
+        x1, y,
+        x2, y,
+        f"Ack = {cage_D/10:.0f} cm",
+        text_offset=(0, pad * 0.08),
+        lw=1.6
+    )
 # ==========================================================
 # HELPERS
 # ==========================================================
@@ -166,20 +192,17 @@ def _mm_to_cm_str(x_mm: float) -> str:
     return f"{x_mm/10:.0f} cm"
 
 
-def _add_dim_line(ax, x1, y1, x2, y2, text, text_offset=(0, 0), lw=1.2):
-    """
-    Draw a dimension line with double arrow and centered label.
-    """
+def _add_dim_line(ax, x1, y1, x2, y2, text, text_offset=(0, 0), lw=1.6):
     ax.annotate(
         "",
         xy=(x2, y2),
         xytext=(x1, y1),
-        arrowprops=dict(arrowstyle="<->", linewidth=lw, color="#777"),
-        zorder=20,
+        arrowprops=dict(arrowstyle="<->", linewidth=lw, color="white"),
+        zorder=45,
     )
     tx = (x1 + x2) / 2.0 + text_offset[0]
     ty = (y1 + y2) / 2.0 + text_offset[1]
-    ax.text(tx, ty, text, ha="center", va="center", color="#777", fontsize=11, zorder=21)
+    ax.text(tx, ty, text, ha="center", va="center", **_label_style())
 
 
 def _add_section_dimensions(ax, shape, dims, pad):
@@ -311,13 +334,14 @@ def draw_cross_section(
                     (cx, cy),
                     cage_D / 2.0,
                     fill=False,
-                    edgecolor="#555",
+                    edgecolor="#white",
                     linewidth=1.6,
                     linestyle="-",
                     zorder=5,
                 )
             )
-
+        if cage_D > 0:
+                _add_core_diameter_dim(ax, cx, cy, cage_D, pad)
     # ======================================================
     # CIRCULAR (TIES)
     # ======================================================
@@ -340,7 +364,7 @@ def draw_cross_section(
                     (cx, cy),
                     cage_D / 2.0,
                     fill=False,
-                    edgecolor="#555",
+                    edgecolor="#white",
                     linewidth=1.6,
                     linestyle="--",
                     zorder=5,
@@ -368,7 +392,7 @@ def draw_cross_section(
                     w_tie,
                     h_tie,
                     fill=False,
-                    edgecolor="#555",
+                    edgecolor="#white",
                     linewidth=1.6,
                     linestyle="--",
                     zorder=5,
