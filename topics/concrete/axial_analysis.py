@@ -12,7 +12,14 @@ import base64
 from io import BytesIO
 from .calculator.axial_design_helpers import required_Ast_for_load
 from .reports.axial_report import build_step_by_step_markdown
-
+from .ui.axial_inputs import (
+    input_strength_basis,
+    input_materials_basic,
+    input_geometry_config,
+    input_section_dimensions,
+    input_longitudinal_steel,
+    input_spiral_details,
+)
 
 def app():
     tab_cap, tab_As, tab_reinf, tab_conc = st.tabs([
@@ -29,100 +36,22 @@ def app():
         col_input, col_viz = st.columns([1.3, 1])
 
         with col_input:
-            write_text("section_header", "1. System Properties")
-
-            # -------------------------
-            # Materials
-            # -------------------------
             write_text("subheader", "Materials")
-            c1, c2 = st.columns(2)
-            with c1:
-                fc = st.number_input("Concrete ($f_{ck}$) [MPa]", value=20.0, key="cap_fc")
-            with c2:
-                fy_long = st.number_input("Longitudinal Steel ($f_{yk}$) [MPa]", value=420.0, key="cap_fy_long")
-
-            strength_basis = st.radio(
-                "Strength Basis",
-                ["Design Values (fcd, fyd)", "Characteristic Values (fck, fyk)"],
-                horizontal=True,
-                key="cap_strength_basis"
-            )
-
-            # -------------------------
-            # Geometry & Configuration
-            # -------------------------
+            fc, fy_long = input_materials_basic("cap", steel_label="Longitudinal Steel ($f_{yk}$) [MPa]")
+            strength_basis = input_strength_basis("cap")
+            
             write_text("subheader", "Geometry & Configuration")
-            c3, c4 = st.columns(2)
-            with c3:
-                shape = st.selectbox("Column Shape", ["Rectangular", "Circular"], key="cap_shape")
-
-            with c4:
-                confinement_options = {
-                    "Spiral (Continuous Helix)": "Spiral / Circular",
-                    "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
-                    "Plain Concrete (No Reinforcement)": "None (Plain Concrete)",
-                }
-                selected_label = st.selectbox(
-                    "Confinement Type",
-                    list(confinement_options.keys()),
-                    key="cap_conf_label"
-                )
-                reinf_style = confinement_options[selected_label]
-
-            cover = 25.0 if "None" not in reinf_style else 0.0
-
-            # -------------------------
-            # Dimensions
-            # -------------------------
+            shape, reinf_style = input_geometry_config("cap", allow_plain=True)
+            
             write_text("subheader", "Dimensions")
-            c5, c6 = st.columns(2)
-
-            Ast = 0.0
-            num_bars = 0
-            bar_dia = 0.0
-            spiral_dia = 0.0
-            spiral_spacing = 0.0
-            core_diameter_input = 0.0
-            fywk = 0.0
-
-            with c5:
-                if shape == "Rectangular":
-                    b = st.number_input("Width (b) [mm]", value=500.0, key="cap_b")
-                    h = st.number_input("Depth (h) [mm]", value=500.0, key="cap_h")
-                    Ag = b * h
-                    dims = (b, h)
-                else:
-                    D = st.number_input("Diameter (D) [mm]", value=300.0, key="cap_D")
-                    Ag = np.pi * D**2 / 4
-                    dims = (D,)
-
-            with c6:
-                if shape == "Circular" and "Spiral" in reinf_style:
-                    core_diameter_input = st.number_input(
-                        "Core Diameter $D_k$ [mm]",
-                        value=250.0,
-                        help="Diameter of confined core measured to centerline of spiral.",
-                        key="cap_Dk"
-                    )
-
-            # -------------------------
-            # Steel
-            # -------------------------
+            dims, Ag = input_section_dimensions("cap", shape)
+            
             write_text("subheader", "Steel")
-            c7, c8 = st.columns(2)
-
-            with c7:
-                if "None" not in reinf_style:
-                    bar_dia = st.number_input("Bar Diameter [mm]", value=20.0, key="cap_bar_dia")
-                    num_bars = st.number_input("Number of Bars", value=8, min_value=4, key="cap_num_bars")
-                    Ast = num_bars * np.pi * (bar_dia / 2) ** 2
-
-            with c8:
-                if "Spiral" in reinf_style:
-                    spiral_dia = st.number_input("Spiral Bar φ [mm]", value=10.0, key="cap_spiral_dia")
-                    spiral_spacing = st.number_input("Spiral Spacing s [mm]", value=50.0, key="cap_spiral_s")
-                    fywk = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=220.0, key="cap_fywk")
-
+            bar_dia, num_bars, Ast = input_longitudinal_steel("cap", reinf_style)
+            
+            write_text("subheader", "Spiral (if selected)")
+            spiral_dia, spiral_spacing, fywk, core_diameter_input = input_spiral_details("cap", shape, reinf_style)
+            
         with col_viz:
             write_text("section_header", "2. Visualization")
             fig1 = draw_cross_section(
