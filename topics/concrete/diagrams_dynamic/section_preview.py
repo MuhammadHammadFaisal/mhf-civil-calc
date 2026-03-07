@@ -3,6 +3,20 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 import matplotlib.patheffects as pe
+def _add_notes(ax, shape, dims, note1, note2):
+    if str(shape).lower() in ["rectangular", "square"]:
+        b, h = float(dims[0]), float(dims[1])
+        x, y = 0.03 * b, 0.97 * h   # inside top-left
+    else:
+        D = float(dims[0])
+        x, y = 0.03 * D, 0.97 * D
+
+    ax.text(x, y, note1, ha="left", va="top", color="white",
+            fontsize=12, zorder=60)
+    if note2:
+        ax.text(x, y - (0.07 * (dims[1] if str(shape).lower() in ["rectangular","square"] else dims[0])),
+                note2, ha="left", va="top", color="white",
+                fontsize=11, zorder=60)
 
 def _label_style():
     # White text with dark outline so it stays visible on any background
@@ -288,7 +302,6 @@ def draw_cross_section(
         _draw_concrete(ax, shape, dims)
         ax.set_aspect("equal", adjustable="box")
         ax.axis("off")
-        fig.tight_layout(pad=0.2)
         return fig
 
     # ---- draw concrete + get center and outer size ----
@@ -417,27 +430,16 @@ def draw_cross_section(
     ax.axis("off")
     fig.tight_layout(pad=0.2)
     # Example note labels (top-left)
+    # ---- notes (top-left) ----
     try:
         note1 = f"{int(num_bars)}Ø{bar_dia:.0f}"
     except Exception:
         note1 = ""
 
     note2 = ""
-    if _is_spiral(reinf_style):
-        if core_diameter and float(core_diameter) > 0:
-            note2 = f"Spiral, Ack={core_diameter:.0f} mm"
-        else:
-            note2 = "Spiral"
+    if _is_spiral(reinf_style) and core_diameter and float(core_diameter) > 0:
+        note2 = f"Spiral, Ack={core_diameter:.0f} mm"
 
     if note1:
-        ax.text(0.02, 0.98, note1, transform=ax.transAxes, va="top", ha="left",
-                fontsize=11, color="#444", zorder=30)
-    if note2:
-        ax.text(
-            0.02, 0.92, note2,
-            transform=ax.transAxes,
-            va="top", ha="left",
-            fontsize=10, color="#444",
-            zorder=30
-        )
+        _add_notes(ax, shape, dims, note1, note2)
     return fig
