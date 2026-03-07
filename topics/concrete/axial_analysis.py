@@ -68,12 +68,12 @@ def app():
                 with c2:
                     num_bars = input_num_bars("cap")
                 Ast = calc_Ast(num_bars, bar_dia)
+            spiral_dia = 0.0
+            spiral_spacing = 0.0
+            fywk = 0.0
+            core_diameter_input = 0.0
             if "Spiral" in reinf_style:
                 write_text("subheader", "Spiral (if selected)")
-                spiral_dia = 0.0
-                spiral_spacing = 0.0
-                fywk = 0.0
-                core_diameter_input = 0.0
                 c1, c2 = st.columns(2)
                 with c1:
                     spiral_dia = input_spiral_bar_dia("cap")
@@ -190,12 +190,13 @@ def app():
 
             write_text("subheader", "Dimensions")
             dims, Ag = input_section_dimensions("as", shape)
+            spiral_dia = 0.0
+            spiral_spacing = 0.0
+            fywk = 0.0
+            core_diameter_input = 0.0
+
             if "Spiral" in reinf_style:
-                write_text("subheader", "Spiral")
-                spiral_dia = 0.0
-                spiral_spacing = 0.0
-                fywk = 0.0
-                core_diameter_input = 0.0
+           
             
                 c3, c4 = st.columns(2)
                 with c3:
@@ -236,12 +237,14 @@ def app():
 
             write_text("subheader", "Dimensions")
             dims, Ag = input_section_dimensions("reinf", shape)
+
+            spiral_dia = 0.0
+            spiral_spacing = 0.0
+            fywk = 0.0
+            core_diameter_input = 0.0
+
             if "Spiral" in reinf_style:
-                write_text("subheader", "Spiral")
-                spiral_dia = 0.0
-                spiral_spacing = 0.0
-                fywk = 0.0
-                core_diameter_input = 0.0
+            
             
                 c3, c4 = st.columns(2)
                 with c3:
@@ -294,13 +297,13 @@ def app():
                 with c2:
                     num_bars = input_num_bars("ac")
                 Ast = calc_Ast(num_bars, bar_dia)
-
+            spiral_dia = 0.0
+            spiral_spacing = 0.0
+            fywk = 0.0
+            core_diameter_input = 0.0
             if "Spiral" in reinf_style:
                 write_text("subheader", "Spiral")
-                spiral_dia = 0.0
-                spiral_spacing = 0.0
-                fywk = 0.0
-                core_diameter_input = 0.0
+
             
                 c3, c4 = st.columns(2)
                 with c3:
@@ -341,12 +344,14 @@ def app():
 
             write_text("subheader", "Dimensions")
             dims, Ag = input_section_dimensions("ack", shape)
+                        spiral_dia = 0.0
+            spiral_spacing = 0.0
+            fywk = 0.0
+            core_diameter_input = 0.0
+            
             if "Spiral" in reinf_style:
                 write_text("subheader", "Spiral")
-                spiral_dia = 0.0
-                spiral_spacing = 0.0
-                fywk = 0.0
-                core_diameter_input = 0.0
+
             
                 c3, c4 = st.columns(2)
                 with c3:
