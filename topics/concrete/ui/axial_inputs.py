@@ -14,7 +14,12 @@ def input_materials_concrete(prefix: str) -> float:
     return fc
 
 def input_nu_requirment(prefix: str) -> float:
-    Nu_kN_req = st.number_input("Applied axial load Nu [kN]", value=2000.0, key="as_Nu")
+    Nu_kN_req = st.number_input(
+        "Applied axial load Nu [kN]",
+        value=2000.0,
+        step=50.0,
+        key=f"{prefix}_Nu"
+    )
     return Nu_kN_req
 
 def input_materials_steel_fyk(prefix: str) -> float:
@@ -25,7 +30,7 @@ def input_materials_steel_fywk(prefix: str) -> float:
     fywk = st.number_input("Steel (fywk) [MPa]", value=220.0, step=10.0, key=f"{prefix}_fywk")
     return fywk
 
-def input_column_geometry(prefix: str) -> float:
+def input_column_geometry(prefix: str) -> str:
     shape = st.selectbox("Column Shape", ["Rectangular", "Circular"], key=f"{prefix}_shape")
     return shape
 
