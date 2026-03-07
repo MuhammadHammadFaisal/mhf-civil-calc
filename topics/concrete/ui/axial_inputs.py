@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 
-def input_strength_basis(prefix: str):
+def input_strength_basis(prefix: str) -> str:
     return st.radio(
         "Strength Basis",
         ["Design Values (fcd, fyd)", "Characteristic Values (fck, fyk)"],
@@ -9,87 +9,104 @@ def input_strength_basis(prefix: str):
         key=f"{prefix}_strength_basis",
     )
 
-def input_materials_basic(prefix: str, steel_label: str = "Steel (fyk) [MPa]"):
-    c1, c2 = st.columns(2)
-    with c1:
-        fc = st.number_input("Concrete (fck) [MPa]", value=20.0, key=f"{prefix}_fc")
-    with c2:
-        fy = st.number_input(steel_label, value=420.0, key=f"{prefix}_fy")
-    return fc, fy
+def input_materials_concrete(prefix: str) -> float:
+    fc = st.number_input("Concrete (fck) [MPa]", value=20.0, step=5.0, key=f"{prefix}_fc")
+    return fc
 
-def input_geometry_config(prefix: str, allow_plain: bool = False, ties_only: bool = False):
-    c1, c2 = st.columns(2)
+def input_nu_requirment(prefix: str) -> float:
+    Nu_kN_req = st.number_input("Applied axial load Nu [kN]", value=2000.0, key="as_Nu")
+    return Nu_kN_req
 
-    with c1:
-        shape = st.selectbox("Column Shape", ["Rectangular", "Circular"], key=f"{prefix}_shape")
+def input_materials_steel_fyk(prefix: str) -> float:
+    fy = st.number_input("Steel (fyk) [MPa]", value=420.0, step=10.0, key=f"{prefix}_fy")
+    return fy
 
-    with c2:
-        if ties_only:
-            st.selectbox("Confinement Type", ["Tied (Standard Hoops)"], key=f"{prefix}_conf_label")
-            reinf_style = "Standard Ties (Match Shape)"
-        else:
-            options = {
-                "Spiral (Continuous Helix)": "Spiral / Circular",
-                "Tied (Standard Hoops)": "Standard Ties (Match Shape)",
-            }
-            if allow_plain:
-                options["Plain Concrete (No Reinforcement)"] = "None (Plain Concrete)"
+def input_materials_steel_fywk(prefix: str) -> float:
+    fywk = st.number_input("Steel (fywk) [MPa]", value=220.0, step=10.0, key=f"{prefix}_fywk")
+    return fywk
 
-            selected_label = st.selectbox("Confinement Type", list(options.keys()), key=f"{prefix}_conf_label")
-            reinf_style = options[selected_label]
+def input_column_geometry(prefix: str) -> float:
+    shape = st.selectbox("Column Shape", ["Rectangular", "Circular"], key=f"{prefix}_shape")
+    return shape
 
-    return shape, reinf_style
+def input_confinement_type_capacity(prefix: str) -> str:
+    reinf_style = st.selectbox("Confinement Type", ["Tied (Standard)", "Spiral / Circular", "Plain Concrete (No Reinforcement)"], key=f"{prefix}_conf_label")        
+    return reinf_style
+
+def input_confinement_type_ast(prefix: str) -> str:
+    reinf_style = st.selectbox("Confinement Type", ["Tied (Standard)", "Spiral / Circular"], key=f"{prefix}_conf_label")        
+    return reinf_style
+
+def input_confinement_type_ao(prefix: str) -> str:
+    reinf_style = st.selectbox("Confinement Type", ["Spiral / Circular"], key=f"{prefix}_conf_label")        
+    return reinf_style
+
+def input_confinement_type_ac(prefix: str) -> str:
+    reinf_style = st.selectbox("Confinement Type", ["Tied (Standard)", "Spiral / Circular", "Plain Concrete (No Reinforcement)"], key=f"{prefix}_conf_label")        
+    return reinf_style
+
+def input_confinement_type_ack(prefix: str) -> str:
+    reinf_style = st.selectbox("Confinement Type", ["Spiral / Circular"], key=f"{prefix}_conf_label")        
+    return reinf_style
 
 def input_section_dimensions(prefix: str, shape: str):
     c1, c2 = st.columns(2)
 
     if shape == "Rectangular":
         with c1:
-            b = st.number_input("Width (b) [mm]", value=500.0, key=f"{prefix}_b")
+            b = st.number_input("Width (b) [mm]", value=500.0, step=10.0, key=f"{prefix}_b")
         with c2:
-            h = st.number_input("Depth (h) [mm]", value=500.0, key=f"{prefix}_h")
+            h = st.number_input("Depth (h) [mm]", value=500.0, step=10.0, key=f"{prefix}_h")
         dims = (b, h)
         Ag = b * h
     else:
         with c1:
-            D = st.number_input("Diameter (D) [mm]", value=300.0, key=f"{prefix}_D")
+            D = st.number_input("Diameter (D) [mm]", value=300.0, step=10.0, key=f"{prefix}_D")
         dims = (D,)
         Ag = np.pi * D**2 / 4
 
     return dims, Ag
 
-def input_longitudinal_steel(prefix: str, reinf_style: str, min_bars: int = 4):
-    # Defaults so nothing crashes
-    bar_dia = 0.0
-    num_bars = 0
-    Ast = 0.0
+def input_bar_diameter(prefix: str, default: float = 20.0) -> float:
+    bar_dia = st.number_input(
+        "Bar Diameter [mm]",
+        value=default, step=2.00,
+        key=f"{prefix}_bar_dia"
+    )
+    return bar_dia
 
-    if "None" not in reinf_style:
-        c1, c2 = st.columns(2)
-        with c1:
-            bar_dia = st.number_input("Bar Diameter [mm]", value=20.0, key=f"{prefix}_bar_dia")
-        with c2:
-            num_bars = st.number_input("Number of Bars", value=8, min_value=min_bars, key=f"{prefix}_num_bars")
+def input_num_bars(prefix: str, default: int = 8, min_bars: int = 4) -> int:
+    num_bars = st.number_input(
+        "Number of Bars",
+        value=default,
+        min_value=min_bars,
+        step=1,
+        key=f"{prefix}_num_bars"
+    )
+    return int(num_bars)
 
-        Ast = num_bars * np.pi * (bar_dia / 2) ** 2
+def calc_Ast(num_bars: int, bar_dia: float) -> float:
+    # Ast in mm^2
+    return float(num_bars) * np.pi * (bar_dia / 2.0) ** 2
 
-    return bar_dia, num_bars, Ast
+def input_spiral_bar_dia(prefix: str, default: float = 10.0) -> float:
+    return st.number_input(
+        "Spiral Bar φ [mm]",
+        value=default, step=2.00,
+        key=f"{prefix}_spiral_dia"
+    )
 
-def input_spiral_details(prefix: str, shape: str, reinf_style: str):
-    # Defaults so nothing crashes
-    spiral_dia = 0.0
-    spiral_spacing = 0.0
-    fywk = 0.0
-    Dk = 0.0
+def input_spiral_spacing(prefix: str, default: float = 50.0) -> float:
+    return st.number_input(
+        "Spiral Spacing s [mm]",
+        value=default, step=1.00,
+        key=f"{prefix}_spiral_s"
+    )
 
-    if "Spiral" in reinf_style:
-        c1, c2 = st.columns(2)
-        with c1:
-            spiral_dia = st.number_input("Spiral Bar φ [mm]", value=10.0, key=f"{prefix}_spiral_dia")
-            fywk = st.number_input("Spiral Steel ($f_{ywk}$) [MPa]", value=220.0, key=f"{prefix}_fywk")
-        with c2:
-            spiral_spacing = st.number_input("Spiral Spacing s [mm]", value=50.0, key=f"{prefix}_spiral_s")
-            if shape == "Circular":
-                Dk = st.number_input("Core Diameter $D_k$ [mm]", value=250.0, key=f"{prefix}_Dk")
 
-    return spiral_dia, spiral_spacing, fywk, Dk
+def input_core_diameter(prefix: str, default: float = 250.0) -> float:
+    return st.number_input(
+        "Core Diameter Ack [mm]",
+        value=default, step=10.0,
+        key=f"{prefix}_Dk"
+    )
