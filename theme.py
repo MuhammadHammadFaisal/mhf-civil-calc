@@ -20,10 +20,10 @@ def inject_ga():
 def load_icon():
     try:
         icon_path = os.path.join("assets", "Sticker.png")
-        if os.path.exists(icon_path):
-            return Image.open(icon_path)
+        if os.path.isfile(icon_path):
+            return Image.open(icon_path).convert("RGBA")
         return "🛠️"
-    except:
+    except Exception:
         return "🛠️"
 
 def apply_theme(page_title="MHF Civil Calc"):
