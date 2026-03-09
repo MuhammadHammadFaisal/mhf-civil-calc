@@ -22,7 +22,7 @@ def app():
     write_text("subheader", "Select Calculation Module")
 
     topic = st.selectbox(
-        label="",
+        label="Calculation module",
         options=[
             "Analysis of Axial Load",
             "Analysis of Bending (Flexure)",
@@ -31,6 +31,7 @@ def app():
             "Design of Combined Loading",
             "Shear Design",
         ],
+        label_visibility="collapsed",
         key="rc_topic_select",
     )
 
