@@ -10,7 +10,7 @@ def input_strength_basis(prefix: str) -> str:
     )
 
 def input_materials_concrete(prefix: str) -> float:
-    fc = st.number_input("Concrete (fck) [MPa]", value=20.0, step=5.0, key=f"{prefix}_fc")
+    fc = st.number_input("Concrete (fck) [MPa]", min_value=0.1, value=20.0, step=5.0, key=f"{prefix}_fc")
     return fc
 
 def input_nu_requirment(prefix: str) -> float:
@@ -23,11 +23,11 @@ def input_nu_requirment(prefix: str) -> float:
     return Nu_kN_req
 
 def input_materials_steel_fyk(prefix: str) -> float:
-    fy = st.number_input("Steel (fyk) [MPa]", value=420.0, step=10.0, key=f"{prefix}_fy")
+    fy = st.number_input("Steel (fyk) [MPa]", min_value=0.1, value=420.0, step=10.0, key=f"{prefix}_fy")
     return fy
 
 def input_materials_steel_fywk(prefix: str) -> float:
-    fywk = st.number_input("Steel (fywk) [MPa]", value=220.0, step=10.0, key=f"{prefix}_fywk")
+    fywk = st.number_input("Steel (fywk) [MPa]", min_value=0.1, value=220.0, step=10.0, key=f"{prefix}_fywk")
     return fywk
 
 def input_column_geometry(prefix: str) -> str:
@@ -59,14 +59,14 @@ def input_section_dimensions(prefix: str, shape: str):
 
     if shape == "Rectangular":
         with c1:
-            b = st.number_input("Width (b) [mm]", value=500.0, step=10.0, key=f"{prefix}_b")
+            b = st.number_input("Width (b) [mm]", min_value=1.0, value=500.0, step=10.0, key=f"{prefix}_b")
         with c2:
-            h = st.number_input("Depth (h) [mm]", value=500.0, step=10.0, key=f"{prefix}_h")
+            h = st.number_input("Depth (h) [mm]", min_value=1.0, value=500.0, step=10.0, key=f"{prefix}_h")
         dims = (b, h)
         Ag = b * h
     else:
         with c1:
-            D = st.number_input("Diameter (D) [mm]", value=300.0, step=10.0, key=f"{prefix}_D")
+            D = st.number_input("Diameter (D) [mm]", min_value=1.0, value=300.0, step=10.0, key=f"{prefix}_D")
         dims = (D,)
         Ag = np.pi * D**2 / 4
 
@@ -74,7 +74,7 @@ def input_section_dimensions(prefix: str, shape: str):
 
 def input_bar_diameter(prefix: str, default: float = 20.0) -> float:
     bar_dia = st.number_input(
-        "Bar Diameter [mm]",
+        "Bar Diameter [mm]", min_value=1.0,
         value=default, step=2.00,
         key=f"{prefix}_bar_dia"
     )
@@ -96,14 +96,14 @@ def calc_Ast(num_bars: int, bar_dia: float) -> float:
 
 def input_spiral_bar_dia(prefix: str, default: float = 10.0) -> float:
     return st.number_input(
-        "Spiral Bar φ [mm]",
+        "Spiral Bar φ [mm]", min_value=1.0,
         value=default, step=2.00,
         key=f"{prefix}_spiral_dia"
     )
 
 def input_spiral_spacing(prefix: str, default: float = 50.0) -> float:
     return st.number_input(
-        "Spiral Spacing s [mm]",
+        "Spiral Spacing s [mm]", min_value=1.0,
         value=default, step=1.00,
         key=f"{prefix}_spiral_s"
     )
@@ -111,7 +111,7 @@ def input_spiral_spacing(prefix: str, default: float = 50.0) -> float:
 
 def input_core_diameter(prefix: str, default: float = 250.0) -> float:
     return st.number_input(
-        "Core Diameter Ack [mm]",
+        "Core Diameter Ack [mm]", min_value=1.0,
         value=default, step=10.0,
         key=f"{prefix}_Dk"
     )
