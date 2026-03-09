@@ -13,7 +13,7 @@ from theme import apply_theme, render_page_header, write_text
 
 # IMPORTANT: must be called before any Streamlit UI
 apply_theme("Reinforced Concrete Fundamentals")
-
+inject_ga()
 
 def app():
     # Use theme header (consistent with your app style)
