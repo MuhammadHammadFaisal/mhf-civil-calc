@@ -1,7 +1,20 @@
 import streamlit as st
 from PIL import Image
 import os
-
+def inject_ga():
+    GA_ID = "G-3NKWXNDFY7"
+    st.markdown(
+        f"""
+        <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){{dataLayer.push(arguments);}}
+        gtag('js', new Date());
+        gtag('config', '{GA_ID}');
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 def load_icon():
