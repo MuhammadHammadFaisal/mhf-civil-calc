@@ -12,7 +12,7 @@ from PIL import Image
 
 from theme import apply_theme
 apply_theme("Soil Mechanics")
-
+inject_ga()
 # Helper function to make image square and resize
 def prepare_icon(im, final_size=64):
     x, y = im.size
