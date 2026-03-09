@@ -21,7 +21,7 @@ def load_icon():
     try:
         icon_path = os.path.join("assets", "Sticker.png")
         if os.path.exists(icon_path):
-            return icon_path
+            return Image.open(icon_path)
         return "🛠️"
     except:
         return "🛠️"
