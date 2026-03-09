@@ -17,13 +17,19 @@ def inject_ga():
     )
 
 
+def prepare_icon(im, final_size=64):
+    x, y = im.size
+    size = max(x, y)
+    new_im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    new_im.paste(im, ((size - x) // 2, (size - y) // 2))
+    return new_im.resize((final_size, final_size), Image.LANCZOS)
+
 def load_icon():
     try:
         icon_path = os.path.join("assets", "Sticker.png")
-        if os.path.isfile(icon_path):
-            return Image.open(icon_path).convert("RGBA")
-        return "🛠️"
-    except Exception:
+        icon_img = Image.open(icon_path).convert("RGBA")
+        return prepare_icon(icon_img, 64)
+    except:
         return "🛠️"
 
 def apply_theme(page_title="MHF Civil Calc"):
