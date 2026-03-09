@@ -16,7 +16,6 @@ def inject_ga():
         unsafe_allow_html=True
     )
 
-
 def prepare_icon(im, final_size=64):
     x, y = im.size
     size = max(x, y)
