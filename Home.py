@@ -5,23 +5,7 @@ from theme import apply_theme, inject_ga
 
 apply_theme("MHF CIVIL CALC")
 inject_ga()
-# =========================================================
-# Helper: Make Image Square and Resize for Favicon
-# =========================================================
-def prepare_icon(im, final_size=64):
-    x, y = im.size
-    size = max(x, y)
-    new_im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    new_im.paste(im, ((size - x) // 2, (size - y) // 2))
-    new_im = new_im.resize((final_size, final_size), Image.LANCZOS)
-    return new_im
 
-# Load favicon
-try:
-    icon_img = Image.open("assets/Sticker.png").convert("RGBA")
-    icon_img = prepare_icon(icon_img, 64)
-except:
-    icon_img = "🛠️"  # fallback emoji
 
 # =========================================================
 # Scan Active Modules
@@ -126,5 +110,6 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
 
