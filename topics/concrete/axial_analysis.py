@@ -115,11 +115,11 @@ def app():
             core_diameter_input=core_diameter_input,
         )
 
-            for warn in validation_warnings:
-                st.warning(warn)
-    
-            for err in validation_errors:
-                st.error(err)
+        for warn in validation_warnings:
+            st.warning(warn)
+
+        for err in validation_errors:
+            st.error(err)
 
         if st.button("Analyze Capacity", type="primary", key="cap_btn"):
             if validation_errors:
