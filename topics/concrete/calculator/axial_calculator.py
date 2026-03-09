@@ -6,6 +6,18 @@ def compute_axial(fc, fy_long, fywk, Ag, Ast, reinf_style,
                   core_diameter_input, spiral_dia, spiral_spacing,
                   strength_basis):
 
+    if fc <= 0:
+        raise ValueError("Concrete strength fc must be greater than 0.")
+
+    if Ag <= 0:
+        raise ValueError("Gross area Ag must be greater than 0.")
+
+    if "Plain Concrete" not in reinf_style and fy_long <= 0:
+        raise ValueError("Longitudinal steel strength fy_long must be greater than 0.")
+
+    if Ast < 0:
+        raise ValueError("Longitudinal steel area Ast cannot be negative.")
+
     gamma_c = 1.5
     gamma_s = 1.15
     ALPHA_CC = 0.85
@@ -17,7 +29,7 @@ def compute_axial(fc, fy_long, fywk, Ag, Ast, reinf_style,
         fcd = fc
         fyd = fy_long
 
-    Fc = ALPHA_CC * fcd * Ag 
+    Fc = ALPHA_CC * fcd * Ag
     Fs = Ast * fyd
     Nor1 = Fc + Fs
 
@@ -26,8 +38,13 @@ def compute_axial(fc, fy_long, fywk, Ag, Ast, reinf_style,
     rho_min_req = None
     spiral_ok = False
 
-    if "Spiral" in reinf_style and spiral_spacing > 0:
-
+    if (
+        "Spiral" in reinf_style
+        and spiral_spacing > 0
+        and spiral_dia > 0
+        and core_diameter_input > spiral_dia
+        and fywk > 0
+    ):
         d_outer = core_diameter_input
         d_center = d_outer - spiral_dia
 
@@ -40,24 +57,23 @@ def compute_axial(fc, fy_long, fywk, Ag, Ast, reinf_style,
         rho_min_abs = 0.12 * (fc / fywk)
         rho_min_req = max(rho_min_calc, rho_min_abs)
 
-        confinement_boost = (2 * rho_s_val * fywk) / 1.5
+        confinement_boost = (2 * rho_s_val * fywk) / gamma_c
         fccd = fcd + confinement_boost
 
         Nor2 = fccd * Ack + Ast * fyd
-
         spiral_ok = rho_s_val >= rho_min_req
 
     return SimpleNamespace(
-    gamma_c=gamma_c,
-    gamma_s=gamma_s,
-    ALPHA_CC=ALPHA_CC,   # ✅ add this
-    fcd=fcd,
-    fyd=fyd,
-    Fc=Fc,
-    Fs=Fs,
-    Nor1=Nor1,
-    Nor2=Nor2,
-    rho_s=rho_s_val,
-    rho_min_req=rho_min_req,
-    spiral_ok=spiral_ok
-  )
+        gamma_c=gamma_c,
+        gamma_s=gamma_s,
+        ALPHA_CC=ALPHA_CC,
+        fcd=fcd,
+        fyd=fyd,
+        Fc=Fc,
+        Fs=Fs,
+        Nor1=Nor1,
+        Nor2=Nor2,
+        rho_s=rho_s_val,
+        rho_min_req=rho_min_req,
+        spiral_ok=spiral_ok
+    )
