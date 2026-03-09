@@ -33,7 +33,7 @@ def load_icon():
 
 def apply_theme(page_title="MHF Civil Calc"):
     # Must be the very first Streamlit command called on the page
-    st.set_page_config(page_title=page_title, layout="wide", page_icon="🚀")
+    st.set_page_config(page_title=page_title, layout="wide",page_icon=load_icon())
 
     st.markdown("""
     <style>
