@@ -9,7 +9,7 @@ from topics.concrete import combined_analysis
 from topics.concrete import combined_design
 from topics.concrete import shear_design
 
-from theme import apply_theme, render_page_header, write_text
+from theme import apply_theme, render_page_header, write_text, inject_ga
 
 # IMPORTANT: must be called before any Streamlit UI
 apply_theme("Reinforced Concrete Fundamentals")
