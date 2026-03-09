@@ -10,7 +10,7 @@ from topics import Stability_of_Slopes
 
 from PIL import Image
 
-from theme import apply_theme
+from theme import apply_theme, inject_ga
 apply_theme("Soil Mechanics")
 inject_ga()
 # Helper function to make image square and resize
