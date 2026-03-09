@@ -1,9 +1,10 @@
 import streamlit as st
 import os
 from PIL import Image
-from theme import apply_theme
-inject_ga()
+from theme import apply_theme, inject_ga
+
 apply_theme("MHF CIVIL CALC")
+inject_ga()
 # =========================================================
 # Helper: Make Image Square and Resize for Favicon
 # =========================================================
@@ -125,4 +126,5 @@ def main():
 # =========================================================
 if __name__ == "__main__":
     main()
+
 
