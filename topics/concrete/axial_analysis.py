@@ -8,6 +8,7 @@ from theme import write_text, glass_box
 from .diagrams_dynamic.section_preview import draw_cross_section
 from .diagrams_results.load_deformation_plot import plot_load_deformation
 from .calculator.axial_calculator import compute_axial
+from .calculator.axial_validation import validate_axial_capacity_inputs
 import base64
 from io import BytesIO
 from .calculator.axial_design_helpers import required_Ast_for_load
@@ -98,73 +99,97 @@ def app():
             plt.close(fig1)
 
         st.markdown("---")
+        validation_errors, validation_warnings = validate_axial_capacity_inputs(
+            shape=shape,
+            dims=dims,
+            reinf_style=reinf_style,
+            fc=fc,
+            fy_long=fy_long,
+            fywk=fywk,
+            Ag=Ag,
+            Ast=Ast,
+            bar_dia=bar_dia,
+            num_bars=num_bars,
+            spiral_dia=spiral_dia,
+            spiral_spacing=spiral_spacing,
+            core_diameter_input=core_diameter_input,
+        )
+
+            for warn in validation_warnings:
+                st.warning(warn)
+    
+            for err in validation_errors:
+                st.error(err)
 
         if st.button("Analyze Capacity", type="primary", key="cap_btn"):
-            results = compute_axial(
-                fc=fc,
-                fy_long=fy_long,
-                fywk=fywk,
-                Ag=Ag,
-                Ast=Ast,
-                reinf_style=reinf_style,
-                core_diameter_input=core_diameter_input,
-                spiral_dia=spiral_dia,
-                spiral_spacing=spiral_spacing,
-                strength_basis=strength_basis
-            )
+            if validation_errors:
+                st.warning("Please fix the invalid inputs before running the analysis.")
+            else:
+                results = compute_axial(
+                    fc=fc,
+                    fy_long=fy_long,
+                    fywk=fywk,
+                    Ag=Ag,
+                    Ast=Ast,
+                    reinf_style=reinf_style,
+                    core_diameter_input=core_diameter_input,
+                    spiral_dia=spiral_dia,
+                    spiral_spacing=spiral_spacing,
+                    strength_basis=strength_basis
+                )
 
-            c_res1, c_res2 = st.columns(2)
+                c_res1, c_res2 = st.columns(2)
 
-            with c_res1:
-                write_text("section_header", "Design Summary")
-                results_data = [
-                    ["Unconfined Capacity (N_or)", f"{results.Nor1 / 1000:,.1f} kN"]
-                ]
+                with c_res1:
+                    write_text("section_header", "Design Summary")
+                    results_data = [
+                        ["Unconfined Capacity (N_or)", f"{results.Nor1 / 1000:,.1f} kN"]
+                    ]
 
-                if results.Nor2 is not None:
-                    results_data.append(["Confined Capacity (N_or2)", f"{results.Nor2 / 1000:,.1f} kN"])
-                    results_data.append(["Capacity Increase (Δ)", f"{(results.Nor2 - results.Nor1) / 1000:,.1f} kN"])
-                else:
-                    results_data.append(["Confined Capacity (N_or2)", "N/A"])
-                    results_data.append(["Capacity Increase (Δ)", "N/A"])
+                    if results.Nor2 is not None:
+                        results_data.append(["Confined Capacity (N_or2)", f"{results.Nor2 / 1000:,.1f} kN"])
+                        results_data.append(["Capacity Increase (Δ)", f"{(results.Nor2 - results.Nor1) / 1000:,.1f} kN"])
+                    else:
+                        results_data.append(["Confined Capacity (N_or2)", "N/A"])
+                        results_data.append(["Capacity Increase (Δ)", "N/A"])
 
-                df_summary = pd.DataFrame(results_data, columns=["Parameter", "Value"])
-                glass_table(df_summary)
-                st.markdown("<br>", unsafe_allow_html=True)
+                    df_summary = pd.DataFrame(results_data, columns=["Parameter", "Value"])
+                    glass_table(df_summary)
+                    st.markdown("<br>", unsafe_allow_html=True)
 
-            with c_res2:
-                write_text("section_header", "Load-Deformation Behavior")
+                with c_res2:
+                    write_text("section_header", "Load-Deformation Behavior")
 
-                graph_N1 = results.Nor1 / 1000
-                graph_N2 = results.Nor2 / 1000 if results.Nor2 is not None else 0
-                plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
+                    graph_N1 = results.Nor1 / 1000
+                    graph_N2 = results.Nor2 / 1000 if results.Nor2 is not None else 0
+                    plot_type = "Spiral" if "Spiral" in reinf_style else "Ties"
 
-                fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
-                buf = BytesIO()
-                fig.savefig(buf, format="png", bbox_inches="tight", transparent=True)
-                buf.seek(0)
-                img_base64 = base64.b64encode(buf.read()).decode("utf-8")
-                plt.close(fig)
+                    fig = plot_load_deformation(graph_N1, graph_N2, plot_type)
+                    buf = BytesIO()
+                    fig.savefig(buf, format="png", bbox_inches="tight", transparent=True)
+                    buf.seek(0)
+                    img_base64 = base64.b64encode(buf.read()).decode("utf-8")
+                    plt.close(fig)
 
-                graph_md = f'<img src="data:image/png;base64,{img_base64}" style="width:100%; max-width:700px; border-radius:8px;">'
-                glass_box(graph_md)
-                st.markdown("<br>", unsafe_allow_html=True)
+                    graph_md = f'<img src="data:image/png;base64,{img_base64}" style="width:100%; max-width:700px; border-radius:8px;">'
+                    glass_box(graph_md)
+                    st.markdown("<br>", unsafe_allow_html=True)
 
-            write_text("section_header", "Step-by-Step Calculation")
-            step_md = build_step_by_step_markdown(
-                results,
-                fc,
-                fy_long,
-                Ag,
-                Ast,
-                reinf_style,
-                core_diameter_input,
-                strength_basis,
-                fywk=fywk,
-                spiral_dia=spiral_dia,
-                spiral_spacing=spiral_spacing,
-            )
-            glass_box(step_md)
+                write_text("section_header", "Step-by-Step Calculation")
+                step_md = build_step_by_step_markdown(
+                    results,
+                    fc,
+                    fy_long,
+                    Ag,
+                    Ast,
+                    reinf_style,
+                    core_diameter_input,
+                    strength_basis,
+                    fywk=fywk,
+                    spiral_dia=spiral_dia,
+                    spiral_spacing=spiral_spacing,
+                )
+                glass_box(step_md)
 
     # =========================================================
     # TAB 2: REQUIRED LONGITUDINAL STEEL (As)
