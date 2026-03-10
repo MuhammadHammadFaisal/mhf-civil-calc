@@ -1,14 +1,5 @@
 import streamlit as st
 
-# IMPORT MODULES
-from topics.concrete import axial_analysis
-
-from topics.concrete import bending_analysis
-from topics.concrete import bending_design
-from topics.concrete import combined_analysis
-from topics.concrete import combined_design
-from topics.concrete import shear_design
-
 from theme import apply_theme, render_page_header, write_text, inject_ga
 
 # IMPORTANT: must be called before any Streamlit UI
@@ -37,21 +28,27 @@ def app():
 
     # --- ROUTING LOGIC ---
     if topic == "Analysis of Axial Load":
+        from topics.concrete import axial_analysis
         axial_analysis.app()
 
     elif topic == "Analysis of Bending (Flexure)":
+        from topics.concrete import bending_analysis
         bending_analysis.app()
 
     elif topic == "Design of Bending (Flexure)":
+        from topics.concrete import bending_design
         bending_design.app()
 
     elif topic == "Analysis of Combined Loading":
+        from topics.concrete import combined_analysis
         combined_analysis.app()
 
     elif topic == "Design of Combined Loading":
+        from topics.concrete import combined_design
         combined_design.app()
 
     elif topic == "Shear Design":
+        from topics.concrete import shear_design
         shear_design.app()
 
 
