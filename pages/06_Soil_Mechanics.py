@@ -4,7 +4,24 @@ from theme import apply_theme, inject_ga
 apply_theme("Soil Mechanics")
 inject_ga()
 def app():
+    col_logo, col_text = st.columns([1, 5], vertical_alignment="center")
 
+    with col_logo:
+        # Increased logo width slightly to make it "a little big"
+        st.image("assets/Sticker.png")
+
+    with col_text:
+        # Font size set to 55px (Professional look: smaller than logo, but distinct)
+        st.markdown(
+            """
+            <div style="padding-left: 15px;">
+                <h1 style='font-size: 55px; margin: 0; line-height: 1.0; font-weight: 700;'>Soil Mechanics</h1>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
+
+    st.markdown("<div style='margin-bottom: 40px;'></div>", unsafe_allow_html=True)
     # --- TOPIC SELECTION MENU ---
     topic = st.selectbox(
         "Select Chapter:", 
