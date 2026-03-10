@@ -1,9 +1,7 @@
 import streamlit as st
 from PIL import Image
-
 import os
-BASE_DIR = Path(__file__).resolve().parent
-ICON_PATH = BASE_DIR / "assets" / "Sticker.png"
+
 def inject_ga():
     GA_ID = "G-3NKWXNDFY7"
     st.markdown(
