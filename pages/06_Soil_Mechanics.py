@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image
-from theme import apply_theme, inject_ga
+from theme import apply_theme, render_page_header, write_text, inject_ga
+
 apply_theme("Soil Mechanics")
 inject_ga()
 def app():
