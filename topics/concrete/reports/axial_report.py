@@ -256,3 +256,34 @@ $$
 """
 
     return md
+def build_required_as_markdown(Nu_kN, f_used, fy_used, Ag, Fc_N, Ast_req):
+    md = f"""
+### Required Steel (As) — Step-by-step
+
+Given:
+- $N_u = {Nu_kN:,.1f}\\,\\text{{kN}}$
+- $A_g = {Ag:,.0f}\\,\\text{{mm}}^2$
+- Concrete strength used: $f = {f_used:.2f}\\,\\text{{MPa}}$
+- Steel strength used: $f_y = {fy_used:.2f}\\,\\text{{MPa}}$
+
+Concrete force:
+$$
+F_c = 0.85\\, f\\, A_g
+$$
+$$
+F_c = {Fc_N/1000:,.1f}\\,\\text{{kN}}
+$$
+
+Solve for steel:
+$$
+N_u = F_c + A_s f_y
+\\Rightarrow
+A_s = \\frac{{N_u - F_c}}{{f_y}}
+$$
+
+Result:
+$$
+A_s = \\mathbf{{{Ast_req:,.0f}}}\\,\\text{{mm}}^2
+$$
+"""
+    return md

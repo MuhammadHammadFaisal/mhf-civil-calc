@@ -2,6 +2,21 @@ import streamlit as st
 from PIL import Image
 import os
 
+def inject_ga():
+    GA_ID = "G-3NKWXNDFY7"
+    st.markdown(
+        f"""
+        <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){{dataLayer.push(arguments);}}
+        gtag('js', new Date());
+        gtag('config', '{GA_ID}');
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
+
 def prepare_icon(im, final_size=64):
     x, y = im.size
     size = max(x, y)
@@ -19,7 +34,7 @@ def load_icon():
 
 def apply_theme(page_title="MHF Civil Calc"):
     # Must be the very first Streamlit command called on the page
-    st.set_page_config(page_title=page_title, layout="wide", page_icon=load_icon())
+    st.set_page_config(page_title=page_title, layout="wide",page_icon=load_icon())
 
     st.markdown("""
     <style>
