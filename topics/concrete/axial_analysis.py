@@ -25,13 +25,9 @@ from .ui.axial_inputs import (
     input_spiral_bar_dia, input_spiral_spacing, input_core_diameter)
 
 def app():
-    tab_cap, tab_As, tab_Ao, tab_Ac, tab_Ack = st.tabs([
+    tab_cap = st.tabs([
         "Axial Capacity",
-        "Required Reinforcement Steel (As)",
-        "Required Confinement Steel (Details)",
-        "Required Concrete (Capacity Check)",
-        "Required Core (Ack)"
-    ])
+        ])
 
     # =========================================================
     # TAB 1: AXIAL CAPACITY
