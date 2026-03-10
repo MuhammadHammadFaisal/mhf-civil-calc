@@ -1,6 +1,6 @@
 import streamlit as st
 from PIL import Image
-from pathlib import Path
+
 import os
 BASE_DIR = Path(__file__).resolve().parent
 ICON_PATH = BASE_DIR / "assets" / "Sticker.png"
@@ -28,11 +28,10 @@ def prepare_icon(im, final_size=64):
 
 def load_icon():
     try:
-        if ICON_PATH.is_file():
-            icon_img = Image.open(ICON_PATH).convert("RGBA")
-            return prepare_icon(icon_img, 64)
-        return "🛠️"
-    except Exception:
+        icon_path = os.path.join("assets", "Sticker.png")
+        icon_img = Image.open(icon_path).convert("RGBA")
+        return prepare_icon(icon_img, 64)
+    except:
         return "🛠️"
 
 def apply_theme(page_title="MHF Civil Calc"):
