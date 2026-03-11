@@ -190,204 +190,204 @@ def app():
     # =========================================================
     # TAB 2: REQUIRED LONGITUDINAL STEEL (As)
     # =========================================================
-    with tab_As:
-        col_input, col_viz = st.columns([1.3, 1])
+    # with tab_As:
+    #     col_input, col_viz = st.columns([1.3, 1])
 
-        with col_input:
-            write_text("subheader", "Materials")
-            c1, c2 = st.columns(2)
-            with c1:
-                fc = input_materials_concrete("as")
-                fy_long = input_materials_steel_fyk("as")
-            with c2:
-                strength_basis = input_strength_basis("as")
-                Nu_kN_req = input_nu_requirment("as")
+    #     with col_input:
+    #         write_text("subheader", "Materials")
+    #         c1, c2 = st.columns(2)
+    #         with c1:
+    #             fc = input_materials_concrete("as")
+    #             fy_long = input_materials_steel_fyk("as")
+    #         with c2:
+    #             strength_basis = input_strength_basis("as")
+    #             Nu_kN_req = input_nu_requirment("as")
 
-            write_text("subheader", "Geometry & Configuration")
-            c3, c4 = st.columns(2)
-            with c3:
-                shape = input_column_geometry("as")
-            with c4:
-                reinf_style = input_confinement_type_ast("as")
+    #         write_text("subheader", "Geometry & Configuration")
+    #         c3, c4 = st.columns(2)
+    #         with c3:
+    #             shape = input_column_geometry("as")
+    #         with c4:
+    #             reinf_style = input_confinement_type_ast("as")
 
-            write_text("subheader", "Dimensions")
-            dims, Ag = input_section_dimensions("as", shape)
-            spiral_dia = 0.0
-            spiral_spacing = 0.0
-            fywk = 0.0
-            core_diameter_input = 0.0
+    #         write_text("subheader", "Dimensions")
+    #         dims, Ag = input_section_dimensions("as", shape)
+    #         spiral_dia = 0.0
+    #         spiral_spacing = 0.0
+    #         fywk = 0.0
+    #         core_diameter_input = 0.0
 
-            if "Spiral" in reinf_style:
+    #         if "Spiral" in reinf_style:
            
             
-                c3, c4 = st.columns(2)
-                with c3:
-                    spiral_dia = input_spiral_bar_dia("as")
-                    fywk = input_materials_steel_fywk("as")  # fywk input
-                with c4:
-                    spiral_spacing = input_spiral_spacing("as")
-                    core_diameter_input = input_core_diameter("as")
-        with col_viz:
-            write_text("section_header", "2. Visualization")
-            glass_box("Visualization will be added here (interaction diagram / section preview).")
+    #             c3, c4 = st.columns(2)
+    #             with c3:
+    #                 spiral_dia = input_spiral_bar_dia("as")
+    #                 fywk = input_materials_steel_fywk("as")  # fywk input
+    #             with c4:
+    #                 spiral_spacing = input_spiral_spacing("as")
+    #                 core_diameter_input = input_core_diameter("as")
+    #     with col_viz:
+    #         write_text("section_header", "2. Visualization")
+    #         glass_box("Visualization will be added here (interaction diagram / section preview).")
 
-        st.markdown("---")
-        glass_box("✅ Inputs only for now — next step: compute required As for given Nu.")
+    #     st.markdown("---")
+    #     glass_box("✅ Inputs only for now — next step: compute required As for given Nu.")
 
-    # =========================================================
-    # TAB 3: REQUIRED TRANSVERSE REINFORCEMENT (TIES)
-    # =========================================================
-    with tab_Ao:
-        col_input, col_viz = st.columns([1.3, 1])
+    # # =========================================================
+    # # TAB 3: REQUIRED TRANSVERSE REINFORCEMENT (TIES)
+    # # =========================================================
+    # with tab_Ao:
+    #     col_input, col_viz = st.columns([1.3, 1])
 
-        with col_input:
-            write_text("subheader", "Materials")
-            c1, c2 = st.columns(2)
-            with c1:
-                fc = input_materials_concrete("reinf")
-                fy_long = input_materials_steel_fyk("reinf")
-            with c2:
-                strength_basis = input_strength_basis("reinf")
-                Nu_kN_req = input_nu_requirment("reinf")
+    #     with col_input:
+    #         write_text("subheader", "Materials")
+    #         c1, c2 = st.columns(2)
+    #         with c1:
+    #             fc = input_materials_concrete("reinf")
+    #             fy_long = input_materials_steel_fyk("reinf")
+    #         with c2:
+    #             strength_basis = input_strength_basis("reinf")
+    #             Nu_kN_req = input_nu_requirment("reinf")
 
-            write_text("subheader", "Geometry & Configuration")
-            c3, c4 = st.columns(2)
-            with c3:
-                shape = input_column_geometry("reinf")
-            with c4:
-                reinf_style = input_confinement_type_ao("reinf")
+    #         write_text("subheader", "Geometry & Configuration")
+    #         c3, c4 = st.columns(2)
+    #         with c3:
+    #             shape = input_column_geometry("reinf")
+    #         with c4:
+    #             reinf_style = input_confinement_type_ao("reinf")
 
-            write_text("subheader", "Dimensions")
-            dims, Ag = input_section_dimensions("reinf", shape)
+    #         write_text("subheader", "Dimensions")
+    #         dims, Ag = input_section_dimensions("reinf", shape)
 
-            spiral_dia = 0.0
-            spiral_spacing = 0.0
-            fywk = 0.0
-            core_diameter_input = 0.0
+    #         spiral_dia = 0.0
+    #         spiral_spacing = 0.0
+    #         fywk = 0.0
+    #         core_diameter_input = 0.0
 
-            if "Spiral" in reinf_style:
+    #         if "Spiral" in reinf_style:
             
             
-                c3, c4 = st.columns(2)
-                with c3:
-                    spiral_dia = input_spiral_bar_dia("reinf")
-                    fywk = input_materials_steel_fywk("reinf")  # fywk input
-                with c4:
-                    spiral_spacing = input_spiral_spacing("reinf")
-                    core_diameter_input = input_core_diameter("reinf")
-        with col_viz:
-            write_text("section_header", "2. Visualization")
-            glass_box("Visualization will be added here (confined core / tie layout preview).")
+    #             c3, c4 = st.columns(2)
+    #             with c3:
+    #                 spiral_dia = input_spiral_bar_dia("reinf")
+    #                 fywk = input_materials_steel_fywk("reinf")  # fywk input
+    #             with c4:
+    #                 spiral_spacing = input_spiral_spacing("reinf")
+    #                 core_diameter_input = input_core_diameter("reinf")
+    #     with col_viz:
+    #         write_text("section_header", "2. Visualization")
+    #         glass_box("Visualization will be added here (confined core / tie layout preview).")
 
-        st.markdown("---")
-        glass_box("✅ Inputs only for now — next step: compute required tie area (Ash) and spacing (s).")
+    #     st.markdown("---")
+    #     glass_box("✅ Inputs only for now — next step: compute required tie area (Ash) and spacing (s).")
 
-    # =========================================================
-    # TAB 4: REQUIRED CONCRETE
-    # =========================================================
-    with tab_Ac:
-        col_input, col_viz = st.columns([1.3, 1])
+    # # =========================================================
+    # # TAB 4: REQUIRED CONCRETE
+    # # =========================================================
+    # with tab_Ac:
+    #     col_input, col_viz = st.columns([1.3, 1])
 
-        with col_input:
-            write_text("subheader", "Materials")
-            c1, c2 = st.columns(2)
-            with c1:
-                fc = input_materials_concrete("ac")
-                fy_long = input_materials_steel_fyk("ac")
-            with c2:
-                strength_basis = input_strength_basis("ac")
-                Nu_kN_req = input_nu_requirment("ac")
+    #     with col_input:
+    #         write_text("subheader", "Materials")
+    #         c1, c2 = st.columns(2)
+    #         with c1:
+    #             fc = input_materials_concrete("ac")
+    #             fy_long = input_materials_steel_fyk("ac")
+    #         with c2:
+    #             strength_basis = input_strength_basis("ac")
+    #             Nu_kN_req = input_nu_requirment("ac")
 
-            write_text("subheader", "Geometry & Configuration")
-            c3, c4 = st.columns(2)
-            with c3:
-                shape = input_column_geometry("ac")
-            with c4:
-                reinf_style = input_confinement_type_ac("ac")
+    #         write_text("subheader", "Geometry & Configuration")
+    #         c3, c4 = st.columns(2)
+    #         with c3:
+    #             shape = input_column_geometry("ac")
+    #         with c4:
+    #             reinf_style = input_confinement_type_ac("ac")
 
-            write_text("subheader", "Dimensions")
-            dims, Ag = input_section_dimensions("ac", shape)
+    #         write_text("subheader", "Dimensions")
+    #         dims, Ag = input_section_dimensions("ac", shape)
 
-            write_text("subheader", "Steel")
-            bar_dia = 0.0
-            num_bars = 0
-            Ast = 0.0
-            if "Plain Concrete" not in reinf_style:
-                c1, c2 = st.columns(2)
-                with c1:
-                    bar_dia = input_bar_diameter("ac")
-                with c2:
-                    num_bars = input_num_bars("ac")
-                Ast = calc_Ast(num_bars, bar_dia)
-            spiral_dia = 0.0
-            spiral_spacing = 0.0
-            fywk = 0.0
-            core_diameter_input = 0.0
-            if "Spiral" in reinf_style:
-                write_text("subheader", "Spiral")
-
-            
-                c3, c4 = st.columns(2)
-                with c3:
-                    spiral_dia = input_spiral_bar_dia("ac")
-                    fywk = input_materials_steel_fywk("ac")  # fywk input
-                with c4:
-                    spiral_spacing = input_spiral_spacing("ac")
-
-                    core_diameter_input = input_core_diameter("ac")
-        with col_viz:
-            write_text("section_header", "2. Visualization")
-            glass_box("Visualization will be added here (required size / capacity preview).")
-
-        st.markdown("---")
-        glass_box("✅ Inputs only for now — next step: compute required concrete size/strength to resist Nu.")
-    # =========================================================
-    # TAB 5: REQUIRED Confinment CONCRETE
-    # =========================================================
-    with tab_Ack:
-        col_input, col_viz = st.columns([1.3, 1])
-
-        with col_input:
-            write_text("subheader", "Materials")
-            c1, c2 = st.columns(2)
-            with c1:
-                fc = input_materials_concrete("ack")
-                fy_long = input_materials_steel_fyk("ack")
-            with c2:
-                strength_basis = input_strength_basis("ack")
-                Nu_kN_req = input_nu_requirment("ack")
-
-            write_text("subheader", "Geometry & Configuration")
-            c3, c4 = st.columns(2)
-            with c3:
-                shape = input_column_geometry("ack")
-            with c4:
-                reinf_style = input_confinement_type_ack("ack")
-
-            write_text("subheader", "Dimensions")
-            dims, Ag = input_section_dimensions("ack", shape)
-            spiral_dia = 0.0
-            spiral_spacing = 0.0
-            fywk = 0.0
-            core_diameter_input = 0.0
-
-            if "Spiral" in reinf_style:
-                write_text("subheader", "Spiral")
+    #         write_text("subheader", "Steel")
+    #         bar_dia = 0.0
+    #         num_bars = 0
+    #         Ast = 0.0
+    #         if "Plain Concrete" not in reinf_style:
+    #             c1, c2 = st.columns(2)
+    #             with c1:
+    #                 bar_dia = input_bar_diameter("ac")
+    #             with c2:
+    #                 num_bars = input_num_bars("ac")
+    #             Ast = calc_Ast(num_bars, bar_dia)
+    #         spiral_dia = 0.0
+    #         spiral_spacing = 0.0
+    #         fywk = 0.0
+    #         core_diameter_input = 0.0
+    #         if "Spiral" in reinf_style:
+    #             write_text("subheader", "Spiral")
 
             
-                c3, c4 = st.columns(2)
-                with c3:
-                    spiral_dia = input_spiral_bar_dia("ack")
-                    fywk = input_materials_steel_fywk("ack")  # fywk input
-                with c4:
-                    spiral_spacing = input_spiral_spacing("ack")
-                    core_diameter_input = input_core_diameter("ack")
-        with col_viz:
-            write_text("section_header", "2. Visualization")
-            glass_box("Visualization will be added here (required size / capacity preview).")
+    #             c3, c4 = st.columns(2)
+    #             with c3:
+    #                 spiral_dia = input_spiral_bar_dia("ac")
+    #                 fywk = input_materials_steel_fywk("ac")  # fywk input
+    #             with c4:
+    #                 spiral_spacing = input_spiral_spacing("ac")
 
-        st.markdown("---")
-        glass_box("✅ Inputs only for now — next step: compute required concrete size/strength to resist Nu.")
+    #                 core_diameter_input = input_core_diameter("ac")
+    #     with col_viz:
+    #         write_text("section_header", "2. Visualization")
+    #         glass_box("Visualization will be added here (required size / capacity preview).")
+
+    #     st.markdown("---")
+    #     glass_box("✅ Inputs only for now — next step: compute required concrete size/strength to resist Nu.")
+    # # =========================================================
+    # # TAB 5: REQUIRED Confinment CONCRETE
+    # # =========================================================
+    # with tab_Ack:
+    #     col_input, col_viz = st.columns([1.3, 1])
+
+    #     with col_input:
+    #         write_text("subheader", "Materials")
+    #         c1, c2 = st.columns(2)
+    #         with c1:
+    #             fc = input_materials_concrete("ack")
+    #             fy_long = input_materials_steel_fyk("ack")
+    #         with c2:
+    #             strength_basis = input_strength_basis("ack")
+    #             Nu_kN_req = input_nu_requirment("ack")
+
+    #         write_text("subheader", "Geometry & Configuration")
+    #         c3, c4 = st.columns(2)
+    #         with c3:
+    #             shape = input_column_geometry("ack")
+    #         with c4:
+    #             reinf_style = input_confinement_type_ack("ack")
+
+    #         write_text("subheader", "Dimensions")
+    #         dims, Ag = input_section_dimensions("ack", shape)
+    #         spiral_dia = 0.0
+    #         spiral_spacing = 0.0
+    #         fywk = 0.0
+    #         core_diameter_input = 0.0
+
+    #         if "Spiral" in reinf_style:
+    #             write_text("subheader", "Spiral")
+
+            
+    #             c3, c4 = st.columns(2)
+    #             with c3:
+    #                 spiral_dia = input_spiral_bar_dia("ack")
+    #                 fywk = input_materials_steel_fywk("ack")  # fywk input
+    #             with c4:
+    #                 spiral_spacing = input_spiral_spacing("ack")
+    #                 core_diameter_input = input_core_diameter("ack")
+    #     with col_viz:
+    #         write_text("section_header", "2. Visualization")
+    #         glass_box("Visualization will be added here (required size / capacity preview).")
+
+    #     st.markdown("---")
+    #     glass_box("✅ Inputs only for now — next step: compute required concrete size/strength to resist Nu.")
 
 if __name__ == "__main__":
     app()
