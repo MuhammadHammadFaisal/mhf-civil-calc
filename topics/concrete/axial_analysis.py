@@ -25,9 +25,9 @@ from .ui.axial_inputs import (
     input_spiral_bar_dia, input_spiral_spacing, input_core_diameter)
 
 def app():
-    tab_cap = st.tabs([
+    [tab_cap] = st.tabs([
         "Axial Capacity",
-        ])
+    ])
 
     # =========================================================
     # TAB 1: AXIAL CAPACITY
