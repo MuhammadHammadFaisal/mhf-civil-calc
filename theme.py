@@ -1,20 +1,22 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from PIL import Image
 import os
 
 def inject_ga():
     GA_ID = "G-3NKWXNDFY7"
-    st.markdown(
+    components.html(
         f"""
         <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
         <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){{dataLayer.push(arguments);}}
-        gtag('js', new Date());
-        gtag('config', '{GA_ID}');
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){{dataLayer.push(arguments);}}
+          gtag('js', new Date());
+          gtag('config', '{GA_ID}');
         </script>
         """,
-        unsafe_allow_html=True
+        height=0,
+        width=0,
     )
 
 def prepare_icon(im, final_size=64):
