@@ -489,29 +489,61 @@ def app():
             ax_w.plot([top_x, wedge_x + 2], [H_c, H_c + (wedge_x + 2 - top_x)*np.tan(bet_r)], 'k-', linewidth=2)
             ax_w.plot([0, wedge_x], [0, wedge_y], 'r--', linewidth=2)
 
-            # B. ANNOTATIONS (Forces)
-            # 1. Weight (W)
-            cx, cy = (0+top_x+wedge_x)/3, (0+H_c+wedge_y)/3
-            ax_w.arrow(cx, cy, 0, -2.0, head_width=0.2, color='purple', width=0.05, zorder=10)
-            ax_w.text(cx + 0.3, cy - 1.0, "W", color='purple', fontweight='bold', fontsize=12)
+                        # B. ANNOTATIONS (Forces)
+            # Use geometry-based directions instead of hardcoded arrows
 
-            # 2. Wall Reaction (P)
-            px, py = top_x/3, H_c/3 
-            ax_w.arrow(px, py, 1.5, 1.0, head_width=0.2, color='red', width=0.05, zorder=10)
-            ax_w.text(px + 1.6, py + 1.0, "P", color='red', fontweight='bold', fontsize=12)
-            ax_w.text(px + 0.3, py + 0.8, f"δ={delta}°", fontsize=8)
+            wedge_scale = max(H_c, wedge_y) * 0.18
+            head_w = wedge_scale * 0.10
+            shaft_w = wedge_scale * 0.03
 
-            # 3. Soil Reaction (R)
-            rx, ry = wedge_x/3, wedge_y/3
-            ax_w.arrow(rx, ry, -0.8, 1.5, head_width=0.2, color='green', width=0.05, zorder=10)
-            ax_w.text(rx - 0.8, ry + 1.5, "R", color='green', fontweight='bold', fontsize=12)
-            ax_w.text(rx - 0.3, ry + 0.8, f"ϕ={phi_c}°", fontsize=8)
+            # Wedge centroid (simple triangle centroid)
+            cx, cy = (0 + top_x + wedge_x) / 3, (0 + H_c + wedge_y) / 3
 
-            ax_w.set_aspect('equal')
-            ax_w.set_xlim(-3, wedge_x + 2)
-            ax_w.set_ylim(-1, max(H_c, wedge_y) + 2)
-            ax_w.axis('off')
-            ax_w.set_title("Free Body Diagram of Wedge", fontweight='bold')
+            # 1. Weight (W) - always vertical downward
+            ax_w.arrow(cx, cy + 0.25 * wedge_scale, 0, -1.2 * wedge_scale,
+                       head_width=head_w, color='purple', width=shaft_w, zorder=10)
+            ax_w.text(cx + 0.15 * wedge_scale, cy - 0.2 * wedge_scale, "W",
+                      color='purple', fontweight='bold', fontsize=12)
+
+            # 2. Wall reaction (P)
+            # Wall face angle from horizontal
+            wall_face_ang = np.arctan2(H_c, top_x if abs(top_x) > 1e-9 else 1e-9)
+
+            # Normal pointing into the wedge
+            wall_normal_ang = wall_face_ang - np.pi / 2
+
+            # Resultant P inclined by delta from the normal
+            theta_p = wall_normal_ang + del_r
+
+            px, py = top_x * 0.38, H_c * 0.38
+            dx_p = wedge_scale * np.cos(theta_p)
+            dy_p = wedge_scale * np.sin(theta_p)
+
+            ax_w.arrow(px, py, dx_p, dy_p,
+                       head_width=head_w, color='red', width=shaft_w, zorder=10)
+            ax_w.text(px + dx_p + 0.08 * wedge_scale, py + dy_p, "P",
+                      color='red', fontweight='bold', fontsize=12)
+            ax_w.text(px + 0.15 * wedge_scale, py + 0.15 * wedge_scale,
+                      f"δ={delta:.1f}°", fontsize=8)
+
+            # 3. Soil reaction (R)
+            # Failure plane angle = rho_rad
+            # Normal pointing into wedge = rho_rad + 90°
+            failure_normal_ang = rho_rad + np.pi / 2
+
+            # Resultant R inclined by phi from the normal
+            theta_r = failure_normal_ang - phi_r
+
+            rx, ry = wedge_x * 0.42, wedge_y * 0.42
+            dx_r = wedge_scale * np.cos(theta_r)
+            dy_r = wedge_scale * np.sin(theta_r)
+
+            ax_w.arrow(rx, ry, dx_r, dy_r,
+                       head_width=head_w, color='green', width=shaft_w, zorder=10)
+            ax_w.text(rx + dx_r - 0.05 * wedge_scale, ry + dy_r + 0.05 * wedge_scale, "R",
+                      color='green', fontweight='bold', fontsize=12)
+            ax_w.text(rx - 0.15 * wedge_scale, ry + 0.20 * wedge_scale,
+                      f"ϕ={phi_c:.1f}°", fontsize=8)
             st.pyplot(fig_w)
             plt.close(fig_w)
 
