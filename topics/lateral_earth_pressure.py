@@ -555,22 +555,100 @@ def app():
 
             # --- CALCULATION PANEL ---
         if c_calc_btn:
-            with st.expander(" Detailed Calculation Steps", expanded=True):
-                # Calculation of Ka (Coulomb)
-                term1 = np.sqrt(np.sin(phi_r + del_r) * np.sin(phi_r - bet_r))
-                term2 = np.sqrt(np.cos(alp_r + del_r) * np.cos(alp_r - bet_r))
-                denom = (np.cos(alp_r)**2) * np.cos(alp_r + del_r) * (1 + (term1/term2))**2
-                Ka_c = (np.cos(phi_r - alp_r)**2) / denom
-                
-                Pa = 0.5 * gamma_c * (H_c**2) * Ka_c
-
-                st.markdown(r"**1. Coulomb Coefficient ($K_a$):**")
-                st.latex(r"K_a = \frac{\cos^2(\\phi - \alpha)}{\cos^2\alpha \cos(\alpha + \delta) \left[ 1 + \\sqrt{\frac{\sin(\\phi + \delta) \\sin(\\phi - \beta)}{\cos(\alpha + \delta) \cos(\alpha - \beta)}} \right]^2}")
-                st.write(f"Substituting values: **$K_a = {Ka_c:.4f}$**")
-                
-                st.markdown(r"**2. Total Active Force ($P_a$):**")
-                st.latex(r"P_a = \frac{1}{2} \\gamma H^2 K_a")
-                st.success(f"**Result: $P_a = {Pa:.2f}$ kN/m**")
+            sin_phi_del = np.sin(phi_r + del_r)
+            sin_phi_bet = np.sin(phi_r - bet_r)
+            cos_alp_del = np.cos(alp_r + del_r)
+            cos_alp_bet = np.cos(alp_r - bet_r)
+            cos_phi_alp = np.cos(phi_r - alp_r)
+            cos_alp = np.cos(alp_r)
+    
+            term1 = np.sqrt(sin_phi_del * sin_phi_bet)
+            term2 = np.sqrt(cos_alp_del * cos_alp_bet)
+            bracket = 1 + (term1 / term2)
+            denom = (cos_alp**2) * cos_alp_del * (bracket**2)
+            Ka_c = (cos_phi_alp**2) / denom
+            Pa = 0.5 * gamma_c * (H_c**2) * Ka_c
+    
+            st.markdown("### Step 1 — Coulomb active earth pressure coefficient")
+            st.latex(r"""
+            K_a =
+            \frac{\cos^2(\phi-\alpha)}
+            {\cos^2\alpha \, \cos(\alpha+\delta)
+            \left[
+            1+\sqrt{
+            \frac{\sin(\phi+\delta)\sin(\phi-\beta)}
+            {\cos(\alpha+\delta)\cos(\alpha-\beta)}
+            }
+            \right]^2}
+            """)
+    
+            st.markdown("**Input angles used**")
+            st.write(
+                f"ϕ = {phi_c:.2f}°,  δ = {delta:.2f}°,  α = {alpha:.2f}°,  β = {beta:.2f}°"
+            )
+    
+            st.markdown("**Convert angles to radians for trig functions**")
+            st.write(
+                f"ϕ = {phi_r:.4f} rad,  δ = {del_r:.4f} rad,  α = {alp_r:.4f} rad,  β = {bet_r:.4f} rad"
+            )
+    
+            st.markdown("**Evaluate the trigonometric parts**")
+            st.latex(r"\sin(\phi+\delta)")
+            st.write(f"= sin({phi_c:.2f}° + {delta:.2f}°) = {sin_phi_del:.4f}")
+    
+            st.latex(r"\sin(\phi-\beta)")
+            st.write(f"= sin({phi_c:.2f}° - {beta:.2f}°) = {sin_phi_bet:.4f}")
+    
+            st.latex(r"\cos(\alpha+\delta)")
+            st.write(f"= cos({alpha:.2f}° + {delta:.2f}°) = {cos_alp_del:.4f}")
+    
+            st.latex(r"\cos(\alpha-\beta)")
+            st.write(f"= cos({alpha:.2f}° - {beta:.2f}°) = {cos_alp_bet:.4f}")
+    
+            st.latex(r"\cos(\phi-\alpha)")
+            st.write(f"= cos({phi_c:.2f}° - {alpha:.2f}°) = {cos_phi_alp:.4f}")
+    
+            st.latex(r"\cos(\alpha)")
+            st.write(f"= cos({alpha:.2f}°) = {cos_alp:.4f}")
+    
+            st.markdown("**Evaluate the square-root terms**")
+            st.latex(r"""
+            \text{Term 1}=\sqrt{\sin(\phi+\delta)\sin(\phi-\beta)}
+            """)
+            st.write(f"= √({sin_phi_del:.4f} × {sin_phi_bet:.4f}) = {term1:.4f}")
+    
+            st.latex(r"""
+            \text{Term 2}=\sqrt{\cos(\alpha+\delta)\cos(\alpha-\beta)}
+            """)
+            st.write(f"= √({cos_alp_del:.4f} × {cos_alp_bet:.4f}) = {term2:.4f}")
+    
+            st.latex(r"""
+            \left[1+\frac{\text{Term 1}}{\text{Term 2}}\right]
+            """)
+            st.write(f"= 1 + ({term1:.4f}/{term2:.4f}) = {bracket:.4f}")
+    
+            st.markdown("**Substitute into the denominator**")
+            st.latex(r"""
+            \cos^2\alpha \cdot \cos(\alpha+\delta)\cdot
+            \left[1+\frac{\text{Term 1}}{\text{Term 2}}\right]^2
+            """)
+            st.write(
+                f"= ({cos_alp:.4f}²) × ({cos_alp_del:.4f}) × ({bracket:.4f}²) = {denom:.4f}"
+            )
+    
+            st.markdown("**Now calculate** $K_a$")
+            st.latex(r"""
+            K_a=\frac{\cos^2(\phi-\alpha)}{\text{denominator}}
+            """)
+            st.write(f"= ({cos_phi_alp:.4f}²) / {denom:.4f} = {Ka_c:.4f}")
+            st.success(f"Final result: Ka = {Ka_c:.4f}")
+    
+            st.markdown("### Step 2 — Total active force")
+            st.latex(r"P_a=\frac{1}{2}\gamma H^2 K_a")
+            st.write(
+                f"= 0.5 × {gamma_c:.2f} × ({H_c:.2f}²) × {Ka_c:.4f}"
+            )
+            st.success(f"Final result: Pa = {Pa:.2f} kN/m")
 
 if __name__ == "__main__":
     app()
