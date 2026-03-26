@@ -584,7 +584,7 @@ def app():
     
             st.markdown("**Input angles used**")
             st.write(
-                f"ϕ = {phi_c:.2f}°,  δ = {delta:.2f}°,  α = {alpha:.2f}°,  β = {beta:.2f}°"
+                f"ϕ = {phi_c:.2f}°,  δ = {delta:.2f}°,  α = {alpha:.2f}°,  β = {beta_c:.2f}°"
             )
     
             st.markdown("**Convert angles to radians for trig functions**")
@@ -597,13 +597,13 @@ def app():
             st.write(f"= sin({phi_c:.2f}° + {delta:.2f}°) = {sin_phi_del:.4f}")
     
             st.latex(r"\sin(\phi-\beta)")
-            st.write(f"= sin({phi_c:.2f}° - {beta:.2f}°) = {sin_phi_bet:.4f}")
+            st.write(f"= sin({phi_c:.2f}° - {beta_c:.2f}°) = {sin_phi_bet:.4f}")
     
             st.latex(r"\cos(\alpha+\delta)")
             st.write(f"= cos({alpha:.2f}° + {delta:.2f}°) = {cos_alp_del:.4f}")
     
             st.latex(r"\cos(\alpha-\beta)")
-            st.write(f"= cos({alpha:.2f}° - {beta:.2f}°) = {cos_alp_bet:.4f}")
+            st.write(f"= cos({alpha:.2f}° - {beta_c:.2f}°) = {cos_alp_bet:.4f}")
     
             st.latex(r"\cos(\phi-\alpha)")
             st.write(f"= cos({phi_c:.2f}° - {alpha:.2f}°) = {cos_phi_alp:.4f}")
