@@ -439,19 +439,25 @@ def app():
 
         with col_c_in:
             write_text("subheader", "1. Wall & Geometry")
-            H_c = st.number_input("Wall Height (H) [m]", 1.0, 20.0, 6.0)
-            alpha = st.number_input("Wall Batter (α) [deg]", 0.0, 30.0, 10.0, help="Angle from vertical")
-            beta_c = st.number_input("Backfill Slope (β) [deg]", 0.0, 30.0, 15.0)
+            c1, c2= st.columns(2)
+            with c1:
+                H_c = st.number_input("Wall Height (H) [m]", 1.0, 20.0, 6.0)
+                alpha = st.number_input("Wall Batter (α) [deg]", 0.0, 30.0, 10.0, help="Angle from vertical")
+            with c2: 
+                beta_c = st.number_input("Backfill Slope (β) [deg]", 0.0, 30.0, 15.0)
             
             st.markdown("---")
             write_text("subheader", "2. Soil & Interface")
-            c_soil_type = st.selectbox("Soil Type", ["Sand", "Custom"], key="c_soil_type")
-            if c_soil_type == "Sand": d_phi, d_delta, d_gam = 32.0, 20.0, 18.0
-            else: d_phi, d_delta, d_gam = 30.0, 15.0, 19.0
-            
-            phi_c = st.number_input("Friction Angle (ϕ') [deg]", 20.0, 45.0, d_phi)
-            delta = st.number_input("Wall Friction (δ) [deg]", 0.0, 30.0, d_delta)
-            gamma_c = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, d_gam)
+            c3, c4= st.columns(2)
+            with c3:
+                c_soil_type = st.selectbox("Soil Type", ["Sand", "Custom"], key="c_soil_type")
+                if c_soil_type == "Sand": d_phi, d_delta, d_gam = 32.0, 20.0, 18.0
+                else: d_phi, d_delta, d_gam = 30.0, 15.0, 19.0
+                
+                phi_c = st.number_input("Friction Angle (ϕ') [deg]", 20.0, 45.0, d_phi)
+            with c4:
+                delta = st.number_input("Wall Friction (δ) [deg]", 0.0, 30.0, d_delta)
+                gamma_c = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, d_gam)
             
             st.markdown("---")
             c_calc_btn = st.button("Calculate Wedge Forces", type="primary", width="stretch")
