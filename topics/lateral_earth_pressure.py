@@ -779,7 +779,7 @@ def app():
             # ---------------------------------------------------------
             wall_face_ang = np.arctan2(H_c, top_x if abs(top_x) > 1e-9 else 1e-9)
             wall_normal_ang = wall_face_ang - np.pi / 2
-            theta_p = wall_normal_ang + del_r
+            theta_p = wall_normal_ang - del_r
         
             failure_face_ang = np.arctan2(y_c, x_c if abs(x_c) > 1e-9 else 1e-9)
             failure_normal_ang = failure_face_ang + np.pi / 2
