@@ -435,7 +435,7 @@ def app():
     with tab_coulomb:
         write_text("section_header", "Coulomb's Wedge Theory")
         
-        col_c_in, col_c_viz = st.columns([0.4, 0.6], gap="medium")
+        col_c_in, col_c_viz = st.columns([0.6, 0.4], gap="medium")
 
         with col_c_in:
             write_text("subheader", "1. Wall & Geometry")
