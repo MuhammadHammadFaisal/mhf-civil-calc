@@ -7,6 +7,7 @@ from theme import write_text, glass_box, glass_table
 
 
 
+
 # =========================================================
 # HELPER FUNCTIONS
 # =========================================================
@@ -555,100 +556,168 @@ def app():
 
             # --- CALCULATION PANEL ---
         if c_calc_btn:
-            sin_phi_del = np.sin(phi_r + del_r)
-            sin_phi_bet = np.sin(phi_r - bet_r)
-            cos_alp_del = np.cos(alp_r + del_r)
-            cos_alp_bet = np.cos(alp_r - bet_r)
-            cos_phi_alp = np.cos(phi_r - alp_r)
-            cos_alp = np.cos(alp_r)
-    
-            term1 = np.sqrt(sin_phi_del * sin_phi_bet)
-            term2 = np.sqrt(cos_alp_del * cos_alp_bet)
-            bracket = 1 + (term1 / term2)
-            denom = (cos_alp**2) * cos_alp_del * (bracket**2)
-            Ka_c = (cos_phi_alp**2) / denom
-            Pa = 0.5 * gamma_c * (H_c**2) * Ka_c
-    
-            st.markdown("### Step 1 — Coulomb active earth pressure coefficient")
-            st.latex(r"""
-            K_a =
-            \frac{\cos^2(\phi-\alpha)}
-            {\cos^2\alpha \, \cos(\alpha+\delta)
-            \left[
-            1+\sqrt{
-            \frac{\sin(\phi+\delta)\sin(\phi-\beta)}
-            {\cos(\alpha+\delta)\cos(\alpha-\beta)}
-            }
-            \right]^2}
-            """)
-    
-            st.markdown("**Input angles used**")
-            st.write(
-                f"ϕ = {phi_c:.2f}°,  δ = {delta:.2f}°,  α = {alpha:.2f}°,  β = {beta_c:.2f}°"
+            # ---------------------------------------------------------
+            # 1. GEOMETRY OF FAILURE WEDGE
+            # ---------------------------------------------------------
+            theta_deg = 45 + phi_c / 2.0
+            theta_r = np.deg2rad(theta_deg)
+        
+            # Ground line AC starts at A(top_x, H_c) with slope beta_c
+            m_ground = np.tan(bet_r)
+        
+            # Failure plane BC starts at B(0,0) with angle theta_deg from horizontal
+            # Intersection of y = x*tan(theta) with y = H_c + (x-top_x)*tan(beta)
+            denom_x = np.tan(theta_r) - m_ground
+            if abs(denom_x) < 1e-9:
+                st.error("Failure plane and ground surface are nearly parallel. Change the input values.")
+                st.stop()
+        
+            x_c = (H_c - top_x * m_ground) / denom_x
+            y_c = x_c * np.tan(theta_r)
+        
+            # Wedge area A-B-C
+            area_wedge = abs(
+                top_x * (y_c - 0) + x_c * (0 - H_c) + 0 * (H_c - y_c)
+            ) / 2.0
+        
+            # Weight of wedge
+            W = gamma_c * area_wedge
+        
+            # ---------------------------------------------------------
+            # 2. FORCE DIRECTIONS
+            # ---------------------------------------------------------
+            # Wall face angle from +x axis: B->A
+            wall_face_ang = np.arctan2(H_c, top_x if abs(top_x) > 1e-9 else 1e-9)
+        
+            # Wall normal pointing into wedge
+            wall_normal_ang = wall_face_ang - np.pi / 2
+        
+            # P is inclined by delta from wall normal
+            theta_p = wall_normal_ang + del_r
+        
+            # Failure plane angle from +x axis: B->C
+            failure_face_ang = np.arctan2(y_c, x_c if abs(x_c) > 1e-9 else 1e-9)
+        
+            # Normal to failure plane
+            failure_normal_ang = failure_face_ang + np.pi / 2
+        
+            # R is inclined downward from failure plane normal by phi
+            theta_r_force = failure_normal_ang - phi_r
+        
+            # ---------------------------------------------------------
+            # 3. SOLVE ΣFx = 0 AND ΣFy = 0
+            # ---------------------------------------------------------
+            A_mat = np.array([
+                [np.cos(theta_p), np.cos(theta_r_force)],
+                [np.sin(theta_p), np.sin(theta_r_force)],
+            ])
+        
+            b_vec = np.array([0.0, W])
+        
+            try:
+                P, R = np.linalg.solve(A_mat, b_vec)
+            except np.linalg.LinAlgError:
+                st.error("Static equilibrium equations could not be solved for these inputs.")
+                st.stop()
+        
+            Ka_static = (2 * P) / (gamma_c * H_c**2)
+        
+            # ---------------------------------------------------------
+            # 4. SUMMARY RESULTS
+            # ---------------------------------------------------------
+            write_text("section_header", "Coulomb Wedge Theory Results")
+        
+            summary_df = pd.DataFrame({
+                "Parameter": [
+                    "Failure plane angle, θ (deg)",
+                    "Wedge area, A (m²/m)",
+                    "Wedge weight, W (kN/m)",
+                    "Wall force, P (kN/m)",
+                    "Plane reaction, R (kN/m)",
+                    "Equivalent active coefficient, Ka",
+                ],
+                "Value": [
+                    f"{theta_deg:.2f}",
+                    f"{area_wedge:.3f}",
+                    f"{W:.2f}",
+                    f"{P:.2f}",
+                    f"{R:.2f}",
+                    f"{Ka_static:.4f}",
+                ]
+            })
+            glass_table(summary_df)
+        
+            glass_box(
+                f"""
+                <b>Final Answers</b><br><br>
+                Wall force on wedge, <b>P = {P:.2f} kN/m</b><br>
+                Reaction on failure plane, <b>R = {R:.2f} kN/m</b><br>
+                Equivalent active earth pressure coefficient, <b>K<sub>a</sub> = {Ka_static:.4f}</b>
+                """
             )
-    
-            st.markdown("**Convert angles to radians for trig functions**")
-            st.write(
-                f"ϕ = {phi_r:.4f} rad,  δ = {del_r:.4f} rad,  α = {alp_r:.4f} rad,  β = {bet_r:.4f} rad"
-            )
-    
-            st.markdown("**Evaluate the trigonometric parts**")
-            st.latex(r"\sin(\phi+\delta)")
-            st.write(f"= sin({phi_c:.2f}° + {delta:.2f}°) = {sin_phi_del:.4f}")
-    
-            st.latex(r"\sin(\phi-\beta)")
-            st.write(f"= sin({phi_c:.2f}° - {beta_c:.2f}°) = {sin_phi_bet:.4f}")
-    
-            st.latex(r"\cos(\alpha+\delta)")
-            st.write(f"= cos({alpha:.2f}° + {delta:.2f}°) = {cos_alp_del:.4f}")
-    
-            st.latex(r"\cos(\alpha-\beta)")
-            st.write(f"= cos({alpha:.2f}° - {beta_c:.2f}°) = {cos_alp_bet:.4f}")
-    
-            st.latex(r"\cos(\phi-\alpha)")
-            st.write(f"= cos({phi_c:.2f}° - {alpha:.2f}°) = {cos_phi_alp:.4f}")
-    
-            st.latex(r"\cos(\alpha)")
-            st.write(f"= cos({alpha:.2f}°) = {cos_alp:.4f}")
-    
-            st.markdown("**Evaluate the square-root terms**")
-            st.latex(r"""
-            \text{Term 1}=\sqrt{\sin(\phi+\delta)\sin(\phi-\beta)}
-            """)
-            st.write(f"= √({sin_phi_del:.4f} × {sin_phi_bet:.4f}) = {term1:.4f}")
-    
-            st.latex(r"""
-            \text{Term 2}=\sqrt{\cos(\alpha+\delta)\cos(\alpha-\beta)}
-            """)
-            st.write(f"= √({cos_alp_del:.4f} × {cos_alp_bet:.4f}) = {term2:.4f}")
-    
-            st.latex(r"""
-            \left[1+\frac{\text{Term 1}}{\text{Term 2}}\right]
-            """)
-            st.write(f"= 1 + ({term1:.4f}/{term2:.4f}) = {bracket:.4f}")
-    
-            st.markdown("**Substitute into the denominator**")
-            st.latex(r"""
-            \cos^2\alpha \cdot \cos(\alpha+\delta)\cdot
-            \left[1+\frac{\text{Term 1}}{\text{Term 2}}\right]^2
-            """)
-            st.write(
-                f"= ({cos_alp:.4f}²) × ({cos_alp_del:.4f}) × ({bracket:.4f}²) = {denom:.4f}"
-            )
-    
-            st.markdown("**Now calculate** $K_a$")
-            st.latex(r"""
-            K_a=\frac{\cos^2(\phi-\alpha)}{\text{denominator}}
-            """)
-            st.write(f"= ({cos_phi_alp:.4f}²) / {denom:.4f} = {Ka_c:.4f}")
-            st.success(f"Final result: Ka = {Ka_c:.4f}")
-    
-            st.markdown("### Step 2 — Total active force")
-            st.latex(r"P_a=\frac{1}{2}\gamma H^2 K_a")
-            st.write(
-                f"= 0.5 × {gamma_c:.2f} × ({H_c:.2f}²) × {Ka_c:.4f}"
-            )
-            st.success(f"Final result: Pa = {Pa:.2f} kN/m")
+        
+            # ---------------------------------------------------------
+            # 5. STUDENT-FRIENDLY WORKING
+            # ---------------------------------------------------------
+            with st.expander("Detailed Calculation Steps", expanded=True):
+                glass_box(
+                    f"""
+                    <b>Step 1 — Assume the failure plane</b><br><br>
+                    For the wedge method, take the failure plane angle as:<br>
+                    θ = 45° + ϕ/2 = 45° + {phi_c:.2f}°/2 = <b>{theta_deg:.2f}°</b>
+                    """
+                )
+        
+                glass_box(
+                    f"""
+                    <b>Step 2 — Compute wedge geometry and weight</b><br><br>
+                    Intersection point of assumed failure plane with the ground surface:<br>
+                    C = ({x_c:.3f}, {y_c:.3f})<br><br>
+                    Wedge area:<br>
+                    A = <b>{area_wedge:.3f} m²/m</b><br><br>
+                    Wedge weight:<br>
+                    W = γ × A = {gamma_c:.2f} × {area_wedge:.3f} = <b>{W:.2f} kN/m</b>
+                    """
+                )
+        
+                st.markdown("### Step 3 — Resolve forces in global x-y directions")
+        
+                st.latex(r"\Sigma F_x = 0")
+                st.latex(r"P\cos(\theta_P) + R\cos(\theta_R) = 0")
+        
+                st.latex(r"\Sigma F_y = 0")
+                st.latex(r"P\sin(\theta_P) + R\sin(\theta_R) - W = 0")
+        
+                st.markdown("**Force direction angles used**")
+                st.write(f"θ_P = {np.rad2deg(theta_p):.2f}°")
+                st.write(f"θ_R = {np.rad2deg(theta_r_force):.2f}°")
+                st.write(f"W = {W:.2f} kN/m")
+        
+                st.markdown("**Substitute into ΣFx = 0**")
+                st.write(
+                    f"{np.cos(theta_p):.4f} P + {np.cos(theta_r_force):.4f} R = 0"
+                )
+        
+                st.markdown("**Substitute into ΣFy = 0**")
+                st.write(
+                    f"{np.sin(theta_p):.4f} P + {np.sin(theta_r_force):.4f} R - {W:.2f} = 0"
+                )
+        
+                glass_box(
+                    f"""
+                    <b>Step 4 — Solve the two equations simultaneously</b><br><br>
+                    From static equilibrium:<br>
+                    <b>P = {P:.2f} kN/m</b><br>
+                    <b>R = {R:.2f} kN/m</b>
+                    """
+                )
+        
+                st.markdown("### Step 5 — Compute equivalent active earth pressure coefficient")
+                st.latex(r"K_a = \frac{2P}{\gamma H^2}")
+                st.write(
+                    f"K_a = (2 × {P:.2f}) / ({gamma_c:.2f} × {H_c:.2f}²) = {Ka_static:.4f}"
+                )
+
 
 if __name__ == "__main__":
     app()
