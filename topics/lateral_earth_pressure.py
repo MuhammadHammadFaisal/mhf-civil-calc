@@ -447,7 +447,7 @@ def app():
             with c2: 
                 beta_c = st.number_input("Backfill Slope (β) [deg]", 0.0, 30.0, 15.0)
             
-            st.markdown("---")
+
             write_text("subheader", "2. Soil & Interface")
             c3, c4= st.columns(2)
             with c3:
@@ -460,7 +460,6 @@ def app():
                 delta = st.number_input("Wall Friction (δ) [deg]", 0.0, 30.0, d_delta)
                 gamma_c = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, d_gam)
             
-            st.markdown("---")
             c_calc_btn = st.button("Calculate Wedge Forces", type="primary", width="stretch")
 
         with col_c_viz:
