@@ -668,27 +668,90 @@ def app():
             # 5. STUDENT-FRIENDLY WORKING
             # ---------------------------------------------------------
             with st.expander("Detailed Calculation Steps", expanded=True):
+                # -----------------------------
+                # GIVEN DATA
+                # -----------------------------
+                write_text("subheader", "Given Data")
+        
+                given_df = pd.DataFrame({
+                    "Item": [
+                        "Wall height, H",
+                        "Unit weight, γ",
+                        "Soil friction angle, ϕ",
+                        "Wall friction angle, δ",
+                        "Wall inclination, α",
+                        "Backfill slope, β",
+                    ],
+                    "Value": [
+                        f"{H_c:.2f} m",
+                        f"{gamma_c:.2f} kN/m³",
+                        f"{phi_c:.2f}°",
+                        f"{delta:.2f}°",
+                        f"{alpha:.2f}°",
+                        f"{beta_c:.2f}°",
+                    ]
+                })
+                glass_table(given_df)
+        
+                # -----------------------------
+                # STEP 1
+                # -----------------------------
+                write_text("subheader", "Step 1 — Assume Failure Plane")
                 glass_box(
-                    f"""
-                    <b>Step 1 — Assume the failure plane</b><br><br>
-                    For the wedge method, take the failure plane angle as:<br>
-                    θ = 45° + ϕ/2 = 45° + {phi_c:.2f}°/2 = <b>{theta_deg:.2f}°</b>
-                    """
+                    f"Assume the failure plane angle using the classroom approximation:<br><br>"
+                    f"<b>θ = 45° + ϕ/2 = 45° + {phi_c:.2f}/2 = {theta_deg:.2f}°</b>"
                 )
         
+                # -----------------------------
+                # STEP 2
+                # -----------------------------
+                write_text("subheader", "Step 2 — Wedge Geometry and Weight")
+        
+                geom_df = pd.DataFrame({
+                    "Quantity": [
+                        "Intersection point C",
+                        "Wedge area, A",
+                        "Wedge weight, W",
+                    ],
+                    "Value": [
+                        f"({x_c:.3f}, {y_c:.3f})",
+                        f"{area_wedge:.3f} m²/m",
+                        f"{W:.2f} kN/m",
+                    ]
+                })
+                glass_table(geom_df)
+        
+                st.latex(r"W = \gamma \, A")
                 glass_box(
-                    f"""
-                    <b>Step 2 — Compute wedge geometry and weight</b><br><br>
-                    Intersection point of assumed failure plane with the ground surface:<br>
-                    C = ({x_c:.3f}, {y_c:.3f})<br><br>
-                    Wedge area:<br>
-                    A = <b>{area_wedge:.3f} m²/m</b><br><br>
-                    Wedge weight:<br>
-                    W = γ × A = {gamma_c:.2f} × {area_wedge:.3f} = <b>{W:.2f} kN/m</b>
-                    """
+                    f"Substitute the values:<br><br>"
+                    f"<b>W = {gamma_c:.2f} \u00d7 {area_wedge:.3f} = {W:.2f} kN/m</b>"
                 )
         
-                st.markdown("### Step 3 — Resolve forces in global x-y directions")
+                # -----------------------------
+                # STEP 3
+                # -----------------------------
+                write_text("subheader", "Step 3 — Force Directions")
+        
+                angle_df = pd.DataFrame({
+                    "Force": ["P", "R"],
+                    "Direction used in equations": [
+                        f"θP = {np.rad2deg(theta_p):.2f}°",
+                        f"θR = {np.rad2deg(theta_r_force):.2f}°",
+                    ]
+                })
+                glass_table(angle_df)
+        
+                glass_box(
+                    "Force assumptions used:<br><br>"
+                    "• <b>P</b> acts at angle <b>δ</b> to the normal of the wall face.<br>"
+                    "• <b>R</b> acts at angle <b>ϕ</b> downward from the normal to the failure plane.<br>"
+                    "• <b>W</b> acts vertically downward."
+                )
+        
+                # -----------------------------
+                # STEP 4
+                # -----------------------------
+                write_text("subheader", "Step 4 — Write Static Equilibrium Equations")
         
                 st.latex(r"\Sigma F_x = 0")
                 st.latex(r"P\cos(\theta_P) + R\cos(\theta_R) = 0")
@@ -696,34 +759,46 @@ def app():
                 st.latex(r"\Sigma F_y = 0")
                 st.latex(r"P\sin(\theta_P) + R\sin(\theta_R) - W = 0")
         
-                st.markdown("**Force direction angles used**")
-                st.write(f"θ_P = {np.rad2deg(theta_p):.2f}°")
-                st.write(f"θ_R = {np.rad2deg(theta_r_force):.2f}°")
-                st.write(f"W = {W:.2f} kN/m")
+                eq_df = pd.DataFrame({
+                    "Equation": ["ΣFx = 0", "ΣFy = 0"],
+                    "Substituted form": [
+                        f"{np.cos(theta_p):.4f} P + {np.cos(theta_r_force):.4f} R = 0",
+                        f"{np.sin(theta_p):.4f} P + {np.sin(theta_r_force):.4f} R = {W:.2f}",
+                    ]
+                })
+                glass_table(eq_df)
         
-                st.markdown("**Substitute into ΣFx = 0**")
-                st.write(
-                    f"{np.cos(theta_p):.4f} P + {np.cos(theta_r_force):.4f} R = 0"
-                )
-        
-                st.markdown("**Substitute into ΣFy = 0**")
-                st.write(
-                    f"{np.sin(theta_p):.4f} P + {np.sin(theta_r_force):.4f} R - {W:.2f} = 0"
-                )
+                # -----------------------------
+                # STEP 5
+                # -----------------------------
+                write_text("subheader", "Step 5 — Solve for P and R")
         
                 glass_box(
-                    f"""
-                    <b>Step 4 — Solve the two equations simultaneously</b><br><br>
-                    From static equilibrium:<br>
-                    <b>P = {P:.2f} kN/m</b><br>
-                    <b>R = {R:.2f} kN/m</b>
-                    """
+                    f"Solving the two equilibrium equations simultaneously gives:<br><br>"
+                    f"<b>P = {P:.2f} kN/m</b><br>"
+                    f"<b>R = {R:.2f} kN/m</b>"
                 )
         
-                st.markdown("### Step 5 — Compute equivalent active earth pressure coefficient")
+                # -----------------------------
+                # STEP 6
+                # -----------------------------
+                write_text("subheader", "Step 6 — Compute Equivalent Active Earth Pressure Coefficient")
+        
                 st.latex(r"K_a = \frac{2P}{\gamma H^2}")
-                st.write(
-                    f"K_a = (2 × {P:.2f}) / ({gamma_c:.2f} × {H_c:.2f}²) = {Ka_static:.4f}"
+        
+                ka_df = pd.DataFrame({
+                    "Expression": ["2P", "γH²", "Ka"],
+                    "Value": [
+                        f"{2*P:.2f}",
+                        f"{gamma_c * H_c**2:.2f}",
+                        f"{Ka_static:.4f}",
+                    ]
+                })
+                glass_table(ka_df)
+        
+                glass_box(
+                    f"Final substitution:<br><br>"
+                    f"<b>K<sub>a</sub> = (2 \u00d7 {P:.2f}) / ({gamma_c:.2f} \u00d7 {H_c:.2f}²) = {Ka_static:.4f}</b>"
                 )
 
 
