@@ -556,52 +556,39 @@ def app():
 
             # --- CALCULATION PANEL ---
         if c_calc_btn:
+                # ---------------------------------------------------------
+            # 1. ASSUMED FAILURE PLANE + WEDGE GEOMETRY
             # ---------------------------------------------------------
-            # 1. GEOMETRY OF FAILURE WEDGE
-            # ---------------------------------------------------------
-            theta_deg = 45 + phi_c / 2.0
-            theta_r = np.deg2rad(theta_deg)
+            theta_fail_deg = 45 + phi_c / 2.0
+            theta_fail_r = np.deg2rad(theta_fail_deg)
         
-            # Ground line AC starts at A(top_x, H_c) with slope beta_c
             m_ground = np.tan(bet_r)
+            denom_x = np.tan(theta_fail_r) - m_ground
         
-            # Failure plane BC starts at B(0,0) with angle theta_deg from horizontal
-            # Intersection of y = x*tan(theta) with y = H_c + (x-top_x)*tan(beta)
-            denom_x = np.tan(theta_r) - m_ground
             if abs(denom_x) < 1e-9:
                 st.error("Failure plane and ground surface are nearly parallel. Change the input values.")
                 st.stop()
         
             x_c = (H_c - top_x * m_ground) / denom_x
-            y_c = x_c * np.tan(theta_r)
+            y_c = x_c * np.tan(theta_fail_r)
         
-            # Wedge area A-B-C
             area_wedge = abs(
-                top_x * (y_c - 0) + x_c * (0 - H_c) + 0 * (H_c - y_c)
+                top_x * (y_c - 0) +
+                x_c * (0 - H_c) +
+                0 * (H_c - y_c)
             ) / 2.0
         
-            # Weight of wedge
             W = gamma_c * area_wedge
         
             # ---------------------------------------------------------
             # 2. FORCE DIRECTIONS
             # ---------------------------------------------------------
-            # Wall face angle from +x axis: B->A
             wall_face_ang = np.arctan2(H_c, top_x if abs(top_x) > 1e-9 else 1e-9)
-        
-            # Wall normal pointing into wedge
             wall_normal_ang = wall_face_ang - np.pi / 2
-        
-            # P is inclined by delta from wall normal
             theta_p = wall_normal_ang + del_r
         
-            # Failure plane angle from +x axis: B->C
             failure_face_ang = np.arctan2(y_c, x_c if abs(x_c) > 1e-9 else 1e-9)
-        
-            # Normal to failure plane
             failure_normal_ang = failure_face_ang + np.pi / 2
-        
-            # R is inclined downward from failure plane normal by phi
             theta_r_force = failure_normal_ang - phi_r
         
             # ---------------------------------------------------------
@@ -623,32 +610,10 @@ def app():
             Ka_static = (2 * P) / (gamma_c * H_c**2)
         
             # ---------------------------------------------------------
-            # 4. SUMMARY RESULTS
+            # 4. FINAL ANSWERS
             # ---------------------------------------------------------
-            write_text("section_header", "Coulomb Wedge Theory Results")
-        
-            summary_df = pd.DataFrame({
-                "Parameter": [
-                    "Failure plane angle, θ (deg)",
-                    "Wedge area, A (m²/m)",
-                    "Wedge weight, W (kN/m)",
-                    "Wall force, P (kN/m)",
-                    "Plane reaction, R (kN/m)",
-                    "Equivalent active coefficient, Ka",
-                ],
-                "Value": [
-                    f"{theta_deg:.2f}",
-                    f"{area_wedge:.3f}",
-                    f"{W:.2f}",
-                    f"{P:.2f}",
-                    f"{R:.2f}",
-                    f"{Ka_static:.4f}",
-                ]
-            })
-            glass_table(summary_df)
-        
             write_text("subheader", "Final Answers")
-
+        
             final_answers_df = pd.DataFrame({
                 "Result": [
                     "Wall force on wedge, P",
@@ -661,145 +626,68 @@ def app():
                     f"{Ka_static:.4f}",
                 ]
             })
-            
             glass_table(final_answers_df)
         
             # ---------------------------------------------------------
-            # 5. STUDENT-FRIENDLY WORKING
+            # 5. DETAILED CALCULATION STEPS
             # ---------------------------------------------------------
+            report_md = (
+                f"### Given / Inputs\n"
+                f"- Wall height: $H = {H_c:.2f}\\,\\mathrm{{m}}$\n"
+                f"- Unit weight: $\\gamma = {gamma_c:.2f}\\,\\mathrm{{kN/m^3}}$\n"
+                f"- Soil friction angle: $\\phi = {phi_c:.2f}^\\circ$\n"
+                f"- Wall friction angle: $\\delta = {delta:.2f}^\\circ$\n"
+                f"- Wall inclination: $\\alpha = {alpha:.2f}^\\circ$\n"
+                f"- Backfill slope: $\\beta = {beta_c:.2f}^\\circ$\n\n"
+                f"---\n\n"
+                f"## Step 1 — Assume the failure plane\n"
+                f"Using the classroom approximation:\n\n"
+                f"$$\\theta = 45^\\circ + \\frac{{\\phi}}{{2}}$$\n\n"
+                f"$$\\theta = 45^\\circ + \\frac{{{phi_c:.2f}^\\circ}}{{2}} = \\mathbf{{{theta_fail_deg:.2f}^\\circ}}$$\n\n"
+                f"---\n\n"
+                f"## Step 2 — Determine wedge geometry\n"
+                f"Intersection point of assumed failure plane with ground surface:\n\n"
+                f"$$C = ({x_c:.3f},\\;{y_c:.3f})$$\n\n"
+                f"Wedge area:\n\n"
+                f"$$A = \\mathbf{{{area_wedge:.3f}}}\\,\\mathrm{{m^2/m}}$$\n\n"
+                f"---\n\n"
+                f"## Step 3 — Calculate wedge weight\n"
+                f"$$W = \\gamma A$$\n\n"
+                f"$$W = ({gamma_c:.2f})({area_wedge:.3f}) = \\mathbf{{{W:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
+                f"---\n\n"
+                f"## Step 4 — Force directions\n"
+                f"- $P$ acts at angle $\\delta$ to the normal of the wall face.\n"
+                f"- $R$ acts at angle $\\phi$ downward from the normal to the failure plane.\n"
+                f"- $W$ acts vertically downward.\n\n"
+                f"Angles used in global coordinates:\n\n"
+                f"$$\\theta_P = \\mathbf{{{np.rad2deg(theta_p):.2f}^\\circ}} "
+                f"\\qquad "
+                f"\\theta_R = \\mathbf{{{np.rad2deg(theta_r_force):.2f}^\\circ}}$$\n\n"
+                f"---\n\n"
+                f"## Step 5 — Write equilibrium equations\n"
+                f"From horizontal equilibrium:\n\n"
+                f"$$\\Sigma F_x = 0$$\n\n"
+                f"$$P\\cos(\\theta_P) + R\\cos(\\theta_R) = 0$$\n\n"
+                f"Substituting values:\n\n"
+                f"$$({np.cos(theta_p):.4f})P + ({np.cos(theta_r_force):.4f})R = 0$$\n\n"
+                f"From vertical equilibrium:\n\n"
+                f"$$\\Sigma F_y = 0$$\n\n"
+                f"$$P\\sin(\\theta_P) + R\\sin(\\theta_R) - W = 0$$\n\n"
+                f"Substituting values:\n\n"
+                f"$$({np.sin(theta_p):.4f})P + ({np.sin(theta_r_force):.4f})R - {W:.2f} = 0$$\n\n"
+                f"---\n\n"
+                f"## Step 6 — Solve for $P$ and $R$\n"
+                f"Solving the two equations simultaneously:\n\n"
+                f"$$P = \\mathbf{{{P:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
+                f"$$R = \\mathbf{{{R:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
+                f"---\n\n"
+                f"## Step 7 — Compute equivalent active earth pressure coefficient\n"
+                f"$$K_a = \\frac{{2P}}{{\\gamma H^2}}$$\n\n"
+                f"$$K_a = \\frac{{2({P:.2f})}}{{({gamma_c:.2f})({H_c:.2f}^2)}} = \\mathbf{{{Ka_static:.4f}}}$$"
+            )
+        
             with st.expander("Detailed Calculation Steps", expanded=True):
-                # -----------------------------
-                # GIVEN DATA
-                # -----------------------------
-                write_text("subheader", "Given Data")
-        
-                given_df = pd.DataFrame({
-                    "Item": [
-                        "Wall height, H",
-                        "Unit weight, γ",
-                        "Soil friction angle, ϕ",
-                        "Wall friction angle, δ",
-                        "Wall inclination, α",
-                        "Backfill slope, β",
-                    ],
-                    "Value": [
-                        f"{H_c:.2f} m",
-                        f"{gamma_c:.2f} kN/m³",
-                        f"{phi_c:.2f}°",
-                        f"{delta:.2f}°",
-                        f"{alpha:.2f}°",
-                        f"{beta_c:.2f}°",
-                    ]
-                })
-                glass_table(given_df)
-        
-                # -----------------------------
-                # STEP 1
-                # -----------------------------
-                write_text("subheader", "Step 1 — Assume Failure Plane")
-                glass_box(
-                    f"Assume the failure plane angle using the classroom approximation:<br><br>"
-                    f"<b>θ = 45° + ϕ/2 = 45° + {phi_c:.2f}/2 = {theta_deg:.2f}°</b>"
-                )
-        
-                # -----------------------------
-                # STEP 2
-                # -----------------------------
-                write_text("subheader", "Step 2 — Wedge Geometry and Weight")
-        
-                geom_df = pd.DataFrame({
-                    "Quantity": [
-                        "Intersection point C",
-                        "Wedge area, A",
-                        "Wedge weight, W",
-                    ],
-                    "Value": [
-                        f"({x_c:.3f}, {y_c:.3f})",
-                        f"{area_wedge:.3f} m²/m",
-                        f"{W:.2f} kN/m",
-                    ]
-                })
-                glass_table(geom_df)
-        
-                st.latex(r"W = \gamma \, A")
-                glass_box(
-                    f"Substitute the values:<br><br>"
-                    f"<b>W = {gamma_c:.2f} \u00d7 {area_wedge:.3f} = {W:.2f} kN/m</b>"
-                )
-        
-                # -----------------------------
-                # STEP 3
-                # -----------------------------
-                write_text("subheader", "Step 3 — Force Directions")
-        
-                angle_df = pd.DataFrame({
-                    "Force": ["P", "R"],
-                    "Direction used in equations": [
-                        f"θP = {np.rad2deg(theta_p):.2f}°",
-                        f"θR = {np.rad2deg(theta_r_force):.2f}°",
-                    ]
-                })
-                glass_table(angle_df)
-        
-                glass_box(
-                    "Force assumptions used:<br><br>"
-                    "• <b>P</b> acts at angle <b>δ</b> to the normal of the wall face.<br>"
-                    "• <b>R</b> acts at angle <b>ϕ</b> downward from the normal to the failure plane.<br>"
-                    "• <b>W</b> acts vertically downward."
-                )
-        
-                # -----------------------------
-                # STEP 4
-                # -----------------------------
-                write_text("subheader", "Step 4 — Write Static Equilibrium Equations")
-        
-                st.latex(r"\Sigma F_x = 0")
-                st.latex(r"P\cos(\theta_P) + R\cos(\theta_R) = 0")
-        
-                st.latex(r"\Sigma F_y = 0")
-                st.latex(r"P\sin(\theta_P) + R\sin(\theta_R) - W = 0")
-        
-                eq_df = pd.DataFrame({
-                    "Equation": ["ΣFx = 0", "ΣFy = 0"],
-                    "Substituted form": [
-                        f"{np.cos(theta_p):.4f} P + {np.cos(theta_r_force):.4f} R = 0",
-                        f"{np.sin(theta_p):.4f} P + {np.sin(theta_r_force):.4f} R = {W:.2f}",
-                    ]
-                })
-                glass_table(eq_df)
-        
-                # -----------------------------
-                # STEP 5
-                # -----------------------------
-                write_text("subheader", "Step 5 — Solve for P and R")
-        
-                glass_box(
-                    f"Solving the two equilibrium equations simultaneously gives:<br><br>"
-                    f"<b>P = {P:.2f} kN/m</b><br>"
-                    f"<b>R = {R:.2f} kN/m</b>"
-                )
-        
-                # -----------------------------
-                # STEP 6
-                # -----------------------------
-                write_text("subheader", "Step 6 — Compute Equivalent Active Earth Pressure Coefficient")
-        
-                st.latex(r"K_a = \frac{2P}{\gamma H^2}")
-        
-                ka_df = pd.DataFrame({
-                    "Expression": ["2P", "γH²", "Ka"],
-                    "Value": [
-                        f"{2*P:.2f}",
-                        f"{gamma_c * H_c**2:.2f}",
-                        f"{Ka_static:.4f}",
-                    ]
-                })
-                glass_table(ka_df)
-        
-                glass_box(
-                    f"Final substitution:<br><br>"
-                    f"<b>K<sub>a</sub> = (2 \u00d7 {P:.2f}) / ({gamma_c:.2f} \u00d7 {H_c:.2f}²) = {Ka_static:.4f}</b>"
-                )
+                st.markdown(report_md)
 
 
 if __name__ == "__main__":
