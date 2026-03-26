@@ -687,8 +687,7 @@ def app():
             )
         
             with st.expander("Detailed Calculation Steps", expanded=True):
-                with st.container(border=True):
-                    glass_box(report_md)
+                glass_box(report_md)
 
 
 if __name__ == "__main__":
