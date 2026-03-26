@@ -687,7 +687,8 @@ def app():
             )
         
             with st.expander("Detailed Calculation Steps", expanded=True):
-                st.markdown(report_md)
+                with st.container(border=True):
+                    st.markdown(report_md)
 
 
 if __name__ == "__main__":
