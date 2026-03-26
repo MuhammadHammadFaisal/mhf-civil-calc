@@ -554,23 +554,23 @@ def app():
             plt.close(fig_w)
 
             # --- CALCULATION PANEL ---
-            if c_calc_btn:
-                with st.expander(" Detailed Calculation Steps", expanded=True):
-                    # Calculation of Ka (Coulomb)
-                    term1 = np.sqrt(np.sin(phi_r + del_r) * np.sin(phi_r - bet_r))
-                    term2 = np.sqrt(np.cos(alp_r + del_r) * np.cos(alp_r - bet_r))
-                    denom = (np.cos(alp_r)**2) * np.cos(alp_r + del_r) * (1 + (term1/term2))**2
-                    Ka_c = (np.cos(phi_r - alp_r)**2) / denom
-                    
-                    Pa = 0.5 * gamma_c * (H_c**2) * Ka_c
+        if c_calc_btn:
+            with st.expander(" Detailed Calculation Steps", expanded=True):
+                # Calculation of Ka (Coulomb)
+                term1 = np.sqrt(np.sin(phi_r + del_r) * np.sin(phi_r - bet_r))
+                term2 = np.sqrt(np.cos(alp_r + del_r) * np.cos(alp_r - bet_r))
+                denom = (np.cos(alp_r)**2) * np.cos(alp_r + del_r) * (1 + (term1/term2))**2
+                Ka_c = (np.cos(phi_r - alp_r)**2) / denom
+                
+                Pa = 0.5 * gamma_c * (H_c**2) * Ka_c
 
-                    st.markdown(r"**1. Coulomb Coefficient ($K_a$):**")
-                    st.latex(r"K_a = \frac{\cos^2(\\phi - \alpha)}{\cos^2\alpha \cos(\alpha + \delta) \left[ 1 + \\sqrt{\frac{\sin(\\phi + \delta) \\sin(\\phi - \beta)}{\cos(\alpha + \delta) \cos(\alpha - \beta)}} \right]^2}")
-                    st.write(f"Substituting values: **$K_a = {Ka_c:.4f}$**")
-                    
-                    st.markdown(r"**2. Total Active Force ($P_a$):**")
-                    st.latex(r"P_a = \frac{1}{2} \\gamma H^2 K_a")
-                    st.success(f"**Result: $P_a = {Pa:.2f}$ kN/m**")
+                st.markdown(r"**1. Coulomb Coefficient ($K_a$):**")
+                st.latex(r"K_a = \frac{\cos^2(\\phi - \alpha)}{\cos^2\alpha \cos(\alpha + \delta) \left[ 1 + \\sqrt{\frac{\sin(\\phi + \delta) \\sin(\\phi - \beta)}{\cos(\alpha + \delta) \cos(\alpha - \beta)}} \right]^2}")
+                st.write(f"Substituting values: **$K_a = {Ka_c:.4f}$**")
+                
+                st.markdown(r"**2. Total Active Force ($P_a$):**")
+                st.latex(r"P_a = \frac{1}{2} \\gamma H^2 K_a")
+                st.success(f"**Result: $P_a = {Pa:.2f}$ kN/m**")
 
 if __name__ == "__main__":
     app()
