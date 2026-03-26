@@ -465,95 +465,289 @@ def app():
 
         with col_c_viz:
             write_text("subheader", "Failure Wedge Diagram (FBD)")
+
+            # Make sure this import exists at top of file:
+            # import matplotlib.patches as patches
             
-            # Constants & Geometry
-            phi_r, del_r = np.radians(phi_c), np.radians(delta)
-            alp_r, bet_r = np.radians(alpha), np.radians(beta_c)
-            top_x = H_c * np.tan(alp_r)
+            # ---------------------------------------------------------
+            # 1. ANGLES / BASIC GEOMETRY
+            # ---------------------------------------------------------
+            phi_r = np.radians(phi_c)
+            del_r = np.radians(delta)
+            alp_r = np.radians(alpha)
+            bet_r = np.radians(beta_c)
             
-            # Approx failure plane for viz
-            rho_approx = 45 + (phi_c/2) 
-            rho_rad = np.radians(rho_approx)
+            # Wall back face: top leans LEFT for positive alpha
+            top_x = -H_c * np.tan(alp_r)
             
-            # Intersection C calculation for drawing
-            if rho_rad > bet_r:
-                wedge_x = (H_c - top_x * np.tan(bet_r)) / (np.tan(rho_rad) - np.tan(bet_r))
-                wedge_y = wedge_x * np.tan(rho_rad)
+            # Use the same assumed failure plane as the calculation block
+            theta_fail_deg = 45 + phi_c / 2.0
+            theta_fail_r = np.radians(theta_fail_deg)
+            
+            # Ground surface through A(top_x, H_c)
+            m_ground = np.tan(bet_r)
+            
+            denom_x = np.tan(theta_fail_r) - m_ground
+            if abs(denom_x) < 1e-9:
+                wedge_x = max(2.0, abs(top_x) + H_c * 0.9)
+                wedge_y = H_c + (wedge_x - top_x) * m_ground
             else:
-                wedge_x, wedge_y = top_x + 5, top_x + 5 
-
-            # --- PLOT ---
-            fig_w, ax_w = plt.subplots(figsize=(8, 8))
+                wedge_x = (H_c - top_x * m_ground) / denom_x
+                wedge_y = wedge_x * np.tan(theta_fail_r)
             
-            # A. GEOMETRY
-            wall_poly = [[0, 0], [top_x, H_c], [top_x - 1.5, H_c], [-1.5, 0]]
-            ax_w.add_patch(patches.Polygon(wall_poly, facecolor='lightgrey', edgecolor='black', hatch='//'))
+            # ---------------------------------------------------------
+            # 2. WALL SHAPE (fixes the "both sides slant same way" issue)
+            # ---------------------------------------------------------
+            wall_base_width = 2.2
+            wall_top_width = 0.8
             
-            soil_poly = [[0, 0], [top_x, H_c], [wedge_x, wedge_y]]
-            ax_w.add_patch(patches.Polygon(soil_poly, facecolor='#FFE0B2', alpha=0.5, edgecolor='none'))
+            front_base_x = -wall_base_width
+            front_top_x = top_x - wall_top_width
             
-            # Ground & Failure Lines
-            ax_w.plot([top_x, wedge_x + 2], [H_c, H_c + (wedge_x + 2 - top_x)*np.tan(bet_r)], 'k-', linewidth=2)
-            ax_w.plot([0, wedge_x], [0, wedge_y], 'r--', linewidth=2)
-
-                        # B. ANNOTATIONS (Forces)
-            # Use geometry-based directions instead of hardcoded arrows
-
-            wedge_scale = max(H_c, wedge_y) * 0.18
-            head_w = wedge_scale * 0.10
-            shaft_w = wedge_scale * 0.03
-
-            # Wedge centroid (simple triangle centroid)
-            cx, cy = (0 + top_x + wedge_x) / 3, (0 + H_c + wedge_y) / 3
-
-            # 1. Weight (W) - always vertical downward
-            ax_w.arrow(cx, cy + 0.25 * wedge_scale, 0, -1.2 * wedge_scale,
-                       head_width=head_w, color='purple', width=shaft_w, zorder=10)
-            ax_w.text(cx + 0.15 * wedge_scale, cy - 0.2 * wedge_scale, "W",
-                      color='purple', fontweight='bold', fontsize=12)
-
-            # 2. Wall reaction (P)
-            # Wall face angle from horizontal
+            wall_poly = np.array([
+                [0.0, 0.0],             # B: back face base
+                [top_x, H_c],           # A: back face top
+                [front_top_x, H_c],     # front face top
+                [front_base_x, 0.0],    # front face base
+            ])
+            
+            # Soil wedge polygon B-A-C
+            soil_poly = np.array([
+                [0.0, 0.0],
+                [top_x, H_c],
+                [wedge_x, wedge_y],
+            ])
+            
+            # ---------------------------------------------------------
+            # 3. FIGURE
+            # ---------------------------------------------------------
+            fig_w, ax_w = plt.subplots(figsize=(7.4, 6.2))
+            ax_w.set_facecolor("#efefef")
+            
+            # Wall
+            ax_w.add_patch(
+                patches.Polygon(
+                    wall_poly,
+                    closed=True,
+                    facecolor="lightgrey",
+                    edgecolor="black",
+                    hatch="//",
+                    linewidth=1.6,
+                    zorder=2
+                )
+            )
+            
+            # Wedge soil
+            ax_w.add_patch(
+                patches.Polygon(
+                    soil_poly,
+                    closed=True,
+                    facecolor="#e9dcc2",
+                    edgecolor="none",
+                    alpha=0.95,
+                    zorder=1
+                )
+            )
+            
+            # Wall back face outline
+            ax_w.plot([0, top_x], [0, H_c], color="black", linewidth=2.2, zorder=4)
+            
+            # Ground surface
+            x_ground_end = wedge_x + max(1.2, 0.35 * H_c)
+            y_ground_end = H_c + (x_ground_end - top_x) * m_ground
+            ax_w.plot(
+                [top_x, x_ground_end],
+                [H_c, y_ground_end],
+                color="black",
+                linewidth=2.2,
+                zorder=4
+            )
+            
+            # Failure plane
+            ax_w.plot(
+                [0, wedge_x],
+                [0, wedge_y],
+                linestyle="--",
+                color="red",
+                linewidth=2.2,
+                zorder=3
+            )
+            
+            # Base reference line
+            ax_w.plot(
+                [front_base_x - 0.2, wedge_x + 0.8],
+                [0, 0],
+                linestyle="--",
+                color="gray",
+                linewidth=1.0,
+                alpha=0.35,
+                zorder=0
+            )
+            
+            # ---------------------------------------------------------
+            # 4. FORCE DIRECTIONS
+            # ---------------------------------------------------------
+            # Wedge centroid
+            cx, cy = (0 + top_x + wedge_x) / 3.0, (0 + H_c + wedge_y) / 3.0
+            
+            # Wall face direction B -> A
             wall_face_ang = np.arctan2(H_c, top_x if abs(top_x) > 1e-9 else 1e-9)
-
-            # Normal pointing into the wedge
+            
+            # Normal from wall into wedge
             wall_normal_ang = wall_face_ang - np.pi / 2
-
-            # Resultant P inclined by delta from the normal
-            theta_p = wall_normal_ang + del_r
-
-            px, py = top_x * 0.38, H_c * 0.38
-            dx_p = wedge_scale * np.cos(theta_p)
-            dy_p = wedge_scale * np.sin(theta_p)
-
-            ax_w.arrow(px, py, dx_p, dy_p,
-                       head_width=head_w, color='red', width=shaft_w, zorder=10)
-            ax_w.text(px + dx_p + 0.08 * wedge_scale, py + dy_p, "P",
-                      color='red', fontweight='bold', fontsize=12)
-            ax_w.text(px + 0.15 * wedge_scale, py + 0.15 * wedge_scale,
-                      f"δ={delta:.1f}°", fontsize=8)
-
-            # 3. Soil reaction (R)
-            # Failure plane angle = rho_rad
-            # Normal pointing into wedge = rho_rad + 90°
-            failure_normal_ang = rho_rad + np.pi / 2
-
-            # Resultant R inclined by phi from the normal
+            
+            # P on wedge: inclined DOWNWARD from wall normal by delta
+            theta_p = wall_normal_ang - del_r
+            
+            # Failure plane direction B -> C
+            failure_face_ang = np.arctan2(wedge_y, wedge_x if abs(wedge_x) > 1e-9 else 1e-9)
+            
+            # Normal into wedge from failure plane
+            failure_normal_ang = failure_face_ang + np.pi / 2
+            
+            # R on wedge: inclined downward from failure plane normal by phi
             theta_r = failure_normal_ang - phi_r
-
-            rx, ry = wedge_x * 0.42, wedge_y * 0.42
-            dx_r = wedge_scale * np.cos(theta_r)
-            dy_r = wedge_scale * np.sin(theta_r)
-
-            ax_w.arrow(rx, ry, dx_r, dy_r,
-                       head_width=head_w, color='green', width=shaft_w, zorder=10)
-            ax_w.text(rx + dx_r - 0.05 * wedge_scale, ry + dy_r + 0.05 * wedge_scale, "R",
-                      color='green', fontweight='bold', fontsize=12)
-            ax_w.text(rx - 0.15 * wedge_scale, ry + 0.20 * wedge_scale,
-                      f"ϕ={phi_c:.1f}°", fontsize=8)
-            st.pyplot(fig_w)
+            
+            # Arrow scaling
+            force_len = 0.95
+            ms = 18  # arrow head size
+            
+            # ---------------------------------------------------------
+            # 5. FORCE LOCATIONS
+            # ---------------------------------------------------------
+            # P applied on wall face
+            t_p = 0.42
+            px = t_p * top_x
+            py = t_p * H_c
+            
+            # R applied on failure plane
+            t_r = 0.56
+            rx = t_r * wedge_x
+            ry = t_r * wedge_y
+            
+            # W through centroid
+            wx, wy = cx, cy + 0.8
+            
+            # ---------------------------------------------------------
+            # 6. SMALL DASHED NORMALS (for showing delta and phi relation)
+            # ---------------------------------------------------------
+            norm_len = 0.70
+            
+            # Wall normal at P
+            ax_w.plot(
+                [px, px + norm_len * np.cos(wall_normal_ang)],
+                [py, py + norm_len * np.sin(wall_normal_ang)],
+                linestyle="--",
+                color="gray",
+                linewidth=1.2,
+                zorder=5
+            )
+            
+            # Failure-plane normal at R
+            ax_w.plot(
+                [rx, rx + norm_len * np.cos(failure_normal_ang)],
+                [ry, ry + norm_len * np.sin(failure_normal_ang)],
+                linestyle="--",
+                color="gray",
+                linewidth=1.2,
+                zorder=5
+            )
+            
+            # ---------------------------------------------------------
+            # 7. DRAW FORCES
+            # ---------------------------------------------------------
+            # P
+            ax_w.annotate(
+                "",
+                xy=(px + force_len * np.cos(theta_p), py + force_len * np.sin(theta_p)),
+                xytext=(px, py),
+                arrowprops=dict(arrowstyle="-|>", color="red", lw=3, mutation_scale=ms),
+                zorder=8
+            )
+            ax_w.text(
+                px + force_len * np.cos(theta_p) + 0.05,
+                py + force_len * np.sin(theta_p) - 0.02,
+                "P",
+                color="red",
+                fontsize=13,
+                fontweight="bold"
+            )
+            
+            # R
+            ax_w.annotate(
+                "",
+                xy=(rx + force_len * np.cos(theta_r), ry + force_len * np.sin(theta_r)),
+                xytext=(rx, ry),
+                arrowprops=dict(arrowstyle="-|>", color="green", lw=3, mutation_scale=ms),
+                zorder=8
+            )
+            ax_w.text(
+                rx + force_len * np.cos(theta_r) - 0.12,
+                ry + force_len * np.sin(theta_r) + 0.08,
+                "R",
+                color="green",
+                fontsize=13,
+                fontweight="bold"
+            )
+            
+            # W
+            ax_w.annotate(
+                "",
+                xy=(cx, cy - 0.95),
+                xytext=(cx, cy + 0.55),
+                arrowprops=dict(arrowstyle="-|>", color="purple", lw=3, mutation_scale=ms),
+                zorder=8
+            )
+            ax_w.text(
+                cx + 0.15,
+                cy - 0.10,
+                "W",
+                color="purple",
+                fontsize=13,
+                fontweight="bold"
+            )
+            
+            # ---------------------------------------------------------
+            # 8. LABEL ANGLES
+            # ---------------------------------------------------------
+            ax_w.text(
+                px - 0.18,
+                py + 0.18,
+                f"δ={delta:.1f}°",
+                fontsize=10,
+                color="#333333"
+            )
+            
+            ax_w.text(
+                rx + 0.12,
+                ry + 0.15,
+                f"ϕ={phi_c:.1f}°",
+                fontsize=10,
+                color="#333333"
+            )
+            
+            ax_w.text(
+                0.65,
+                0.30,
+                f"θ={theta_fail_deg:.1f}°",
+                fontsize=10,
+                color="#333333"
+            )
+            
+            # ---------------------------------------------------------
+            # 9. FINAL DISPLAY SETTINGS
+            # ---------------------------------------------------------
+            min_x = min(front_base_x, top_x) - 0.55
+            max_x = max(wedge_x, x_ground_end) + 0.55
+            max_y = max(wedge_y, y_ground_end, H_c) + 0.55
+            
+            ax_w.set_xlim(min_x, max_x)
+            ax_w.set_ylim(-0.35, max_y)
+            ax_w.set_aspect("equal", adjustable="box")
+            ax_w.axis("off")
+            
+            st.pyplot(fig_w, use_container_width=True)
             plt.close(fig_w)
-
             # --- CALCULATION PANEL ---
         if c_calc_btn:
                 # ---------------------------------------------------------
