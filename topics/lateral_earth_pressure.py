@@ -648,12 +648,10 @@ def app():
             glass_table(summary_df)
         
             glass_box(
-                f"""
-                <b>Final Answers</b><br><br>
-                Wall force on wedge, <b>P = {P:.2f} kN/m</b><br>
-                Reaction on failure plane, <b>R = {R:.2f} kN/m</b><br>
-                Equivalent active earth pressure coefficient, <b>K<sub>a</sub> = {Ka_static:.4f}</b>
-                """
+                f"<b>Final Answers</b><br><br>"
+                f"Wall force on wedge, <b>P = {P:.2f} kN/m</b><br>"
+                f"Reaction on failure plane, <b>R = {R:.2f} kN/m</b><br>"
+                f"Equivalent active earth pressure coefficient, <b>K<sub>a</sub> = {Ka_static:.4f}</b>"
             )
         
             # ---------------------------------------------------------
