@@ -647,12 +647,22 @@ def app():
             })
             glass_table(summary_df)
         
-            glass_box(
-                f"<b>Final Answers</b><br><br>"
-                f"Wall force on wedge, <b>P = {P:.2f} kN/m</b><br>"
-                f"Reaction on failure plane, <b>R = {R:.2f} kN/m</b><br>"
-                f"Equivalent active earth pressure coefficient, <b>K<sub>a</sub> = {Ka_static:.4f}</b>"
-            )
+            write_text("subheader", "Final Answers")
+
+            final_answers_df = pd.DataFrame({
+                "Result": [
+                    "Wall force on wedge, P",
+                    "Reaction on failure plane, R",
+                    "Equivalent active earth pressure coefficient, Ka",
+                ],
+                "Value": [
+                    f"{P:.2f} kN/m",
+                    f"{R:.2f} kN/m",
+                    f"{Ka_static:.4f}",
+                ]
+            })
+            
+            glass_table(final_answers_df)
         
             # ---------------------------------------------------------
             # 5. STUDENT-FRIENDLY WORKING
