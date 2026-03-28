@@ -674,8 +674,7 @@ def app():
             # Wall back face
             ax_w.plot([0, top_x_full], [0, H_c], color="black", linewidth=2.2, zorder=4)
 
-            if cw["valid"]:
-                x_c_full = cw["x_c_full"]
+                            x_c_full = cw["x_c_full"]
                 y_c_full = cw["y_c_full"]
                 x_d = cw["x_d"]
                 y_d = cw["y_d"]
@@ -695,8 +694,7 @@ def app():
                     zorder=4
                 )
 
-                # Active cracked wedge only
-                                # Active cracked wedge only
+                # Active cracked wedge only: B-D-C
                 active_wedge_poly = np.array([
                     [0.0, 0.0],
                     [x_d, y_d],
@@ -713,64 +711,7 @@ def app():
                     )
                 )
 
-                # Excluded zone due to tension crack
-                if zt > 1e-6:
-                    excluded_poly = np.array([
-                        [top_x_full, H_c],
-                        [x_c, y_c],
-                        [x_d, y_d],
-                    ])
-                    ax_w.add_patch(
-                        patches.Polygon(
-                            excluded_poly,
-                            closed=True,
-                            facecolor="#fff4b8",
-                            edgecolor="#d8b400",
-                            hatch="///",
-                            alpha=0.85,
-                            linewidth=1.0,
-                            zorder=1.5
-                        )
-                    )
-                
-                    crack_x = top_x_full + 0.12
-                    ax_w.plot(
-                        [crack_x, crack_x],
-                        [H_c, y_d],
-                        linestyle="--",
-                        color="royalblue",
-                        linewidth=2.0,
-                        zorder=6
-                    )
-                    ax_w.text(
-                        crack_x + 0.08,
-                        (H_c + y_d) / 2.0,
-                        f"zₜ={zt:.2f} m",
-                        fontsize=10,
-                        color="royalblue",
-                        va="center"
-                    )
-
-                    # Crack depth marker beside wall
-                    crack_x = top_x_full + 0.12
-                    ax_w.plot(
-                        [crack_x, crack_x],
-                        [H_c, y_d],
-                        linestyle="--",
-                        color="royalblue",
-                        linewidth=2.0,
-                        zorder=6
-                    )
-                    ax_w.text(
-                        crack_x + 0.08,
-                        (H_c + y_d) / 2.0,
-                        f"zₜ={zt:.2f} m",
-                        fontsize=10,
-                        color="royalblue",
-                        va="center"
-                    )
-
-                # Excluded zone due to tension crack
+                # Excluded zone due to tension crack: D-A-C
                 if zt > 1e-6:
                     excluded_poly = np.array([
                         [top_x_full, H_c],
@@ -790,11 +731,10 @@ def app():
                         )
                     )
 
-                    # Crack depth marker
-                    crack_x = top_x_full + 0.15
+                    crack_x = top_x_full + 0.12
                     ax_w.plot(
                         [crack_x, crack_x],
-                        [H_c, H_eff],
+                        [H_c, y_d],
                         linestyle="--",
                         color="royalblue",
                         linewidth=2.0,
@@ -802,7 +742,7 @@ def app():
                     )
                     ax_w.text(
                         crack_x + 0.08,
-                        (H_c + H_eff) / 2.0,
+                        (H_c + y_d) / 2.0,
                         f"zₜ={zt:.2f} m",
                         fontsize=10,
                         color="royalblue",
@@ -829,7 +769,6 @@ def app():
                     alpha=0.35,
                     zorder=0
                 )
-
                 # ---------------------------------------------------------
                 # FORCE LOCATIONS
                 # ---------------------------------------------------------
