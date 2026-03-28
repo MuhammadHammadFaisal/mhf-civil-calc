@@ -773,10 +773,9 @@ def app():
                 # Excluded zone due to tension crack
                 if zt > 1e-6:
                     excluded_poly = np.array([
-                        [top_x_eff, H_eff],
                         [top_x_full, H_c],
-                        [x_c_full, y_c_full],
-                        [x_c_eff, y_c_eff],
+                        [x_c, y_c],
+                        [x_d, y_d],
                     ])
                     ax_w.add_patch(
                         patches.Polygon(
