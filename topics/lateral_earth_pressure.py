@@ -7,10 +7,204 @@ from theme import write_text, glass_box, glass_table
 
 
 
+
 # =========================================================
 # HELPER FUNCTIONS
 # =========================================================
+def polygon_area_centroid(points):
+    """
+    points: list of (x, y) vertices in order, closed or unclosed.
+    Returns: (area, cx, cy)
+    """
+    pts = np.array(points, dtype=float)
+    if not np.allclose(pts[0], pts[-1]):
+        pts = np.vstack([pts, pts[0]])
 
+    x = pts[:, 0]
+    y = pts[:, 1]
+
+    cross = x[:-1] * y[1:] - x[1:] * y[:-1]
+    A2 = np.sum(cross)
+    A = 0.5 * A2
+
+    if abs(A) < 1e-12:
+        return 0.0, np.mean(x[:-1]), np.mean(y[:-1])
+
+    cx = np.sum((x[:-1] + x[1:]) * cross) / (6.0 * A)
+    cy = np.sum((y[:-1] + y[1:]) * cross) / (6.0 * A)
+
+    return abs(A), cx, cy
+def build_coulomb_cracked_wedge(H_c, alpha, beta_c, phi_c, delta, gamma_c, c_c):
+    phi_r = np.radians(phi_c)
+    del_r = np.radians(delta)
+    alp_r = np.radians(alpha)
+    bet_r = np.radians(beta_c)
+
+    theta_fail_deg = 45.0 + phi_c / 2.0
+    theta_fail_r = np.radians(theta_fail_deg)
+
+    m_ground = np.tan(bet_r)
+    top_x_full = -H_c * np.tan(alp_r)
+
+    denom_x = np.tan(theta_fail_r) - m_ground
+    if abs(denom_x) < 1e-9:
+        return {"valid": False, "reason": "Failure plane and ground surface are nearly parallel."}
+
+    # ---------------------------------------------------------
+    # 1) FULL COHESIONLESS WEDGE -> ONLY TO GET Ka_dry FOR z_t
+    # ---------------------------------------------------------
+    x_c_full = (H_c - top_x_full * m_ground) / denom_x
+    y_c_full = x_c_full * np.tan(theta_fail_r)
+
+    full_triangle = [
+        (top_x_full, H_c),   # A
+        (0.0, 0.0),          # B
+        (x_c_full, y_c_full) # C_full
+    ]
+    area_full, _, _ = polygon_area_centroid(full_triangle)
+    W_full = gamma_c * area_full
+
+    wall_face_ang = np.arctan2(H_c, top_x_full if abs(top_x_full) > 1e-9 else 1e-9)
+    wall_normal_ang = wall_face_ang - np.pi / 2.0
+    theta_p = wall_normal_ang + del_r
+    p_dir = np.array([np.cos(theta_p), np.sin(theta_p)])
+
+    failure_face_ang_full = np.arctan2(y_c_full, x_c_full if abs(x_c_full) > 1e-9 else 1e-9)
+    failure_normal_ang_full = failure_face_ang_full + np.pi / 2.0
+    t_dir_full = np.array([np.cos(failure_face_ang_full), np.sin(failure_face_ang_full)])
+    n_dir_full = np.array([np.cos(failure_normal_ang_full), np.sin(failure_normal_ang_full)])
+
+    A_eq_full = np.column_stack((p_dir, n_dir_full + np.tan(phi_r) * t_dir_full))
+    b_eq_full = np.array([0.0, W_full])
+
+    try:
+        sol_full = np.linalg.solve(A_eq_full, b_eq_full)
+        P_dry = sol_full[0]
+        N_dry = sol_full[1]
+    except np.linalg.LinAlgError:
+        return {"valid": False, "reason": "Dry reference wedge could not be solved."}
+
+    if gamma_c <= 0 or H_c <= 0 or P_dry <= 0:
+        return {"valid": False, "reason": "Invalid dry reference wedge."}
+
+    Ka_dry = (2.0 * P_dry) / (gamma_c * H_c**2)
+
+    # ---------------------------------------------------------
+    # 2) TENSION CRACK DEPTH
+    # ---------------------------------------------------------
+    if c_c > 0 and Ka_dry > 0:
+        zt = min(H_c, (2.0 * c_c) / (gamma_c * np.sqrt(Ka_dry)))
+    else:
+        zt = 0.0
+
+    # ---------------------------------------------------------
+    # 3) VERTICAL TENSION CRACK BEHIND WALL
+    #     Ground line:  y_g = H + (x - xA) tan(beta)
+    #     Failure line: y_f = x tan(theta)
+    #     Crack depth:  y_g - y_f = z_t
+    # ---------------------------------------------------------
+    x_crack = (H_c - top_x_full * m_ground - zt) / denom_x
+    y_c = x_crack * np.tan(theta_fail_r)   # C = crack bottom on failure plane
+    y_d = y_c + zt                         # D = crack top on ground line
+    x_d = x_crack
+
+    if x_crack < top_x_full - 1e-9 or x_crack > x_c_full + 1e-9:
+        return {"valid": False, "reason": "Computed tension crack lies outside the wedge geometry."}
+
+    # ---------------------------------------------------------
+    # 4) ACTIVE WEDGE = A-B-C-D (quadrilateral)
+    # ---------------------------------------------------------
+    active_poly = [
+        (top_x_full, H_c),  # A
+        (0.0, 0.0),         # B
+        (x_crack, y_c),     # C
+        (x_crack, y_d),     # D
+    ]
+    area_eff, cx_eff, cy_eff = polygon_area_centroid(active_poly)
+    W_eff = gamma_c * area_eff
+
+    # Failure plane under active wedge is only B-C
+    L_fail_eff = np.hypot(x_crack, y_c)
+    C_plane = c_c * L_fail_eff
+
+    failure_face_ang = np.arctan2(y_c, x_crack if abs(x_crack) > 1e-9 else 1e-9)
+    failure_normal_ang = failure_face_ang + np.pi / 2.0
+
+    t_dir = np.array([np.cos(failure_face_ang), np.sin(failure_face_ang)])
+    n_dir = np.array([np.cos(failure_normal_ang), np.sin(failure_normal_ang)])
+
+    A_eq = np.column_stack((p_dir, n_dir + np.tan(phi_r) * t_dir))
+    b_eq = np.array([
+        -C_plane * t_dir[0],
+        W_eff - C_plane * t_dir[1]
+    ])
+
+    try:
+        sol = np.linalg.solve(A_eq, b_eq)
+        P = sol[0]
+        N = sol[1]
+    except np.linalg.LinAlgError:
+        return {"valid": False, "reason": "Cracked cohesive wedge could not be solved."}
+
+    R_vec = N * n_dir + (N * np.tan(phi_r)) * t_dir
+    R = np.linalg.norm(R_vec)
+    theta_r_plot = np.arctan2(R_vec[1], R_vec[0])
+
+    Ka_eff = (2.0 * P) / (gamma_c * H_c**2)
+
+    return {
+        "valid": True,
+        "reason": "",
+        "theta_fail_deg": theta_fail_deg,
+        "theta_fail_r": theta_fail_r,
+        "m_ground": m_ground,
+        "top_x_full": top_x_full,
+        "x_c_full": x_c_full,
+        "y_c_full": y_c_full,
+        "x_crack": x_crack,
+        "y_c": y_c,
+        "x_d": x_d,
+        "y_d": y_d,
+        "area_eff": area_eff,
+        "cx_eff": cx_eff,
+        "cy_eff": cy_eff,
+        "W_eff": W_eff,
+        "L_fail_eff": L_fail_eff,
+        "C_plane": C_plane,
+        "zt": zt,
+        "Ka_dry": Ka_dry,
+        "Ka_eff": Ka_eff,
+        "P": P,
+        "N": N,
+        "R": R,
+        "theta_p": theta_p,
+        "theta_r_plot": theta_r_plot,
+        "wall_face_ang": wall_face_ang,
+        "wall_normal_ang": wall_normal_ang,
+        "failure_face_ang": failure_face_ang,
+        "failure_normal_ang": failure_normal_ang,
+        "t_dir": t_dir,
+        "n_dir": n_dir,
+    }
+def load_coulomb_soil_defaults():
+    defaults = {
+        "Sand": {
+            "phi_c_val": 32.0,
+            "delta_c_val": 20.0,
+            "gamma_c_val": 18.0,
+            "c_c_val": 0.0,
+        },
+        "Clay": {
+            "phi_c_val": 24.0,
+            "delta_c_val": 8.0,
+            "gamma_c_val": 19.0,
+            "c_c_val": 20.0,
+        },
+    }
+
+    soil = st.session_state.get("c_soil_type", "Sand")
+    for key, value in defaults[soil].items():
+        st.session_state[key] = value
 def tension_crack_depth(layer):
     phi_r = np.radians(layer['phi'])
     Ka = (1 - np.sin(phi_r)) / (1 + np.sin(phi_r))
@@ -432,107 +626,497 @@ def app():
     # ---------------------------------------------------------
     # TAB 2: COULOMB (Wedge Theory)
     # ---------------------------------------------------------
+    # ---------------------------------------------------------
+    # TAB 2: COULOMB (Wedge Theory)
+    # ---------------------------------------------------------
     with tab_coulomb:
         write_text("section_header", "Coulomb's Wedge Theory")
         
-        col_c_in, col_c_viz = st.columns([0.4, 0.6], gap="medium")
+        col_c_in, col_c_viz = st.columns([0.6, 0.4], gap="medium")
 
         with col_c_in:
             write_text("subheader", "1. Wall & Geometry")
-            H_c = st.number_input("Wall Height (H) [m]", 1.0, 20.0, 6.0)
-            alpha = st.number_input("Wall Batter (α) [deg]", 0.0, 30.0, 10.0, help="Angle from vertical")
-            beta_c = st.number_input("Backfill Slope (β) [deg]", 0.0, 30.0, 15.0)
-            
-            st.markdown("---")
+            c1, c2 = st.columns(2)
+            with c1:
+                H_c = st.number_input("Wall Height (H) [m]", 1.0, 20.0, 6.0)
+                alpha = st.number_input("Wall Batter (α) [deg]", 0.0, 30.0, 10.0, help="Angle from vertical")
+            with c2:
+                beta_c = st.number_input("Backfill Slope (β) [deg]", 0.0, 30.0, 15.0)
+
             write_text("subheader", "2. Soil & Interface")
-            c_soil_type = st.selectbox("Soil Type", ["Sand", "Custom"], key="c_soil_type")
-            if c_soil_type == "Sand": d_phi, d_delta, d_gam = 32.0, 20.0, 18.0
-            else: d_phi, d_delta, d_gam = 30.0, 15.0, 19.0
-            
-            phi_c = st.number_input("Friction Angle (ϕ') [deg]", 20.0, 45.0, d_phi)
-            delta = st.number_input("Wall Friction (δ) [deg]", 0.0, 30.0, d_delta)
-            gamma_c = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, d_gam)
-            
-            st.markdown("---")
+            c3, c4 = st.columns(2)
+            with c3:
+                c_soil_type = st.selectbox("Soil Type", ["Sand", "Clay"], key="c_soil_type")
+                if c_soil_type == "Sand":
+                    d_phi, d_delta, d_gam, d_c = 32.0, 20.0, 18.0, 0.0
+                else:
+                    d_phi, d_delta, d_gam, d_c = 24.0, 8.0, 19.0, 20.0
+
+                phi_c = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 45.0, d_phi)
+                c_c = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, d_c)
+
+            with c4:
+                delta = st.number_input("Wall Friction (δ) [deg]", 0.0, 30.0, d_delta)
+                gamma_c = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, d_gam)
+
             c_calc_btn = st.button("Calculate Wedge Forces", type="primary", width="stretch")
+
+        # ---------------------------------------------------------
+        # BUILD CRACKED WEDGE MODEL ONCE
+        # ---------------------------------------------------------
+        cw = build_coulomb_cracked_wedge(H_c, alpha, beta_c, phi_c, delta, gamma_c, c_c)
 
         with col_c_viz:
             write_text("subheader", "Failure Wedge Diagram (FBD)")
-            
-            # Constants & Geometry
-            phi_r, del_r = np.radians(phi_c), np.radians(delta)
-            alp_r, bet_r = np.radians(alpha), np.radians(beta_c)
-            top_x = H_c * np.tan(alp_r)
-            
-            # Approx failure plane for viz
-            rho_approx = 45 + (phi_c/2) 
-            rho_rad = np.radians(rho_approx)
-            
-            # Intersection C calculation for drawing
-            if rho_rad > bet_r:
-                wedge_x = (H_c - top_x * np.tan(bet_r)) / (np.tan(rho_rad) - np.tan(bet_r))
-                wedge_y = wedge_x * np.tan(rho_rad)
+
+            phi_r = np.radians(phi_c)
+            alp_r = np.radians(alpha)
+            bet_r = np.radians(beta_c)
+
+            top_x_full = -H_c * np.tan(alp_r)
+
+            wall_base_width = 2.2
+            wall_top_width = 0.8
+            front_base_x = -wall_base_width
+            front_top_x = top_x_full - wall_top_width
+
+            wall_poly = np.array([
+                [0.0, 0.0],
+                [top_x_full, H_c],
+                [front_top_x, H_c],
+                [front_base_x, 0.0],
+            ])
+
+            fig_w, ax_w = plt.subplots(figsize=(7.4, 6.2))
+            ax_w.set_facecolor("#efefef")
+
+            # Wall
+            ax_w.add_patch(
+                patches.Polygon(
+                    wall_poly,
+                    closed=True,
+                    facecolor="lightgrey",
+                    edgecolor="black",
+                    hatch="//",
+                    linewidth=1.6,
+                    zorder=2
+                )
+            )
+
+            # Wall back face
+            ax_w.plot([0, top_x_full], [0, H_c], color="black", linewidth=2.2, zorder=4)
+            if cw["valid"]:
+                x_c_full = cw["x_c_full"]
+                y_c_full = cw["y_c_full"]
+                x_crack = cw["x_crack"]
+                y_c = cw["y_c"]
+                x_d = cw["x_d"]
+                y_d = cw["y_d"]
+                zt = cw["zt"]
+
+                x_ground_end = x_c_full + max(1.2, 0.35 * H_c)
+                y_ground_end = H_c + (x_ground_end - top_x_full) * cw["m_ground"]
+
+                # Ground surface (full)
+                ax_w.plot(
+                    [top_x_full, x_ground_end],
+                    [H_c, y_ground_end],
+                    color="black",
+                    linewidth=2.2,
+                    zorder=4
+                )
+
+                # Active cracked wedge only: A-B-C-D
+                active_wedge_poly = np.array([
+                    [top_x_full, H_c],   # A
+                    [0.0, 0.0],          # B
+                    [x_crack, y_c],      # C
+                    [x_d, y_d],          # D
+                ])
+                ax_w.add_patch(
+                    patches.Polygon(
+                        active_wedge_poly,
+                        closed=True,
+                        facecolor="#e9dcc2",
+                        edgecolor="none",
+                        alpha=0.95,
+                        zorder=1
+                    )
+                )
+
+                # Excluded zone due to tension crack: D - C_full - C
+                if zt > 1e-6:
+                    excluded_poly = np.array([
+                        [x_d, y_d],            # D
+                        [x_c_full, y_c_full],  # original ground/failure intersection
+                        [x_crack, y_c],        # C
+                    ])
+                    ax_w.add_patch(
+                        patches.Polygon(
+                            excluded_poly,
+                            closed=True,
+                            facecolor="#fff4b8",
+                            edgecolor="#d8b400",
+                            hatch="///",
+                            alpha=0.85,
+                            linewidth=1.0,
+                            zorder=1.5
+                        )
+                    )
+
+                    # Vertical tension crack D-C
+                    ax_w.plot(
+                        [x_crack, x_crack],
+                        [y_c, y_d],
+                        linestyle="--",
+                        color="royalblue",
+                        linewidth=2.0,
+                        zorder=6
+                    )
+                    ax_w.text(
+                        x_crack + 0.08,
+                        (y_c + y_d) / 2.0,
+                        f"zₜ={zt:.2f} m",
+                        fontsize=10,
+                        color="royalblue",
+                        va="center"
+                    )
+
+                # Failure plane under active wedge is B-C
+                ax_w.plot(
+                    [0, x_crack],
+                    [0, y_c],
+                    linestyle="--",
+                    color="red",
+                    linewidth=2.4,
+                    zorder=3
+                )
+
+                # Optional extension of original full failure plane to C_full
+                if zt > 1e-6:
+                    ax_w.plot(
+                        [x_crack, x_c_full],
+                        [y_c, y_c_full],
+                        linestyle="--",
+                        color="red",
+                        linewidth=2.0,
+                        alpha=0.35,
+                        zorder=2
+                    )
+
+                # Base reference
+                ax_w.plot(
+                    [front_base_x - 0.2, x_c_full + 0.8],
+                    [0, 0],
+                    linestyle="--",
+                    color="gray",
+                    linewidth=1.0,
+                    alpha=0.35,
+                    zorder=0
+                )
+                # ---------------------------------------------------------
+                # FORCE LOCATIONS
+                # ---------------------------------------------------------
+                cx = cw["cx_eff"]
+                cy = cw["cy_eff"]
+
+                force_len = 0.95
+                ms = 18
+                norm_len = 0.70
+
+                # P acts on full wall face AB
+                t_p = 0.45
+                px = t_p * top_x_full
+                py = t_p * H_c
+
+                # R acts on active failure plane B-C
+                t_r = 0.56
+                rx = t_r * x_crack
+                ry = t_r * y_c
+
+                # Cohesion acts along active failure plane B-C
+                t_c = 0.74
+                cxp = t_c * x_crack
+                cyp = t_c * y_c
+                # Normals
+                ax_w.plot(
+                    [px, px + norm_len * np.cos(cw["wall_normal_ang"])],
+                    [py, py + norm_len * np.sin(cw["wall_normal_ang"])],
+                    linestyle="--",
+                    color="gray",
+                    linewidth=1.2,
+                    zorder=5
+                )
+                ax_w.plot(
+                    [rx, rx + norm_len * np.cos(cw["failure_normal_ang"])],
+                    [ry, ry + norm_len * np.sin(cw["failure_normal_ang"])],
+                    linestyle="--",
+                    color="gray",
+                    linewidth=1.2,
+                    zorder=5
+                )
+
+                # P
+                ax_w.annotate(
+                    "",
+                    xy=(px + force_len * np.cos(cw["theta_p"]), py + force_len * np.sin(cw["theta_p"])),
+                    xytext=(px, py),
+                    arrowprops=dict(arrowstyle="-|>", color="red", lw=3, mutation_scale=ms),
+                    zorder=8
+                )
+                ax_w.text(
+                    px + force_len * np.cos(cw["theta_p"]) + 0.05,
+                    py + force_len * np.sin(cw["theta_p"]) - 0.02,
+                    "P",
+                    color="red",
+                    fontsize=13,
+                    fontweight="bold"
+                )
+
+                # R (normal + friction only)
+                ax_w.annotate(
+                    "",
+                    xy=(rx + force_len * np.cos(cw["theta_r_plot"]), ry + force_len * np.sin(cw["theta_r_plot"])),
+                    xytext=(rx, ry),
+                    arrowprops=dict(arrowstyle="-|>", color="green", lw=3, mutation_scale=ms),
+                    zorder=8
+                )
+                ax_w.text(
+                    rx + force_len * np.cos(cw["theta_r_plot"]) - 0.12,
+                    ry + force_len * np.sin(cw["theta_r_plot"]) + 0.08,
+                    "R",
+                    color="green",
+                    fontsize=13,
+                    fontweight="bold"
+                )
+
+                # Cohesive force along failure plane
+                ax_w.annotate(
+                    "",
+                    xy=(cxp + 0.85 * cw["t_dir"][0], cyp + 0.85 * cw["t_dir"][1]),
+                    xytext=(cxp, cyp),
+                    arrowprops=dict(arrowstyle="-|>", color="darkorange", lw=3, mutation_scale=ms),
+                    zorder=8
+                )
+                ax_w.text(
+                    cxp + 0.85 * cw["t_dir"][0] + 0.06,
+                    cyp + 0.85 * cw["t_dir"][1] + 0.02,
+                    "C",
+                    color="darkorange",
+                    fontsize=13,
+                    fontweight="bold"
+                )
+
+                # W
+                ax_w.annotate(
+                    "",
+                    xy=(cx, cy - 0.95),
+                    xytext=(cx, cy + 0.55),
+                    arrowprops=dict(arrowstyle="-|>", color="purple", lw=3, mutation_scale=ms),
+                    zorder=8
+                )
+                ax_w.text(
+                    cx + 0.15,
+                    cy - 0.10,
+                    "W",
+                    color="purple",
+                    fontsize=13,
+                    fontweight="bold"
+                )
+
+                # Labels
+                ax_w.text(px - 0.18, py + 0.18, f"δ={delta:.1f}°", fontsize=10, color="#333333")
+                ax_w.text(rx + 0.12, ry + 0.15, f"ϕ={phi_c:.1f}°", fontsize=10, color="#333333")
+                ax_w.text(0.65, 0.30, f"θ={cw['theta_fail_deg']:.1f}°", fontsize=10, color="#333333")
+
+                min_x = min(front_base_x, top_x_full) - 0.55
+                max_x = max(x_c_full, x_ground_end) + 0.55
+                max_y = max(y_c_full, y_ground_end, H_c) + 0.55
+
+                ax_w.set_xlim(min_x, max_x)
+                ax_w.set_ylim(-0.35, max_y)
             else:
-                wedge_x, wedge_y = top_x + 5, top_x + 5 
+                ax_w.text(0.5, 0.5, cw["reason"], ha="center", va="center", transform=ax_w.transAxes)
 
-            # --- PLOT ---
-            fig_w, ax_w = plt.subplots(figsize=(8, 8))
-            
-            # A. GEOMETRY
-            wall_poly = [[0, 0], [top_x, H_c], [top_x - 1.5, H_c], [-1.5, 0]]
-            ax_w.add_patch(patches.Polygon(wall_poly, facecolor='lightgrey', edgecolor='black', hatch='//'))
-            
-            soil_poly = [[0, 0], [top_x, H_c], [wedge_x, wedge_y]]
-            ax_w.add_patch(patches.Polygon(soil_poly, facecolor='#FFE0B2', alpha=0.5, edgecolor='none'))
-            
-            # Ground & Failure Lines
-            ax_w.plot([top_x, wedge_x + 2], [H_c, H_c + (wedge_x + 2 - top_x)*np.tan(bet_r)], 'k-', linewidth=2)
-            ax_w.plot([0, wedge_x], [0, wedge_y], 'r--', linewidth=2)
-
-            # B. ANNOTATIONS (Forces)
-            # 1. Weight (W)
-            cx, cy = (0+top_x+wedge_x)/3, (0+H_c+wedge_y)/3
-            ax_w.arrow(cx, cy, 0, -2.0, head_width=0.2, color='purple', width=0.05, zorder=10)
-            ax_w.text(cx + 0.3, cy - 1.0, "W", color='purple', fontweight='bold', fontsize=12)
-
-            # 2. Wall Reaction (P)
-            px, py = top_x/3, H_c/3 
-            ax_w.arrow(px, py, 1.5, 1.0, head_width=0.2, color='red', width=0.05, zorder=10)
-            ax_w.text(px + 1.6, py + 1.0, "P", color='red', fontweight='bold', fontsize=12)
-            ax_w.text(px + 0.3, py + 0.8, f"δ={delta}°", fontsize=8)
-
-            # 3. Soil Reaction (R)
-            rx, ry = wedge_x/3, wedge_y/3
-            ax_w.arrow(rx, ry, -0.8, 1.5, head_width=0.2, color='green', width=0.05, zorder=10)
-            ax_w.text(rx - 0.8, ry + 1.5, "R", color='green', fontweight='bold', fontsize=12)
-            ax_w.text(rx - 0.3, ry + 0.8, f"ϕ={phi_c}°", fontsize=8)
-
-            ax_w.set_aspect('equal')
-            ax_w.set_xlim(-3, wedge_x + 2)
-            ax_w.set_ylim(-1, max(H_c, wedge_y) + 2)
-            ax_w.axis('off')
-            ax_w.set_title("Free Body Diagram of Wedge", fontweight='bold')
-            st.pyplot(fig_w)
+            ax_w.set_aspect("equal", adjustable="box")
+            ax_w.axis("off")
+            st.pyplot(fig_w, use_container_width=True)
             plt.close(fig_w)
 
-            # --- CALCULATION PANEL ---
-            if c_calc_btn:
-                with st.expander(" Detailed Calculation Steps", expanded=True):
-                    # Calculation of Ka (Coulomb)
-                    term1 = np.sqrt(np.sin(phi_r + del_r) * np.sin(phi_r - bet_r))
-                    term2 = np.sqrt(np.cos(alp_r + del_r) * np.cos(alp_r - bet_r))
-                    denom = (np.cos(alp_r)**2) * np.cos(alp_r + del_r) * (1 + (term1/term2))**2
-                    Ka_c = (np.cos(phi_r - alp_r)**2) / denom
-                    
-                    Pa = 0.5 * gamma_c * (H_c**2) * Ka_c
+        # ---------------------------------------------------------
+        # CALCULATION PANEL
+        # ---------------------------------------------------------
+        if c_calc_btn:
+            if not cw["valid"]:
+                st.error(cw["reason"])
+            else:
+                write_text("subheader", "Final Answers")
 
-                    st.markdown(r"**1. Coulomb Coefficient ($K_a$):**")
-                    st.latex(r"K_a = \frac{\cos^2(\\phi - \alpha)}{\cos^2\alpha \cos(\alpha + \delta) \left[ 1 + \\sqrt{\frac{\sin(\\phi + \delta) \\sin(\\phi - \beta)}{\cos(\alpha + \delta) \cos(\alpha - \beta)}} \right]^2}")
-                    st.write(f"Substituting values: **$K_a = {Ka_c:.4f}$**")
-                    
-                    st.markdown(r"**2. Total Active Force ($P_a$):**")
-                    st.latex(r"P_a = \frac{1}{2} \\gamma H^2 K_a")
-                    st.success(f"**Result: $P_a = {Pa:.2f}$ kN/m**")
+                final_answers_df = pd.DataFrame({
+                    "Result": [
+                        "Tension crack depth, zₜ",
+                        "Cohesive force on failure plane, C",
+                        "Wall force on wedge, P",
+                        "Equivalent active coefficient, Kₐ",
+                    ],
+                    "Value": [
+                        f"{cw['zt']:.2f} m",
+                        f"{cw['C_plane']:.2f} kN/m",
+                        f"{cw['P']:.2f} kN/m",
+                        f"{cw['Ka_eff']:.4f}",
+                    ]
+                })
+                glass_table(final_answers_df)
+
+                report_md = (
+                    f"### Given Data\n"
+                    f"- Wall height: $H = {H_c:.2f}\\,\\mathrm{{m}}$\n"
+                    f"- Soil unit weight: $\\gamma = {gamma_c:.2f}\\,\\mathrm{{kN/m^3}}$\n"
+                    f"- Soil friction angle: $\\phi = {phi_c:.2f}^\\circ$\n"
+                    f"- Cohesion: $c' = {c_c:.2f}\\,\\mathrm{{kPa}}$\n"
+                    f"- Wall friction angle: $\\delta = {delta:.2f}^\\circ$\n"
+                    f"- Wall batter angle: $\\alpha = {alpha:.2f}^\\circ$\n"
+                    f"- Backfill slope angle: $\\beta = {beta_c:.2f}^\\circ$\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 1 — Assume the failure plane angle\n"
+                    f"For this classroom Coulomb wedge model, the failure plane is taken as:\n\n"
+                    f"$$\\theta = 45^\\circ + \\frac{{\\phi}}{{2}}$$\n\n"
+                
+                    f"Substituting the soil friction angle:\n\n"
+                    f"$$\\theta = 45^\\circ + \\frac{{{phi_c:.2f}^\\circ}}{{2}} = \\mathbf{{{cw['theta_fail_deg']:.2f}^\\circ}}$$\n\n"
+                
+                    f"This is the assumed inclination of the failure plane measured from the horizontal base through point $B$.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 2 — Determine the original full wedge geometry\n"
+                    f"Before considering tension crack, extend the assumed failure plane until it meets the ground surface.\n\n"
+                
+                    f"Top of wall:\n\n"
+                    f"$$A = ({cw['top_x_full']:.3f},\\; {H_c:.3f})$$\n\n"
+                
+                    f"Original ground/failure-plane intersection:\n\n"
+                    f"$$C_{{full}} = ({cw['x_c_full']:.3f},\\; {cw['y_c_full']:.3f})$$\n\n"
+                
+                    f"So the original dry reference wedge is triangle $A$-$B$-$C_{{full}}$.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 3 — Solve a dry reference wedge\n"
+                    f"A cohesionless reference wedge is solved first so that an equivalent active coefficient can be used for estimating the tension crack depth.\n\n"
+                
+                    f"Equivalent dry active coefficient from the reference wedge:\n\n"
+                    f"$$K_{{a,dry}} = \\mathbf{{{cw['Ka_dry']:.4f}}}$$\n\n"
+                
+                    f"This value is only used for estimating the crack depth and is not the final reported coefficient.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 4 — Calculate tension crack depth\n"
+                    f"For a cohesive backfill, the classical active-state estimate is:\n\n"
+                    f"$$z_t = \\frac{{2c'}}{{\\gamma\\sqrt{{K_{{a,dry}}}}}}$$\n\n"
+                
+                    f"Substituting the values:\n\n"
+                    f"$$z_t = \\frac{{2({c_c:.2f})}}{{({gamma_c:.2f})\\sqrt{{{cw['Ka_dry']:.4f}}}}} = \\mathbf{{{cw['zt']:.2f}\\,\\mathrm{{m}}}}$$\n\n"
+                
+                    f"This means the upper part of the backfill is cracked and does not remain attached to the active wedge.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 5 — Define the vertical tension crack\n"
+                    f"The tension crack is taken as vertical behind the wall.\n\n"
+                
+                    f"Bottom of crack on the failure plane:\n\n"
+                    f"$$C = ({cw['x_crack']:.3f},\\; {cw['y_c']:.3f})$$\n\n"
+                
+                    f"Top of crack on the ground surface:\n\n"
+                    f"$$D = ({cw['x_d']:.3f},\\; {cw['y_d']:.3f})$$\n\n"
+                
+                    f"So the actual active wedge used in the final calculation is the quadrilateral:\n\n"
+                    f"$$A - B - C - D$$\n\n"
+                
+                    f"The triangular portion to the right of the crack is excluded from the active wedge.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 6 — Calculate the cracked active wedge area\n"
+                    f"Area of the actual active wedge $A$-$B$-$C$-$D$:\n\n"
+                    f"$$A_{{eff}} = \\mathbf{{{cw['area_eff']:.3f}\\,\\mathrm{{m^2/m}}}}$$\n\n"
+                
+                    f"---\n\n"
+                
+                    f"## Step 7 — Calculate the wedge weight\n"
+                    f"The self-weight of the cracked wedge is:\n\n"
+                    f"$$W = \\gamma A_{{eff}}$$\n\n"
+                
+                    f"$$W = ({gamma_c:.2f})({cw['area_eff']:.3f}) = \\mathbf{{{cw['W_eff']:.2f}\\,\\mathrm{{kN/m}}}}$$\n\n"
+                
+                    f"This is the weight of only the remaining active wedge after crack formation.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 8 — Calculate cohesion along the active failure plane\n"
+                    f"Only the active portion of the failure plane, segment $BC$, is considered.\n\n"
+                
+                    f"Length of active failure plane:\n\n"
+                    f"$$L_{{BC}} = \\mathbf{{{cw['L_fail_eff']:.3f}\\,\\mathrm{{m}}}}$$\n\n"
+                
+                    f"Cohesive resisting force along the failure plane:\n\n"
+                    f"$$C = c' \\cdot L_{{BC}}$$\n\n"
+                
+                    f"$$C = ({c_c:.2f})({cw['L_fail_eff']:.3f}) = \\mathbf{{{cw['C_plane']:.2f}\\,\\mathrm{{kN/m}}}}$$\n\n"
+                
+                    f"This force acts along the failure plane in the resisting direction.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 9 — Identify the forces acting on the wedge\n"
+                    f"The cracked active wedge is analysed under the following actions:\n\n"
+                    f"1. **$P$** = wall force acting on the wedge\n"
+                    f"2. **$R$** = resultant reaction from the failure plane\n"
+                    f"3. **$W$** = self-weight of the wedge acting vertically downward\n"
+                    f"4. **$C$** = cohesion contribution along the failure plane\n\n"
+                
+                    f"---\n\n"
+                
+                    f"## Step 10 — Write the equilibrium of the cracked wedge\n"
+                    f"The vector equilibrium used in the code is:\n\n"
+                    f"$$\\vec{{P}} + N\\vec{{n}} + (N\\tan\\phi)\\vec{{t}} + C\\vec{{t}} - W\\vec{{j}} = 0$$\n\n"
+                
+                    f"where:\n\n"
+                    f"- $N\\vec{{n}}$ = normal component on the failure plane\n"
+                    f"- $(N\\tan\\phi)\\vec{{t}}$ = friction component on the failure plane\n"
+                    f"- $C\\vec{{t}}$ = cohesion component along the failure plane\n"
+                    f"- $W\\vec{{j}}$ = wedge weight acting vertically downward\n\n"
+                
+                    f"The code resolves this equilibrium in the horizontal and vertical directions and solves for the unknown force components.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 11 — Solve for the active wall force\n"
+                    f"From equilibrium of the cracked wedge, the wall force is obtained as:\n\n"
+                    f"$$P = \\mathbf{{{cw['P']:.2f}\\,\\mathrm{{kN/m}}}}$$\n\n"
+                
+                    f"The resultant reaction from the failure plane is:\n\n"
+                    f"$$R = \\mathbf{{{cw['R']:.2f}\\,\\mathrm{{kN/m}}}}$$\n\n"
+                
+                    f"---\n\n"
+                
+                    f"## Step 12 — Compute the equivalent active earth pressure coefficient\n"
+                    f"The final equivalent active coefficient is reported with respect to the full wall height:\n\n"
+                    f"$$K_a = \\frac{{2P}}{{\\gamma H^2}}$$\n\n"
+                
+                    f"Substituting the calculated wall force:\n\n"
+                    f"$$K_a = \\frac{{2({cw['P']:.2f})}}{{({gamma_c:.2f})({H_c:.2f})^2}} = \\mathbf{{{cw['Ka_eff']:.4f}}}$$\n\n"
+                
+                    f"---\n\n"
+                
+                    f"### Final Answers\n"
+                    f"- Tension crack depth: $z_t = \\mathbf{{{cw['zt']:.2f}\\,\\mathrm{{m}}}}$\n"
+                    f"- Cohesive force on active failure plane: $C = \\mathbf{{{cw['C_plane']:.2f}\\,\\mathrm{{kN/m}}}}$\n"
+                    f"- Active wall force: $P = \\mathbf{{{cw['P']:.2f}\\,\\mathrm{{kN/m}}}}$\n"
+                    f"- Equivalent active earth pressure coefficient: $K_a = \\mathbf{{{cw['Ka_eff']:.4f}}}$\n\n"
+                
+                    f"### Note\n"
+                    f"The final reported values are based on the cracked cohesive wedge after formation of the vertical tension crack."
+                )
+
+                with st.expander("Detailed Calculation Steps", expanded=True):
+                    glass_box(report_md)
+
 
 if __name__ == "__main__":
     app()
