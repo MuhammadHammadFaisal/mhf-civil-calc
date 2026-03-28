@@ -673,7 +673,7 @@ def app():
 
             # Wall back face
             ax_w.plot([0, top_x_full], [0, H_c], color="black", linewidth=2.2, zorder=4)
-
+            if cw["valid"]:
                 x_c_full = cw["x_c_full"]
                 y_c_full = cw["y_c_full"]
                 x_d = cw["x_d"]
