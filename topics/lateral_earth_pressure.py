@@ -126,7 +126,14 @@ def calculate_stress(z_local, layers, wt_depth, surcharge, gamma_w, mode="Active
     sig_lat_tot = sig_lat_eff + u
     
     return sig_lat_eff, sig_lat_tot, u, K, active_layer['id'], sig_v
-    
+def load_coulomb_soil_defaults():
+    defaults = {
+        "Sand": {"phi_c_val": 32.0, "delta_c_val": 20.0, "gamma_c_val": 18.0, "c_c_val": 0.0},
+        "Clay": {"phi_c_val": 24.0, "delta_c_val": 8.0, "gamma_c_val": 19.0, "c_c_val": 20.0},
+    }
+    soil = st.session_state.get("c_soil_type", "Sand")
+    for key, value in defaults[soil].items():
+        st.session_state[key] = value    
 # =========================================================
 # MAIN APP
 # =========================================================
@@ -429,110 +436,192 @@ def app():
                 for log in left_logs:
                     glass_box(log)
 
-    # ---------------------------------------------------------
-    # TAB 2: COULOMB (Wedge Theory)
-    # ---------------------------------------------------------
-    with tab_coulomb:
-        write_text("section_header", "Coulomb's Wedge Theory")
-        
-        col_c_in, col_c_viz = st.columns([0.4, 0.6], gap="medium")
+with tab_coulomb:
+    write_text("section_header", "Coulomb's Wedge Theory")
 
-        with col_c_in:
-            write_text("subheader", "1. Wall & Geometry")
-            H_c = st.number_input("Wall Height (H) [m]", 1.0, 20.0, 6.0)
-            alpha = st.number_input("Wall Batter (α) [deg]", 0.0, 30.0, 10.0, help="Angle from vertical")
-            beta_c = st.number_input("Backfill Slope (β) [deg]", 0.0, 30.0, 15.0)
-            
-            st.markdown("---")
-            write_text("subheader", "2. Soil & Interface")
-            c_soil_type = st.selectbox("Soil Type", ["Sand", "Custom"], key="c_soil_type")
-            if c_soil_type == "Sand": d_phi, d_delta, d_gam = 32.0, 20.0, 18.0
-            else: d_phi, d_delta, d_gam = 30.0, 15.0, 19.0
-            
-            phi_c = st.number_input("Friction Angle (ϕ') [deg]", 20.0, 45.0, d_phi)
-            delta = st.number_input("Wall Friction (δ) [deg]", 0.0, 30.0, d_delta)
-            gamma_c = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, d_gam)
-            
-            st.markdown("---")
-            c_calc_btn = st.button("Calculate Wedge Forces", type="primary", width="stretch")
+    col_c_in, col_c_viz = st.columns([0.4, 0.6], gap="medium")
 
-        with col_c_viz:
-            write_text("subheader", "Failure Wedge Diagram (FBD)")
-            
-            # Constants & Geometry
-            phi_r, del_r = np.radians(phi_c), np.radians(delta)
-            alp_r, bet_r = np.radians(alpha), np.radians(beta_c)
-            top_x = H_c * np.tan(alp_r)
-            
-            # Approx failure plane for viz
-            rho_approx = 45 + (phi_c/2) 
-            rho_rad = np.radians(rho_approx)
-            
-            # Intersection C calculation for drawing
-            if rho_rad > bet_r:
-                wedge_x = (H_c - top_x * np.tan(bet_r)) / (np.tan(rho_rad) - np.tan(bet_r))
-                wedge_y = wedge_x * np.tan(rho_rad)
+    with col_c_in:
+        write_text("subheader", "1. Wall & Geometry")
+        H_c = st.number_input("Wall Height (H) [m]", 1.0, 20.0, 6.0)
+        alpha = st.number_input("Wall Batter (α) [deg]", 0.0, 30.0, 10.0, help="Angle from vertical")
+        beta_c = st.number_input("Backfill Slope (β) [deg]", 0.0, 30.0, 15.0)
+
+        st.markdown("---")
+        write_text("subheader", "2. Soil & Interface")
+
+        if "c_soil_type" not in st.session_state:
+            st.session_state["c_soil_type"] = "Sand"
+            load_coulomb_soil_defaults()
+
+        c_soil_type = st.selectbox(
+            "Soil Type",
+            ["Sand", "Clay"],
+            key="c_soil_type",
+            on_change=load_coulomb_soil_defaults,
+        )
+
+        phi_c = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 45.0, key="phi_c_val")
+        delta = st.number_input("Wall Friction (δ) [deg]", 0.0, 30.0, key="delta_c_val")
+        gamma_c = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, key="gamma_c_val")
+        c_c = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, key="c_c_val")
+
+        st.caption("Sand/Clay only. Changing soil type reloads the default values above.")
+
+        st.markdown("---")
+        c_calc_btn = st.button("Calculate Wedge Forces", type="primary", width="stretch")
+
+    with col_c_viz:
+        write_text("subheader", "Failure Wedge Diagram (FBD)")
+
+        phi_r = np.radians(phi_c)
+        del_r = np.radians(delta)
+        alp_r = np.radians(alpha)
+        bet_r = np.radians(beta_c)
+
+        top_x = H_c * np.tan(alp_r)
+
+        # Approximate failure plane for visualization
+        rho_deg = np.clip(45.0 + (phi_c / 2.0) - (beta_c / 2.0), beta_c + 5.0, 85.0)
+        rho_rad = np.radians(rho_deg)
+
+        # Intersection of failure plane with ground surface
+        if rho_rad > bet_r and abs(np.tan(rho_rad) - np.tan(bet_r)) > 1e-9:
+            wedge_x = (H_c - top_x * np.tan(bet_r)) / (np.tan(rho_rad) - np.tan(bet_r))
+            wedge_y = wedge_x * np.tan(rho_rad)
+        else:
+            wedge_x = top_x + 5.0
+            wedge_y = H_c + (wedge_x - top_x) * np.tan(bet_r)
+
+        # Coulomb Ka
+        sin_term = np.sin(phi_r + del_r) * np.sin(phi_r - bet_r)
+        cos_term = np.cos(alp_r + del_r) * np.cos(alp_r - bet_r)
+
+        valid_coulomb = (cos_term > 0) and (sin_term >= 0)
+
+        if valid_coulomb:
+            term1 = np.sqrt(sin_term)
+            term2 = np.sqrt(cos_term)
+            denom = (np.cos(alp_r) ** 2) * np.cos(alp_r + del_r) * (1 + (term1 / term2)) ** 2
+            Ka_c = (np.cos(phi_r - alp_r) ** 2) / denom if abs(denom) > 1e-12 else np.nan
+        else:
+            Ka_c = np.nan
+
+        # Cohesive active case with tension crack correction
+        zt = 0.0
+        H_eff = H_c
+        Pa_cracked = np.nan
+        h_from_base = H_c / 3.0
+        L_fail = np.hypot(wedge_x, wedge_y)
+        C_plane = c_c * L_fail
+
+        if valid_coulomb and Ka_c > 0:
+            if c_c > 0:
+                zt = min(H_c, (2.0 * c_c) / (gamma_c * np.sqrt(Ka_c)))
+            H_eff = max(H_c - zt, 0.0)
+            Pa_cracked = 0.5 * gamma_c * (H_eff ** 2) * Ka_c
+            h_from_base = H_eff / 3.0 if H_eff > 0 else 0.0
+
+        # --- PLOT ---
+        fig_w, ax_w = plt.subplots(figsize=(8, 8))
+
+        # A. GEOMETRY
+        wall_poly = [[0, 0], [top_x, H_c], [top_x - 1.5, H_c], [-1.5, 0]]
+        ax_w.add_patch(patches.Polygon(wall_poly, facecolor='lightgrey', edgecolor='black', hatch='//'))
+
+        soil_poly = [[0, 0], [top_x, H_c], [wedge_x, wedge_y]]
+        ax_w.add_patch(patches.Polygon(soil_poly, facecolor='#FFE0B2', alpha=0.5, edgecolor='none'))
+
+        # Ground and failure plane
+        ax_w.plot([top_x, wedge_x + 2], [H_c, H_c + (wedge_x + 2 - top_x) * np.tan(bet_r)], 'k-', linewidth=2)
+        ax_w.plot([0, wedge_x], [0, wedge_y], 'r--', linewidth=2)
+
+        # Tension crack marker
+        if zt > 0:
+            crack_x = top_x + 0.35
+            ax_w.plot([crack_x, crack_x], [H_c, H_c - zt], linestyle='--', color='royalblue', linewidth=2)
+            ax_w.text(crack_x + 0.15, H_c - zt / 2, f"zₜ = {zt:.2f} m", color='royalblue', fontsize=9, va='center')
+
+        # B. ANNOTATIONS (Forces)
+        # 1. Weight (W)
+        cx, cy = (0 + top_x + wedge_x) / 3, (0 + H_c + wedge_y) / 3
+        ax_w.arrow(cx, cy, 0, -2.0, head_width=0.2, color='purple', width=0.05, zorder=10)
+        ax_w.text(cx + 0.3, cy - 1.0, "W", color='purple', fontweight='bold', fontsize=12)
+
+        # 2. Wall Reaction (P)
+        p_ang = -alp_r + del_r
+        px, py = top_x / 3, H_c / 3
+        p_len = 1.8
+        ax_w.arrow(
+            px, py,
+            p_len * np.cos(p_ang),
+            p_len * np.sin(p_ang),
+            head_width=0.2, color='red', width=0.05, zorder=10
+        )
+        ax_w.text(px + p_len * np.cos(p_ang) + 0.15, py + p_len * np.sin(p_ang), "P",
+                  color='red', fontweight='bold', fontsize=12)
+        ax_w.text(px + 0.25, py + 0.55, f"δ = {delta:.1f}°", fontsize=8)
+
+        # 3. Soil Reaction (R)
+        r_ang = (np.pi / 2.0) + rho_rad - phi_r
+        rx, ry = wedge_x / 3, wedge_y / 3
+        r_len = 1.8
+        ax_w.arrow(
+            rx, ry,
+            r_len * np.cos(r_ang),
+            r_len * np.sin(r_ang),
+            head_width=0.2, color='green', width=0.05, zorder=10
+        )
+        ax_w.text(rx + r_len * np.cos(r_ang) - 0.1, ry + r_len * np.sin(r_ang) + 0.1, "R",
+                  color='green', fontweight='bold', fontsize=12)
+        ax_w.text(rx - 0.15, ry + 0.65, f"ϕ = {phi_c:.1f}°", fontsize=8)
+
+        ax_w.set_aspect('equal')
+        ax_w.set_xlim(-3, wedge_x + 2)
+        ax_w.set_ylim(-1, max(H_c, wedge_y) + 2)
+        ax_w.axis('off')
+        ax_w.set_title("Free Body Diagram of Wedge", fontweight='bold')
+        st.pyplot(fig_w)
+        plt.close(fig_w)
+
+        # --- CALCULATION PANEL ---
+        if c_calc_btn:
+            if not valid_coulomb or not np.isfinite(Ka_c):
+                st.error("Invalid geometry/material combination for Coulomb active pressure. Check that ϕ' ≥ β and that α + δ does not make the denominator invalid.")
             else:
-                wedge_x, wedge_y = top_x + 5, top_x + 5 
-
-            # --- PLOT ---
-            fig_w, ax_w = plt.subplots(figsize=(8, 8))
-            
-            # A. GEOMETRY
-            wall_poly = [[0, 0], [top_x, H_c], [top_x - 1.5, H_c], [-1.5, 0]]
-            ax_w.add_patch(patches.Polygon(wall_poly, facecolor='lightgrey', edgecolor='black', hatch='//'))
-            
-            soil_poly = [[0, 0], [top_x, H_c], [wedge_x, wedge_y]]
-            ax_w.add_patch(patches.Polygon(soil_poly, facecolor='#FFE0B2', alpha=0.5, edgecolor='none'))
-            
-            # Ground & Failure Lines
-            ax_w.plot([top_x, wedge_x + 2], [H_c, H_c + (wedge_x + 2 - top_x)*np.tan(bet_r)], 'k-', linewidth=2)
-            ax_w.plot([0, wedge_x], [0, wedge_y], 'r--', linewidth=2)
-
-            # B. ANNOTATIONS (Forces)
-            # 1. Weight (W)
-            cx, cy = (0+top_x+wedge_x)/3, (0+H_c+wedge_y)/3
-            ax_w.arrow(cx, cy, 0, -2.0, head_width=0.2, color='purple', width=0.05, zorder=10)
-            ax_w.text(cx + 0.3, cy - 1.0, "W", color='purple', fontweight='bold', fontsize=12)
-
-            # 2. Wall Reaction (P)
-            px, py = top_x/3, H_c/3 
-            ax_w.arrow(px, py, 1.5, 1.0, head_width=0.2, color='red', width=0.05, zorder=10)
-            ax_w.text(px + 1.6, py + 1.0, "P", color='red', fontweight='bold', fontsize=12)
-            ax_w.text(px + 0.3, py + 0.8, f"δ={delta}°", fontsize=8)
-
-            # 3. Soil Reaction (R)
-            rx, ry = wedge_x/3, wedge_y/3
-            ax_w.arrow(rx, ry, -0.8, 1.5, head_width=0.2, color='green', width=0.05, zorder=10)
-            ax_w.text(rx - 0.8, ry + 1.5, "R", color='green', fontweight='bold', fontsize=12)
-            ax_w.text(rx - 0.3, ry + 0.8, f"ϕ={phi_c}°", fontsize=8)
-
-            ax_w.set_aspect('equal')
-            ax_w.set_xlim(-3, wedge_x + 2)
-            ax_w.set_ylim(-1, max(H_c, wedge_y) + 2)
-            ax_w.axis('off')
-            ax_w.set_title("Free Body Diagram of Wedge", fontweight='bold')
-            st.pyplot(fig_w)
-            plt.close(fig_w)
-
-            # --- CALCULATION PANEL ---
-            if c_calc_btn:
-                with st.expander(" Detailed Calculation Steps", expanded=True):
-                    # Calculation of Ka (Coulomb)
-                    term1 = np.sqrt(np.sin(phi_r + del_r) * np.sin(phi_r - bet_r))
-                    term2 = np.sqrt(np.cos(alp_r + del_r) * np.cos(alp_r - bet_r))
-                    denom = (np.cos(alp_r)**2) * np.cos(alp_r + del_r) * (1 + (term1/term2))**2
-                    Ka_c = (np.cos(phi_r - alp_r)**2) / denom
-                    
-                    Pa = 0.5 * gamma_c * (H_c**2) * Ka_c
+                with st.expander("Detailed Calculation Steps", expanded=True):
+                    Pa_dry = 0.5 * gamma_c * (H_c ** 2) * Ka_c
 
                     st.markdown(r"**1. Coulomb Coefficient ($K_a$):**")
-                    st.latex(r"K_a = \frac{\cos^2(\\phi - \alpha)}{\cos^2\alpha \cos(\alpha + \delta) \left[ 1 + \\sqrt{\frac{\sin(\\phi + \delta) \\sin(\\phi - \beta)}{\cos(\alpha + \delta) \cos(\alpha - \beta)}} \right]^2}")
-                    st.write(f"Substituting values: **$K_a = {Ka_c:.4f}$**")
-                    
-                    st.markdown(r"**2. Total Active Force ($P_a$):**")
-                    st.latex(r"P_a = \frac{1}{2} \\gamma H^2 K_a")
-                    st.success(f"**Result: $P_a = {Pa:.2f}$ kN/m**")
+                    st.latex(r"K_a = \frac{\cos^2(\phi - \alpha)}{\cos^2\alpha \cos(\alpha + \delta)\left[1 + \sqrt{\frac{\sin(\phi + \delta)\sin(\phi - \beta)}{\cos(\alpha + \delta)\cos(\alpha - \beta)}}\right]^2}")
+                    st.write(f"Substituting values: **Kₐ = {Ka_c:.4f}**")
+
+                    st.markdown(r"**2. Cohesionless Coulomb Thrust:**")
+                    st.latex(r"P_{a,\mathrm{dry}} = \frac{1}{2}\gamma H^2 K_a")
+                    st.write(f"**Pₐ,dry = {Pa_dry:.2f} kN/m**")
+
+                    st.markdown(r"**3. Tension Crack Depth (cohesive backfill):**")
+                    st.latex(r"z_t = \frac{2c'}{\gamma \sqrt{K_a}}")
+                    st.write(f"**zₜ = {zt:.2f} m**")
+
+                    st.markdown(r"**4. Effective Height after Crack:**")
+                    st.latex(r"H_{\mathrm{eff}} = H - z_t")
+                    st.write(f"**H_eff = {H_eff:.2f} m**")
+
+                    st.markdown(r"**5. Active Thrust after Crack Formation:**")
+                    st.latex(r"P_a = \frac{1}{2}\gamma K_a H_{\mathrm{eff}}^2")
+                    st.success(f"**Result: Pₐ = {Pa_cracked:.2f} kN/m**")
+
+                    st.markdown(r"**6. Resultant Location:**")
+                    st.latex(r"h = \frac{H_{\mathrm{eff}}}{3}")
+                    st.write(f"**Acts at {h_from_base:.2f} m above base**")
+
+                    st.markdown(r"**7. Cohesion Along the Drawn Failure Plane:**")
+                    st.latex(r"C_{\mathrm{plane}} = c' \cdot L")
+                    st.write(f"Failure plane length **L = {L_fail:.2f} m**")
+                    st.write(f"Indicative cohesive resistance along plane **C_plane = {C_plane:.2f} kN/m**")
+
+                    st.info("This Coulomb tab now includes cohesive backfill and tension-crack correction using Coulomb geometry-based Kₐ. Water-filled crack thrust is not included here yet.")
 
 if __name__ == "__main__":
     app()
