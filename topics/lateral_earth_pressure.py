@@ -11,7 +11,25 @@ from theme import write_text, glass_box, glass_table
 # =========================================================
 # HELPER FUNCTIONS
 # =========================================================
+def load_coulomb_soil_defaults():
+    defaults = {
+        "Sand": {
+            "phi_c_val": 32.0,
+            "delta_c_val": 20.0,
+            "gamma_c_val": 18.0,
+            "c_c_val": 0.0,
+        },
+        "Clay": {
+            "phi_c_val": 24.0,
+            "delta_c_val": 8.0,
+            "gamma_c_val": 19.0,
+            "c_c_val": 20.0,
+        },
+    }
 
+    soil = st.session_state.get("c_soil_type", "Sand")
+    for key, value in defaults[soil].items():
+        st.session_state[key] = value
 def tension_crack_depth(layer):
     phi_r = np.radians(layer['phi'])
     Ka = (1 - np.sin(phi_r)) / (1 + np.sin(phi_r))
@@ -433,6 +451,9 @@ def app():
     # ---------------------------------------------------------
     # TAB 2: COULOMB (Wedge Theory)
     # ---------------------------------------------------------
+    # ---------------------------------------------------------
+    # TAB 2: COULOMB (Wedge Theory)
+    # ---------------------------------------------------------
     with tab_coulomb:
         write_text("section_header", "Coulomb's Wedge Theory")
         
@@ -440,34 +461,39 @@ def app():
 
         with col_c_in:
             write_text("subheader", "1. Wall & Geometry")
-            c1, c2= st.columns(2)
+            c1, c2 = st.columns(2)
             with c1:
                 H_c = st.number_input("Wall Height (H) [m]", 1.0, 20.0, 6.0)
                 alpha = st.number_input("Wall Batter (α) [deg]", 0.0, 30.0, 10.0, help="Angle from vertical")
-            with c2: 
+            with c2:
                 beta_c = st.number_input("Backfill Slope (β) [deg]", 0.0, 30.0, 15.0)
-            
 
             write_text("subheader", "2. Soil & Interface")
-            c3, c4= st.columns(2)
+
+            if "c_soil_type" not in st.session_state:
+                st.session_state["c_soil_type"] = "Sand"
+                load_coulomb_soil_defaults()
+
+            c3, c4 = st.columns(2)
             with c3:
-                c_soil_type = st.selectbox("Soil Type", ["Sand", "Custom"], key="c_soil_type")
-                if c_soil_type == "Sand": d_phi, d_delta, d_gam = 32.0, 20.0, 18.0
-                else: d_phi, d_delta, d_gam = 30.0, 15.0, 19.0
-                
-                phi_c = st.number_input("Friction Angle (ϕ') [deg]", 20.0, 45.0, d_phi)
+                c_soil_type = st.selectbox(
+                    "Soil Type",
+                    ["Sand", "Clay"],
+                    key="c_soil_type",
+                    on_change=load_coulomb_soil_defaults
+                )
+                phi_c = st.number_input("Friction Angle (ϕ') [deg]", 0.0, 45.0, key="phi_c_val")
+                c_c = st.number_input("Cohesion (c') [kPa]", 0.0, 100.0, key="c_c_val")
             with c4:
-                delta = st.number_input("Wall Friction (δ) [deg]", 0.0, 30.0, d_delta)
-                gamma_c = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, d_gam)
-            
+                delta = st.number_input("Wall Friction (δ) [deg]", 0.0, 30.0, key="delta_c_val")
+                gamma_c = st.number_input("Unit Weight (γ) [kN/m³]", 10.0, 25.0, key="gamma_c_val")
+
+            st.caption("Changing soil type reloads Sand/Clay default values.")
             c_calc_btn = st.button("Calculate Wedge Forces", type="primary", width="stretch")
 
         with col_c_viz:
             write_text("subheader", "Failure Wedge Diagram (FBD)")
 
-            # Make sure this import exists at top of file:
-            # import matplotlib.patches as patches
-            
             # ---------------------------------------------------------
             # 1. ANGLES / BASIC GEOMETRY
             # ---------------------------------------------------------
@@ -475,54 +501,146 @@ def app():
             del_r = np.radians(delta)
             alp_r = np.radians(alpha)
             bet_r = np.radians(beta_c)
-            
+
             # Wall back face: top leans LEFT for positive alpha
             top_x = -H_c * np.tan(alp_r)
-            
-            # Use the same assumed failure plane as the calculation block
+
+            # Assumed failure plane
             theta_fail_deg = 45 + phi_c / 2.0
             theta_fail_r = np.radians(theta_fail_deg)
-            
+
             # Ground surface through A(top_x, H_c)
             m_ground = np.tan(bet_r)
-            
+
             denom_x = np.tan(theta_fail_r) - m_ground
-            if abs(denom_x) < 1e-9:
-                wedge_x = max(2.0, abs(top_x) + H_c * 0.9)
-                wedge_y = H_c + (wedge_x - top_x) * m_ground
-            else:
+            geom_valid = abs(denom_x) > 1e-9
+
+            if geom_valid:
                 wedge_x = (H_c - top_x * m_ground) / denom_x
                 wedge_y = wedge_x * np.tan(theta_fail_r)
-            
+            else:
+                wedge_x = max(2.0, abs(top_x) + H_c * 0.9)
+                wedge_y = H_c + (wedge_x - top_x) * m_ground
+
             # ---------------------------------------------------------
-            # 2. WALL SHAPE (fixes the "both sides slant same way" issue)
+            # 2. WALL SHAPE
             # ---------------------------------------------------------
             wall_base_width = 2.2
             wall_top_width = 0.8
-            
+
             front_base_x = -wall_base_width
             front_top_x = top_x - wall_top_width
-            
+
             wall_poly = np.array([
-                [0.0, 0.0],             # B: back face base
-                [top_x, H_c],           # A: back face top
-                [front_top_x, H_c],     # front face top
-                [front_base_x, 0.0],    # front face base
+                [0.0, 0.0],
+                [top_x, H_c],
+                [front_top_x, H_c],
+                [front_base_x, 0.0],
             ])
-            
-            # Soil wedge polygon B-A-C
+
             soil_poly = np.array([
                 [0.0, 0.0],
                 [top_x, H_c],
                 [wedge_x, wedge_y],
             ])
-            
+
             # ---------------------------------------------------------
-            # 3. FIGURE
+            # 3. WEDGE GEOMETRY + FORCE MODEL
+            # ---------------------------------------------------------
+            if geom_valid:
+                area_wedge = abs(
+                    top_x * (wedge_y - 0.0) +
+                    wedge_x * (0.0 - H_c) +
+                    0.0 * (H_c - wedge_y)
+                ) / 2.0
+                W = gamma_c * area_wedge
+                L_fail = np.hypot(wedge_x, wedge_y)
+                C_plane = c_c * L_fail
+            else:
+                area_wedge = np.nan
+                W = np.nan
+                L_fail = np.nan
+                C_plane = np.nan
+
+            # Wall face direction B -> A
+            wall_face_ang = np.arctan2(H_c, top_x if abs(top_x) > 1e-9 else 1e-9)
+
+            # Normal from wall into wedge
+            wall_normal_ang = wall_face_ang - np.pi / 2.0
+
+            # P on wedge: inclined downward from wall normal by delta
+            theta_p = wall_normal_ang + del_r
+
+            # Failure plane direction B -> C
+            failure_face_ang = np.arctan2(wedge_y, wedge_x if abs(wedge_x) > 1e-9 else 1e-9)
+
+            # Normal into wedge from failure plane
+            failure_normal_ang = failure_face_ang + np.pi / 2.0
+
+            p_dir = np.array([np.cos(theta_p), np.sin(theta_p)])
+            t_dir = np.array([np.cos(failure_face_ang), np.sin(failure_face_ang)])
+            n_dir = np.array([np.cos(failure_normal_ang), np.sin(failure_normal_ang)])
+
+            solve_valid = geom_valid
+            P_dry = np.nan
+            N_dry = np.nan
+            Ka_dry = np.nan
+            zt = 0.0
+
+            P_cphi = np.nan
+            N_cphi = np.nan
+            Ka_cphi = np.nan
+            R_total = np.nan
+            theta_r_plot = failure_normal_ang - phi_r
+
+            if solve_valid:
+                A_eq = np.column_stack((
+                    p_dir,
+                    n_dir + np.tan(phi_r) * t_dir
+                ))
+
+                # Cohesionless reference
+                b_dry = np.array([0.0, W])
+
+                try:
+                    P_dry, N_dry = np.linalg.solve(A_eq, b_dry)
+                except np.linalg.LinAlgError:
+                    solve_valid = False
+
+            if solve_valid and gamma_c > 0 and H_c > 0:
+                Ka_dry = (2.0 * P_dry) / (gamma_c * H_c**2)
+
+                if c_c > 0 and Ka_dry > 0:
+                    zt = min(H_c, (2.0 * c_c) / (gamma_c * np.sqrt(Ka_dry)))
+                else:
+                    zt = 0.0
+
+                # c-phi equilibrium with cohesion along failure plane
+                b_cphi = np.array([
+                    -C_plane * t_dir[0],
+                    W - C_plane * t_dir[1]
+                ])
+
+                try:
+                    P_cphi, N_cphi = np.linalg.solve(A_eq, b_cphi)
+
+                    plane_force_vec = (
+                        N_cphi * n_dir +
+                        (N_cphi * np.tan(phi_r) + C_plane) * t_dir
+                    )
+
+                    R_total = np.linalg.norm(plane_force_vec)
+                    theta_r_plot = np.arctan2(plane_force_vec[1], plane_force_vec[0])
+                    Ka_cphi = (2.0 * P_cphi) / (gamma_c * H_c**2)
+                except np.linalg.LinAlgError:
+                    solve_valid = False
+
+            # ---------------------------------------------------------
+            # 4. FIGURE
             # ---------------------------------------------------------
             fig_w, ax_w = plt.subplots(figsize=(7.4, 6.2))
             ax_w.set_facecolor("#efefef")
-            
+
             # Wall
             ax_w.add_patch(
                 patches.Polygon(
@@ -535,7 +653,7 @@ def app():
                     zorder=2
                 )
             )
-            
+
             # Wedge soil
             ax_w.add_patch(
                 patches.Polygon(
@@ -547,10 +665,10 @@ def app():
                     zorder=1
                 )
             )
-            
+
             # Wall back face outline
             ax_w.plot([0, top_x], [0, H_c], color="black", linewidth=2.2, zorder=4)
-            
+
             # Ground surface
             x_ground_end = wedge_x + max(1.2, 0.35 * H_c)
             y_ground_end = H_c + (x_ground_end - top_x) * m_ground
@@ -561,7 +679,7 @@ def app():
                 linewidth=2.2,
                 zorder=4
             )
-            
+
             # Failure plane
             ax_w.plot(
                 [0, wedge_x],
@@ -571,7 +689,7 @@ def app():
                 linewidth=2.2,
                 zorder=3
             )
-            
+
             # Base reference line
             ax_w.plot(
                 [front_base_x - 0.2, wedge_x + 0.8],
@@ -582,56 +700,46 @@ def app():
                 alpha=0.35,
                 zorder=0
             )
-            
+
+            # Tension crack marker (engineering indicator)
+            if solve_valid and zt > 0:
+                crack_x = top_x + 0.22
+                crack_y_bottom = max(0.0, H_c - zt)
+                ax_w.plot(
+                    [crack_x, crack_x],
+                    [H_c, crack_y_bottom],
+                    linestyle="--",
+                    color="royalblue",
+                    linewidth=2.0,
+                    zorder=6
+                )
+                ax_w.text(
+                    crack_x + 0.08,
+                    H_c - zt / 2.0,
+                    f"zₜ={zt:.2f} m",
+                    fontsize=9,
+                    color="royalblue",
+                    va="center"
+                )
+
             # ---------------------------------------------------------
-            # 4. FORCE DIRECTIONS
+            # 5. FORCE DIRECTIONS
             # ---------------------------------------------------------
-            # Wedge centroid
             cx, cy = (0 + top_x + wedge_x) / 3.0, (0 + H_c + wedge_y) / 3.0
-            
-            # Wall face direction B -> A
-            wall_face_ang = np.arctan2(H_c, top_x if abs(top_x) > 1e-9 else 1e-9)
-            
-            # Normal from wall into wedge
-            wall_normal_ang = wall_face_ang - np.pi / 2
-            
-            # P on wedge: inclined DOWNWARD from wall normal by delta
-            theta_p = wall_normal_ang + del_r
-            
-            # Failure plane direction B -> C
-            failure_face_ang = np.arctan2(wedge_y, wedge_x if abs(wedge_x) > 1e-9 else 1e-9)
-            
-            # Normal into wedge from failure plane
-            failure_normal_ang = failure_face_ang + np.pi / 2
-            
-            # R on wedge: inclined downward from failure plane normal by phi
-            theta_r = failure_normal_ang - phi_r
-            
-            # Arrow scaling
+
             force_len = 0.95
-            ms = 18  # arrow head size
-            
-            # ---------------------------------------------------------
-            # 5. FORCE LOCATIONS
-            # ---------------------------------------------------------
-            # P applied on wall face
+            ms = 18
+
             t_p = 0.42
             px = t_p * top_x
             py = t_p * H_c
-            
-            # R applied on failure plane
+
             t_r = 0.56
             rx = t_r * wedge_x
             ry = t_r * wedge_y
-            
-            # W through centroid
-            wx, wy = cx, cy + 0.8
-            
-            # ---------------------------------------------------------
-            # 6. SMALL DASHED NORMALS (for showing delta and phi relation)
-            # ---------------------------------------------------------
+
             norm_len = 0.70
-            
+
             # Wall normal at P
             ax_w.plot(
                 [px, px + norm_len * np.cos(wall_normal_ang)],
@@ -641,7 +749,7 @@ def app():
                 linewidth=1.2,
                 zorder=5
             )
-            
+
             # Failure-plane normal at R
             ax_w.plot(
                 [rx, rx + norm_len * np.cos(failure_normal_ang)],
@@ -651,10 +759,7 @@ def app():
                 linewidth=1.2,
                 zorder=5
             )
-            
-            # ---------------------------------------------------------
-            # 7. DRAW FORCES
-            # ---------------------------------------------------------
+
             # P
             ax_w.annotate(
                 "",
@@ -671,24 +776,24 @@ def app():
                 fontsize=13,
                 fontweight="bold"
             )
-            
+
             # R
             ax_w.annotate(
                 "",
-                xy=(rx + force_len * np.cos(theta_r), ry + force_len * np.sin(theta_r)),
+                xy=(rx + force_len * np.cos(theta_r_plot), ry + force_len * np.sin(theta_r_plot)),
                 xytext=(rx, ry),
                 arrowprops=dict(arrowstyle="-|>", color="green", lw=3, mutation_scale=ms),
                 zorder=8
             )
             ax_w.text(
-                rx + force_len * np.cos(theta_r) - 0.12,
-                ry + force_len * np.sin(theta_r) + 0.08,
+                rx + force_len * np.cos(theta_r_plot) - 0.12,
+                ry + force_len * np.sin(theta_r_plot) + 0.08,
                 "R",
                 color="green",
                 fontsize=13,
                 fontweight="bold"
             )
-            
+
             # W
             ax_w.annotate(
                 "",
@@ -705,10 +810,8 @@ def app():
                 fontsize=13,
                 fontweight="bold"
             )
-            
-            # ---------------------------------------------------------
-            # 8. LABEL ANGLES
-            # ---------------------------------------------------------
+
+            # Angle labels
             ax_w.text(
                 px - 0.18,
                 py + 0.18,
@@ -716,7 +819,7 @@ def app():
                 fontsize=10,
                 color="#333333"
             )
-            
+
             ax_w.text(
                 rx + 0.12,
                 ry + 0.15,
@@ -724,7 +827,7 @@ def app():
                 fontsize=10,
                 color="#333333"
             )
-            
+
             ax_w.text(
                 0.65,
                 0.30,
@@ -732,155 +835,120 @@ def app():
                 fontsize=10,
                 color="#333333"
             )
-            
-            # ---------------------------------------------------------
-            # 9. FINAL DISPLAY SETTINGS
-            # ---------------------------------------------------------
+
             min_x = min(front_base_x, top_x) - 0.55
             max_x = max(wedge_x, x_ground_end) + 0.55
             max_y = max(wedge_y, y_ground_end, H_c) + 0.55
-            
+
             ax_w.set_xlim(min_x, max_x)
             ax_w.set_ylim(-0.35, max_y)
             ax_w.set_aspect("equal", adjustable="box")
             ax_w.axis("off")
-            
+
             st.pyplot(fig_w, use_container_width=True)
             plt.close(fig_w)
-            # --- CALCULATION PANEL ---
+
+        # --- CALCULATION PANEL ---
         if c_calc_btn:
-                # ---------------------------------------------------------
-            # 1. ASSUMED FAILURE PLANE + WEDGE GEOMETRY
-            # ---------------------------------------------------------
-            theta_fail_deg = 45 + phi_c / 2.0
-            theta_fail_r = np.deg2rad(theta_fail_deg)
-        
-            m_ground = np.tan(bet_r)
-            denom_x = np.tan(theta_fail_r) - m_ground
-        
-            if abs(denom_x) < 1e-9:
+            if not geom_valid:
                 st.error("Failure plane and ground surface are nearly parallel. Change the input values.")
-                st.stop()
-        
-            x_c = (H_c - top_x * m_ground) / denom_x
-            y_c = x_c * np.tan(theta_fail_r)
-        
-            area_wedge = abs(
-                top_x * (y_c - 0) +
-                x_c * (0 - H_c) +
-                0 * (H_c - y_c)
-            ) / 2.0
-        
-            W = gamma_c * area_wedge
-        
-            # ---------------------------------------------------------
-            # 2. FORCE DIRECTIONS
-            # ---------------------------------------------------------
-            wall_face_ang = np.arctan2(H_c, top_x if abs(top_x) > 1e-9 else 1e-9)
-            wall_normal_ang = wall_face_ang - np.pi / 2
-            theta_p = wall_normal_ang + del_r
-        
-            failure_face_ang = np.arctan2(y_c, x_c if abs(x_c) > 1e-9 else 1e-9)
-            failure_normal_ang = failure_face_ang + np.pi / 2
-            theta_r_force = failure_normal_ang - phi_r
-        
-            # ---------------------------------------------------------
-            # 3. SOLVE ΣFx = 0 AND ΣFy = 0
-            # ---------------------------------------------------------
-            A_mat = np.array([
-                [np.cos(theta_p), np.cos(theta_r_force)],
-                [np.sin(theta_p), np.sin(theta_r_force)],
-            ])
-        
-            b_vec = np.array([0.0, W])
-        
-            try:
-                P, R = np.linalg.solve(A_mat, b_vec)
-            except np.linalg.LinAlgError:
+            elif not solve_valid:
                 st.error("Static equilibrium equations could not be solved for these inputs.")
-                st.stop()
-        
-            Ka_static = (2 * P) / (gamma_c * H_c**2)
-        
-            # ---------------------------------------------------------
-            # 4. FINAL ANSWERS
-            # ---------------------------------------------------------
-            write_text("subheader", "Final Answers")
-        
-            final_answers_df = pd.DataFrame({
-                "Result": [
-                    "Wall force on wedge, P",
-                    "Reaction on failure plane, R",
-                    "Equivalent active earth pressure coefficient, Ka",
-                ],
-                "Value": [
-                    f"{P:.2f} kN/m",
-                    f"{R:.2f} kN/m",
-                    f"{Ka_static:.4f}",
-                ]
-            })
-            glass_table(final_answers_df)
-        
-            # ---------------------------------------------------------
-            # 5. DETAILED CALCULATION STEPS
-            # ---------------------------------------------------------
-            report_md = (
-                f"### Given / Inputs\n"
-                f"- Wall height: $H = {H_c:.2f}\\,\\mathrm{{m}}$\n"
-                f"- Unit weight: $\\gamma = {gamma_c:.2f}\\,\\mathrm{{kN/m^3}}$\n"
-                f"- Soil friction angle: $\\phi = {phi_c:.2f}^\\circ$\n"
-                f"- Wall friction angle: $\\delta = {delta:.2f}^\\circ$\n"
-                f"- Wall inclination: $\\alpha = {alpha:.2f}^\\circ$\n"
-                f"- Backfill slope: $\\beta = {beta_c:.2f}^\\circ$\n\n"
-                f"---\n\n"
-                f"## Step 1 — Assume the failure plane\n"
-                f"Using the classroom approximation:\n\n"
-                f"$$\\theta = 45^\\circ + \\frac{{\\phi}}{{2}}$$\n\n"
-                f"$$\\theta = 45^\\circ + \\frac{{{phi_c:.2f}^\\circ}}{{2}} = \\mathbf{{{theta_fail_deg:.2f}^\\circ}}$$\n\n"
-                f"---\n\n"
-                f"## Step 2 — Determine wedge geometry\n"
-                f"Intersection point of assumed failure plane with ground surface:\n\n"
-                f"$$C = ({x_c:.3f},\\;{y_c:.3f})$$\n\n"
-                f"Wedge area:\n\n"
-                f"$$A = \\mathbf{{{area_wedge:.3f}}}\\,\\mathrm{{m^2/m}}$$\n\n"
-                f"---\n\n"
-                f"## Step 3 — Calculate wedge weight\n"
-                f"$$W = \\gamma A$$\n\n"
-                f"$$W = ({gamma_c:.2f})({area_wedge:.3f}) = \\mathbf{{{W:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
-                f"---\n\n"
-                f"## Step 4 — Force directions\n"
-                f"- $P$ acts at angle $\\delta$ to the normal of the wall face.\n"
-                f"- $R$ acts at angle $\\phi$ downward from the normal to the failure plane.\n"
-                f"- $W$ acts vertically downward.\n\n"
-                f"Angles used in global coordinates:\n\n"
-                f"$$\\theta_P = \\mathbf{{{np.rad2deg(theta_p):.2f}^\\circ}} "
-                f"\\qquad "
-                f"\\theta_R = \\mathbf{{{np.rad2deg(theta_r_force):.2f}^\\circ}}$$\n\n"
-                f"---\n\n"
-                f"## Step 5 — Write equilibrium equations\n"
-                f"From horizontal equilibrium:\n\n"
-                f"$$\\Sigma F_x = 0$$\n\n"
-                f"$$P\\cos(\\theta_P) + R\\cos(\\theta_R) = 0$$\n\n"
-                f"Substituting values:\n\n"
-                f"$$({np.cos(theta_p):.4f})P + ({np.cos(theta_r_force):.4f})R = 0$$\n\n"
-                f"From vertical equilibrium:\n\n"
-                f"$$\\Sigma F_y = 0$$\n\n"
-                f"$$P\\sin(\\theta_P) + R\\sin(\\theta_R) - W = 0$$\n\n"
-                f"Substituting values:\n\n"
-                f"$$({np.sin(theta_p):.4f})P + ({np.sin(theta_r_force):.4f})R - {W:.2f} = 0$$\n\n"
-                f"---\n\n"
-                f"## Step 6 — Solve for $P$ and $R$\n"
-                f"Solving the two equations simultaneously:\n\n"
-                f"$$P = \\mathbf{{{P:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
-                f"$$R = \\mathbf{{{R:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
-                f"---\n\n"
-                f"## Step 7 — Compute equivalent active earth pressure coefficient\n"
-                f"$$K_a = \\frac{{2P}}{{\\gamma H^2}}$$\n\n"
-                f"$$K_a = \\frac{{2({P:.2f})}}{{({gamma_c:.2f})({H_c:.2f}^2)}} = \\mathbf{{{Ka_static:.4f}}}$$"
-            )
-        
-            with st.expander("Detailed Calculation Steps", expanded=True):
-                glass_box(report_md)
+            else:
+                if P_cphi <= 0 or N_cphi <= 0:
+                    st.warning("Computed cohesive solution produced a non-physical sign for P or N. Review the inputs and interpretation.")
+
+                write_text("subheader", "Final Answers")
+
+                final_answers_df = pd.DataFrame({
+                    "Result": [
+                        "Cohesionless wall force, P_dry",
+                        "Equivalent Ka (cohesionless)",
+                        "Tension crack depth, z_t",
+                        "Failure plane length, L",
+                        "Cohesion along plane, C = c'L",
+                        "Wall force with c-φ, P",
+                        "Normal on failure plane, N",
+                        "Resultant on failure plane, R",
+                        "Equivalent Ka (with c-φ)",
+                    ],
+                    "Value": [
+                        f"{P_dry:.2f} kN/m",
+                        f"{Ka_dry:.4f}",
+                        f"{zt:.2f} m",
+                        f"{L_fail:.2f} m",
+                        f"{C_plane:.2f} kN/m",
+                        f"{P_cphi:.2f} kN/m",
+                        f"{N_cphi:.2f} kN/m",
+                        f"{R_total:.2f} kN/m",
+                        f"{Ka_cphi:.4f}",
+                    ]
+                })
+                glass_table(final_answers_df)
+
+                report_md = (
+                    f"### Given / Inputs\n"
+                    f"- Wall height: $H = {H_c:.2f}\\,\\mathrm{{m}}$\n"
+                    f"- Unit weight: $\\gamma = {gamma_c:.2f}\\,\\mathrm{{kN/m^3}}$\n"
+                    f"- Soil friction angle: $\\phi = {phi_c:.2f}^\\circ$\n"
+                    f"- Cohesion: $c' = {c_c:.2f}\\,\\mathrm{{kPa}}$\n"
+                    f"- Wall friction angle: $\\delta = {delta:.2f}^\\circ$\n"
+                    f"- Wall inclination: $\\alpha = {alpha:.2f}^\\circ$\n"
+                    f"- Backfill slope: $\\beta = {beta_c:.2f}^\\circ$\n\n"
+                    f"---\n\n"
+                    f"## Step 1 — Assume the failure plane\n"
+                    f"Using the classroom approximation:\n\n"
+                    f"$$\\theta = 45^\\circ + \\frac{{\\phi}}{{2}}$$\n\n"
+                    f"$$\\theta = 45^\\circ + \\frac{{{phi_c:.2f}^\\circ}}{{2}} = \\mathbf{{{theta_fail_deg:.2f}^\\circ}}$$\n\n"
+                    f"---\n\n"
+                    f"## Step 2 — Determine wedge geometry\n"
+                    f"Intersection point of assumed failure plane with ground surface:\n\n"
+                    f"$$C = ({wedge_x:.3f},\\;{wedge_y:.3f})$$\n\n"
+                    f"Wedge area:\n\n"
+                    f"$$A = \\mathbf{{{area_wedge:.3f}}}\\,\\mathrm{{m^2/m}}$$\n\n"
+                    f"Failure plane length:\n\n"
+                    f"$$L = \\mathbf{{{L_fail:.3f}}}\\,\\mathrm{{m}}$$\n\n"
+                    f"---\n\n"
+                    f"## Step 3 — Calculate wedge weight\n"
+                    f"$$W = \\gamma A$$\n\n"
+                    f"$$W = ({gamma_c:.2f})({area_wedge:.3f}) = \\mathbf{{{W:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
+                    f"---\n\n"
+                    f"## Step 4 — Cohesionless reference solution\n"
+                    f"First solve the wedge without cohesion to get an equivalent cohesionless active thrust.\n\n"
+                    f"$$P_{{dry}} = \\mathbf{{{P_dry:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
+                    f"$$K_{{a,dry}} = \\frac{{2P_{{dry}}}}{{\\gamma H^2}} = \\mathbf{{{Ka_dry:.4f}}}$$\n\n"
+                    f"---\n\n"
+                    f"## Step 5 — Tension crack depth indicator\n"
+                    f"Using the classical $c$-$\\phi$ active stress expression:\n\n"
+                    f"$$z_t = \\frac{{2c'}}{{\\gamma \\sqrt{{K_{{a,dry}}}}}}$$\n\n"
+                    f"$$z_t = \\frac{{2({c_c:.2f})}}{{({gamma_c:.2f})\\sqrt{{{Ka_dry:.4f}}}}} = \\mathbf{{{zt:.2f}\\,\\mathrm{{m}}}}$$\n\n"
+                    f"---\n\n"
+                    f"## Step 6 — Cohesion along the failure plane\n"
+                    f"$$C = c' L$$\n\n"
+                    f"$$C = ({c_c:.2f})({L_fail:.3f}) = \\mathbf{{{C_plane:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
+                    f"This cohesive force acts along the failure plane in the resisting direction.\n\n"
+                    f"---\n\n"
+                    f"## Step 7 — Static equilibrium for the $c$-$\\phi$ wedge\n"
+                    f"The wedge is solved using:\n\n"
+                    f"$$\\vec{{P}} + N\\vec{{n}} + (N\\tan\\phi)\\vec{{t}} + C\\vec{{t}} - W\\vec{{j}} = 0$$\n\n"
+                    f"Solving the two equilibrium equations gives:\n\n"
+                    f"$$P = \\mathbf{{{P_cphi:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
+                    f"$$N = \\mathbf{{{N_cphi:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
+                    f"Equivalent resultant on the failure plane:\n\n"
+                    f"$$R = \\mathbf{{{R_total:.2f}}}\\,\\mathrm{{kN/m}}$$\n\n"
+                    f"---\n\n"
+                    f"## Step 8 — Equivalent active earth pressure coefficient\n"
+                    f"$$K_a = \\frac{{2P}}{{\\gamma H^2}}$$\n\n"
+                    f"$$K_a = \\frac{{2({P_cphi:.2f})}}{{({gamma_c:.2f})({H_c:.2f})^2}} = \\mathbf{{{Ka_cphi:.4f}}}$$\n\n"
+                    f"---\n\n"
+                    f"### Note\n"
+                    f"- The wedge solution above includes **cohesion along the failure plane** explicitly.\n"
+                    f"- The plotted/reported **tension crack depth** is shown as an engineering indicator from the classical $c$-$\\phi$ active stress relation.\n"
+                    f"- This is a practical upgrade of your existing classroom wedge model, not a full re-cut cracked-wedge limit analysis."
+                )
+
+                with st.expander("Detailed Calculation Steps", expanded=True):
+                    glass_box(report_md)
 
 
 if __name__ == "__main__":
