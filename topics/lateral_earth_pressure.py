@@ -969,20 +969,149 @@ def app():
                 glass_table(final_answers_df)
 
                 report_md = (
-                    f"### Short Calculation Summary\n"
-                    f"- First, a dry reference wedge is solved only to estimate the tension crack depth.\n"
-                    f"- Then the wedge height is reduced to:\n\n"
-                    f"$$H_{{eff}} = H - z_t = {H_c:.2f} - {cw['zt']:.2f} = \\mathbf{{{cw['H_eff']:.2f}\\,\\mathrm{{m}}}}$$\n\n"
-                    f"- The cracked wedge area actually used in equilibrium is:\n\n"
+                    f"### Given Data\n"
+                    f"- Wall height: $H = {H_c:.2f}\\,\\mathrm{{m}}$\n"
+                    f"- Soil unit weight: $\\gamma = {gamma_c:.2f}\\,\\mathrm{{kN/m^3}}$\n"
+                    f"- Soil friction angle: $\\phi = {phi_c:.2f}^\\circ$\n"
+                    f"- Cohesion: $c' = {c_c:.2f}\\,\\mathrm{{kPa}}$\n"
+                    f"- Wall friction angle: $\\delta = {delta:.2f}^\\circ$\n"
+                    f"- Wall batter angle: $\\alpha = {alpha:.2f}^\\circ$\n"
+                    f"- Backfill slope angle: $\\beta = {beta_c:.2f}^\\circ$\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 1 — Assume the failure plane angle\n"
+                    f"For this classroom Coulomb wedge model, the failure plane is taken as:\n\n"
+                    f"$$\\theta = 45^\\circ + \\frac{{\\phi}}{{2}}$$\n\n"
+                
+                    f"Substituting the soil friction angle:\n\n"
+                    f"$$\\theta = 45^\\circ + \\frac{{{phi_c:.2f}^\\circ}}{{2}} = \\mathbf{{{cw['theta_fail_deg']:.2f}^\\circ}}$$\n\n"
+                
+                    f"This is the assumed inclination of the failure plane measured from the horizontal base through point $B$.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 2 — Determine the original full wedge geometry\n"
+                    f"Before considering tension crack, extend the assumed failure plane until it meets the ground surface.\n\n"
+                
+                    f"Top of wall:\n\n"
+                    f"$$A = ({cw['top_x_full']:.3f},\\; {H_c:.3f})$$\n\n"
+                
+                    f"Original ground/failure-plane intersection:\n\n"
+                    f"$$C_{{full}} = ({cw['x_c_full']:.3f},\\; {cw['y_c_full']:.3f})$$\n\n"
+                
+                    f"So the original dry reference wedge is triangle $A$-$B$-$C_{{full}}$.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 3 — Solve a dry reference wedge\n"
+                    f"A cohesionless reference wedge is solved first so that an equivalent active coefficient can be used for estimating the tension crack depth.\n\n"
+                
+                    f"Equivalent dry active coefficient from the reference wedge:\n\n"
+                    f"$$K_{{a,dry}} = \\mathbf{{{cw['Ka_dry']:.4f}}}$$\n\n"
+                
+                    f"This value is only used for estimating the crack depth and is not the final reported coefficient.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 4 — Calculate tension crack depth\n"
+                    f"For a cohesive backfill, the classical active-state estimate is:\n\n"
+                    f"$$z_t = \\frac{{2c'}}{{\\gamma\\sqrt{{K_{{a,dry}}}}}}$$\n\n"
+                
+                    f"Substituting the values:\n\n"
+                    f"$$z_t = \\frac{{2({c_c:.2f})}}{{({gamma_c:.2f})\\sqrt{{{cw['Ka_dry']:.4f}}}}} = \\mathbf{{{cw['zt']:.2f}\\,\\mathrm{{m}}}}$$\n\n"
+                
+                    f"This means the upper part of the backfill is cracked and does not remain attached to the active wedge.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 5 — Define the vertical tension crack\n"
+                    f"The tension crack is taken as vertical behind the wall.\n\n"
+                
+                    f"Bottom of crack on the failure plane:\n\n"
+                    f"$$C = ({cw['x_crack']:.3f},\\; {cw['y_c']:.3f})$$\n\n"
+                
+                    f"Top of crack on the ground surface:\n\n"
+                    f"$$D = ({cw['x_d']:.3f},\\; {cw['y_d']:.3f})$$\n\n"
+                
+                    f"So the actual active wedge used in the final calculation is the quadrilateral:\n\n"
+                    f"$$A - B - C - D$$\n\n"
+                
+                    f"The triangular portion to the right of the crack is excluded from the active wedge.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 6 — Calculate the cracked active wedge area\n"
+                    f"Area of the actual active wedge $A$-$B$-$C$-$D$:\n\n"
                     f"$$A_{{eff}} = \\mathbf{{{cw['area_eff']:.3f}\\,\\mathrm{{m^2/m}}}}$$\n\n"
-                    f"- Its weight is:\n\n"
-                    f"$$W = \\gamma A_{{eff}} = ({gamma_c:.2f})({cw['area_eff']:.3f}) = \\mathbf{{{cw['W_eff']:.2f}\\,\\mathrm{{kN/m}}}}$$\n\n"
-                    f"- Cohesion along the cracked failure plane is:\n\n"
-                    f"$$C = c' L = \\mathbf{{{cw['C_plane']:.2f}\\,\\mathrm{{kN/m}}}}$$\n\n"
-                    f"- Final wall force from cracked c-ϕ wedge equilibrium:\n\n"
+                
+                    f"---\n\n"
+                
+                    f"## Step 7 — Calculate the wedge weight\n"
+                    f"The self-weight of the cracked wedge is:\n\n"
+                    f"$$W = \\gamma A_{{eff}}$$\n\n"
+                
+                    f"$$W = ({gamma_c:.2f})({cw['area_eff']:.3f}) = \\mathbf{{{cw['W_eff']:.2f}\\,\\mathrm{{kN/m}}}}$$\n\n"
+                
+                    f"This is the weight of only the remaining active wedge after crack formation.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 8 — Calculate cohesion along the active failure plane\n"
+                    f"Only the active portion of the failure plane, segment $BC$, is considered.\n\n"
+                
+                    f"Length of active failure plane:\n\n"
+                    f"$$L_{{BC}} = \\mathbf{{{cw['L_fail_eff']:.3f}\\,\\mathrm{{m}}}}$$\n\n"
+                
+                    f"Cohesive resisting force along the failure plane:\n\n"
+                    f"$$C = c' \\cdot L_{{BC}}$$\n\n"
+                
+                    f"$$C = ({c_c:.2f})({cw['L_fail_eff']:.3f}) = \\mathbf{{{cw['C_plane']:.2f}\\,\\mathrm{{kN/m}}}}$$\n\n"
+                
+                    f"This force acts along the failure plane in the resisting direction.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 9 — Identify the forces acting on the wedge\n"
+                    f"The cracked active wedge is analysed under the following actions:\n\n"
+                    f"1. **$P$** = wall force acting on the wedge\n"
+                    f"2. **$R$** = resultant reaction from the failure plane\n"
+                    f"3. **$W$** = self-weight of the wedge acting vertically downward\n"
+                    f"4. **$C$** = cohesion contribution along the failure plane\n\n"
+                
+                    f"---\n\n"
+                
+                    f"## Step 10 — Write the equilibrium of the cracked wedge\n"
+                    f"The vector equilibrium used in the code is:\n\n"
+                    f"$$\\vec{{P}} + N\\vec{{n}} + (N\\tan\\phi)\\vec{{t}} + C\\vec{{t}} - W\\vec{{j}} = 0$$\n\n"
+                
+                    f"where:\n\n"
+                    f"- $N\\vec{{n}}$ = normal component on the failure plane\n"
+                    f"- $(N\\tan\\phi)\\vec{{t}}$ = friction component on the failure plane\n"
+                    f"- $C\\vec{{t}}$ = cohesion component along the failure plane\n"
+                    f"- $W\\vec{{j}}$ = wedge weight acting vertically downward\n\n"
+                
+                    f"The code resolves this equilibrium in the horizontal and vertical directions and solves for the unknown force components.\n\n"
+                    f"---\n\n"
+                
+                    f"## Step 11 — Solve for the active wall force\n"
+                    f"From equilibrium of the cracked wedge, the wall force is obtained as:\n\n"
                     f"$$P = \\mathbf{{{cw['P']:.2f}\\,\\mathrm{{kN/m}}}}$$\n\n"
-                    f"- Equivalent active coefficient based on full wall height:\n\n"
-                    f"$$K_a = \\mathbf{{{cw['Ka_eff']:.4f}}}$$"
+                
+                    f"The resultant reaction from the failure plane is:\n\n"
+                    f"$$R = \\mathbf{{{cw['R']:.2f}\\,\\mathrm{{kN/m}}}}$$\n\n"
+                
+                    f"---\n\n"
+                
+                    f"## Step 12 — Compute the equivalent active earth pressure coefficient\n"
+                    f"The final equivalent active coefficient is reported with respect to the full wall height:\n\n"
+                    f"$$K_a = \\frac{{2P}}{{\\gamma H^2}}$$\n\n"
+                
+                    f"Substituting the calculated wall force:\n\n"
+                    f"$$K_a = \\frac{{2({cw['P']:.2f})}}{{({gamma_c:.2f})({H_c:.2f})^2}} = \\mathbf{{{cw['Ka_eff']:.4f}}}$$\n\n"
+                
+                    f"---\n\n"
+                
+                    f"### Final Answers\n"
+                    f"- Tension crack depth: $z_t = \\mathbf{{{cw['zt']:.2f}\\,\\mathrm{{m}}}}$\n"
+                    f"- Cohesive force on active failure plane: $C = \\mathbf{{{cw['C_plane']:.2f}\\,\\mathrm{{kN/m}}}}$\n"
+                    f"- Active wall force: $P = \\mathbf{{{cw['P']:.2f}\\,\\mathrm{{kN/m}}}}$\n"
+                    f"- Equivalent active earth pressure coefficient: $K_a = \\mathbf{{{cw['Ka_eff']:.4f}}}$\n\n"
+                
+                    f"### Note\n"
+                    f"The final reported values are based on the cracked cohesive wedge after formation of the vertical tension crack."
                 )
 
                 with st.expander("Detailed Calculation Steps", expanded=True):
