@@ -732,6 +732,24 @@ def app():
                             zorder=1.5
                         )
                     )
+                
+                    crack_x = top_x_full + 0.12
+                    ax_w.plot(
+                        [crack_x, crack_x],
+                        [H_c, y_d],
+                        linestyle="--",
+                        color="royalblue",
+                        linewidth=2.0,
+                        zorder=6
+                    )
+                    ax_w.text(
+                        crack_x + 0.08,
+                        (H_c + y_d) / 2.0,
+                        f"zₜ={zt:.2f} m",
+                        fontsize=10,
+                        color="royalblue",
+                        va="center"
+                    )
 
                     # Crack depth marker beside wall
                     crack_x = top_x_full + 0.12
